@@ -169,17 +169,19 @@ const settingsMenu: MenuItem[] = [
     name: "Ticket Setup",
     icon: HiOutlineTicket,
     children: [
-      { name: "Ticket Status", path: "/settings/ticket-setup/status" },
+      { name: "Ticket Status", path: "/settings/ticket-setup/ticket-status" },
       {
         name: "Ticket Category",
-        path: "/settings/ticket-setup/category",
+        path: "/settings/ticket-setup/ticket-category",
       },
     ],
   },
   {
     name: "Lead Setup",
     icon: MdOutlineLeaderboard,
-    children: [{ name: "Lead Source", path: "/settings/lead-setup/source" }],
+    children: [
+      { name: "Lead Source", path: "/settings/lead-setup/lead-source" },
+    ],
   },
   {
     name: "Product Setup",
@@ -187,7 +189,7 @@ const settingsMenu: MenuItem[] = [
     children: [
       {
         name: "Product Category",
-        path: "/settings/product-setup/category",
+        path: "/settings/product-setup/product-category",
       },
     ],
   },

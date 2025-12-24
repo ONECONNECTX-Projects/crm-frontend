@@ -7,6 +7,7 @@ import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
+import CreatePriorityForm from "./create/page";
 
 interface Priority {
   id: number;
@@ -75,6 +76,7 @@ export default function PriorityPage() {
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [editPriority, setEditPriority] = useState<Priority | null>(null);
 
   const [columns, setColumns] = useState<
     { key: keyof Priority; label: string; visible: boolean }[]
@@ -97,7 +99,10 @@ export default function PriorityPage() {
   const actions: TableAction<Priority>[] = [
     {
       label: "Edit",
-      onClick: (row) => console.log("Edit priority", row),
+      onClick: (row) => {
+        setEditPriority(row);
+        setOpenCreate(true);
+      },
     },
     {
       label: "Delete",
@@ -189,13 +194,36 @@ export default function PriorityPage() {
         }}
       />
 
-      <SlideOver open={openCreate} onClose={() => setOpenCreate(false)}>
-        <div className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Add Priority</h2>
-          <p className="text-gray-600">
-            Priority configuration form will be implemented here.
-          </p>
-        </div>
+      <SlideOver
+        open={openCreate}
+        onClose={() => {
+          setOpenCreate(false);
+          setEditPriority(null);
+        }}
+      >
+        <CreatePriorityForm
+          mode={editPriority ? "edit" : "create"}
+          initialData={
+            editPriority
+              ? {
+                  id: editPriority.id,
+                  name: editPriority.name,
+                  color: editPriority.color,
+                }
+              : null
+          }
+          onClose={() => {
+            setOpenCreate(false);
+            setEditPriority(null);
+          }}
+          onSubmit={(data) => {
+            if (editPriority) {
+              console.log("Update Priority:", data);
+            } else {
+              console.log("Create Priority:", data);
+            }
+          }}
+        />
       </SlideOver>
     </div>
   );
