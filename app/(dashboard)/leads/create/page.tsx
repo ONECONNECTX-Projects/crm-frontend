@@ -1,51 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
 
-export default function CreateLeadForm({ mode = "create", data, onClose }: { mode?: "create" | "edit"; data?: any; onClose: () => void }) {
+interface LeadData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  owner?: string;
+  status?: string;
+  value?: string;
+  source?: string;
+}
+
+export default function CreateLeadForm({
+  mode = "create",
+  data,
+  onClose,
+}: {
+  mode?: "create" | "edit";
+  data?: LeadData;
+  onClose: () => void;
+}) {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-const [formData, setFormData] = useState({
-  name: "",
-  email: "",
-  phone: "",
-  owner: "",
-  status: "",
-  value: "",
-  source: "",
-});
-
-useEffect(() => {
-  if (mode === "edit" && data) {
-    setFormData({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      owner: data.owner,
-      status: data.status,
-      value: data.value,
-      source: data.source,
-    });
-  } else {
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      owner: "",
-      status: "",
-      value: "",
-      source: "",
-    });
-  }
-}, [mode, data]);
+  const [formData, setFormData] = useState({
+    name: mode === "edit" && data ? data.name : "",
+    email: mode === "edit" && data ? data.email : "",
+    phone: mode === "edit" && data ? data.phone : "",
+    owner: mode === "edit" && data ? data.owner : "",
+    status: mode === "edit" && data ? data.status : "",
+    value: mode === "edit" && data ? data.value : "",
+    source: mode === "edit" && data ? data.source : "",
+  });
   return (
     <div className="w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-<h2 className="text-xl font-semibold">
-  {mode === "edit" ? "Edit Lead" : "Create Lead"}
-</h2>
+        <h2 className="text-xl font-semibold">
+          {mode === "edit" ? "Edit Lead" : "Create Lead"}
+        </h2>
         <button
           onClick={onClose}
           className="p-2 hover:bg-gray-100 rounded-full transition"
@@ -56,81 +52,107 @@ useEffect(() => {
 
       {/* FORM */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
         {/* NAME */}
         <div>
-          <label className="block mb-1 font-medium">
-            <span className="text-red-600">*</span> Name
-          </label>
-          <input
+          <InputField
             type="text"
-            placeholder="Jhon"
-            className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50"
+            label="Name *"
+            value={formData.name}
+            onChange={(v) => setFormData({ ...formData, name: v })}
+            placeholder="Enter Lead Name"
           />
         </div>
 
         {/* EMAIL */}
         <div>
-          <label className="block mb-1 font-medium">Email</label>
-          <input
+          <InputField
             type="email"
-            placeholder="example@email.com"
-            className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50"
+            label="Email"
+            value={formData.email}
+            onChange={(v) => setFormData({ ...formData, email: v })}
+            placeholder="Enter Email Address"
           />
         </div>
 
         {/* PHONE */}
         <div>
-          <label className="block mb-1 font-medium">Phone Number</label>
-          <input
+          <InputField
             type="text"
-            placeholder="+1 (273) 642-1785"
-            className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50"
+            label="Phone Number"
+            value={formData.phone}
+            onChange={(v) => setFormData({ ...formData, phone: v })}
+            placeholder="Enter Phone Number"
           />
         </div>
 
         {/* LEAD OWNER */}
         <div>
-          <label className="block mb-1 font-medium">Lead Owner</label>
-          <select className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50">
-            <option value="demo">demo</option>
-          </select>
+          <SelectDropdown
+            label="Lead Owner"
+            value={formData.owner}
+            onChange={(v) => setFormData({ ...formData, owner: v })}
+            options={[
+              { label: "Demo", value: "demo" },
+              { label: "Admin", value: "admin" },
+            ]}
+            placeholder="Select Lead Owner"
+          />
         </div>
 
         {/* LEAD VALUE */}
         <div>
-          <label className="block mb-1 font-medium">Lead Value</label>
-          <input
-            type="text"
-            placeholder="Lead Value"
-            className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50"
+          <SelectDropdown
+            label="Lead Value"
+            value={formData.value}
+            onChange={(v) => setFormData({ ...formData, value: v })}
+            options={[
+              { label: "High", value: "high" },
+              { label: "Medium", value: "medium" },
+              { label: "Low", value: "low" },
+            ]}
+            placeholder="Select Lead Value"
           />
         </div>
 
         {/* LEAD STATUS */}
         <div>
-          <label className="block mb-1 font-medium">Lead Status</label>
-          <select className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50">
-            <option>Select contact owner name</option>
-          </select>
+          <SelectDropdown
+            label="Lead Status"
+            value={formData.status}
+            onChange={(v) => setFormData({ ...formData, status: v })}
+            options={[
+              { label: "New", value: "new" },
+              { label: "Contacted", value: "contacted" },
+              { label: "Qualified", value: "qualified" },
+              { label: "Unqualified", value: "unqualified" },
+            ]}
+            placeholder="Select Lead Status"
+          />
         </div>
 
         {/* LEAD SOURCE */}
         <div className="md:col-span-2">
-          <label className="block mb-1 font-medium">
-            Lead Source{" "}
-            <button className="ml-2 text-blue-600 font-bold text-lg">+</button>
-          </label>
-          <select className="w-full border rounded-md px-3 py-2 text-sm bg-gray-50">
-            <option>Select contact owner name</option>
-          </select>
+          <SelectDropdown
+            label="Lead Source"
+            value={formData.source}
+            onChange={(v) => setFormData({ ...formData, source: v })}
+            options={[
+              { label: "Website", value: "website" },
+              { label: "Referral", value: "referral" },
+              { label: "Social Media", value: "social_media" },
+            ]}
+            placeholder="Select Lead Source"
+          />
         </div>
       </div>
 
       {/* Create Button */}
-      <Button type="submit" className="w-full mt-6 bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition">
-  {mode === "edit" ? "Save Changes" : "Create Lead"}
-</Button>
+      <Button
+        type="submit"
+        className="w-full mt-6 bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition"
+      >
+        {mode === "edit" ? "Save Changes" : "Create Lead"}
+      </Button>
 
       {/* CSV IMPORT BLOCK */}
       <div className="mt-8 border rounded-xl p-5">

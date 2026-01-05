@@ -357,10 +357,10 @@ const handlePageChange = (page: number) => {
 />
     </div>
 <SlideOver open={openCreate} onClose={() => setOpenCreate(false)}>
-  <CreateLeadForm 
+  <CreateLeadForm
     mode={mode}
-    data={editingLead}
-    onClose={() => setOpenCreate(false)} 
+    data={editingLead || undefined}
+    onClose={() => setOpenCreate(false)}
   />
 </SlideOver>
     </>

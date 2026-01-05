@@ -8,9 +8,7 @@ interface InputFieldProps {
   type?: string;
   placeholder?: string;
   value: any;
-  onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => void;
+  onChange: (value: string) => void;
   maxLength?: number;
   multiline?: boolean;
   rows?: number;
@@ -38,7 +36,7 @@ export default function InputField({
   const isPassword = type === "password";
 
   // Prevent leading space BEFORE it is typed
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: any) => {
     if (noLeadingSpace && value === "" && e.key === " ") {
       e.preventDefault();
       setLocalError("Cannot start with space");
@@ -46,7 +44,9 @@ export default function InputField({
   };
 
   // Validate leading space after input
-  const validateValue = (e: any) => {
+  const validateValue = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     let val = e.target.value;
 
     if (noLeadingSpace && val.startsWith(" ")) {
@@ -57,12 +57,14 @@ export default function InputField({
       setLocalError("");
     }
 
-    onChange(e);
+    onChange(val);
   };
 
   return (
     <div className="w-full">
-      {label && <label className="block mb-1 font-medium text-gray-700">{label}</label>}
+      {label && (
+        <label className="block mb-1 font-medium text-gray-700">{label}</label>
+      )}
 
       <div className="relative flex items-center">
         {icon && <div className="absolute left-3 text-gray-500">{icon}</div>}
@@ -89,9 +91,11 @@ export default function InputField({
               placeholder={placeholder}
               value={value}
               onChange={validateValue}
-              onKeyDown={handleKeyDown}   // <-- BLOCK SPACE BEFORE INPUT
+              onKeyDown={handleKeyDown} // <-- BLOCK SPACE BEFORE INPUT
               maxLength={maxLength}
-              className={`w-full p-3 ${icon ? "pl-10" : ""} pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
+              className={`w-full p-3 ${
+                icon ? "pl-10" : ""
+              } pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
                 localError || error
                   ? "border-red-500 focus:ring-red-400"
                   : "border-gray-300 focus:ring-blue-500"

@@ -2,13 +2,40 @@
 
 import { useState } from "react";
 import { X, Plus } from "lucide-react";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
+import { label } from "framer-motion/client";
 
+type OpportunityForm = {
+  name: string;
+  amount: string;
+  nextStep: string;
+  competitors: string;
+};
+
+type ChangeHandler = (field: keyof OpportunityForm) => (value: string) => void;
 export default function CreateOpportunity({
   onClose,
 }: {
   onClose: () => void;
 }) {
   const [step, setStep] = useState(1);
+
+  const [form, setForm] = useState<OpportunityForm>({
+    name: "",
+    amount: "",
+    nextStep: "",
+    competitors: "",
+  });
+
+  const handleChange = (field: keyof OpportunityForm) => (value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    console.log("Final Form Data 👉", form);
+    onClose();
+  };
 
   return (
     <div className="p-6">
@@ -25,15 +52,29 @@ export default function CreateOpportunity({
         <Step active={step >= 1} label="Opportunity Information" />
         <div className="flex-1 h-[2px] bg-gray-200 mx-4">
           <div
-            className={`h-full bg-blue-600 transition-all`}
+            className="h-full bg-blue-600 transition-all"
             style={{ width: step === 2 ? "100%" : "0%" }}
           />
         </div>
-        <Step active={step === 2} label="Addition Information" />
+        <Step active={step === 2} label="Additional Information" />
       </div>
 
-      {step === 1 && <StepOne onNext={() => setStep(2)} />}
-      {step === 2 && <StepTwo onBack={() => setStep(1)} onSubmit={onClose} />}
+      {step === 1 && (
+        <StepOne
+          form={form}
+          onChange={handleChange}
+          onNext={() => setStep(2)}
+        />
+      )}
+
+      {step === 2 && (
+        <StepTwo
+          form={form}
+          onChange={handleChange}
+          onBack={() => setStep(1)}
+          onSubmit={handleSubmit}
+        />
+      )}
     </div>
   );
 }
@@ -51,14 +92,47 @@ function Step({ active, label }: { active: boolean; label: string }) {
     </div>
   );
 }
-function StepOne({ onNext }: { onNext: () => void }) {
+
+function StepOne({
+  form,
+  onChange,
+  onNext,
+}: {
+  form: OpportunityForm;
+  onChange: ChangeHandler;
+  onNext: () => void;
+}) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <Input label="* Name" />
-        <Select label="Opportunity owner" options={["demo"]} />
-        <Input label="Amount" />
-        <Input label="Next step" />
+        <InputField
+          label="Name"
+          placeholder="Enter you Name"
+          value={form.name}
+          onChange={onChange("name")}
+        />
+
+        <SelectDropdown
+          label="Opportunity owner"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
+
+        <InputField
+          label="Amount"
+          placeholder="Enter Amount"
+          value={form.amount}
+          onChange={onChange("amount")}
+        />
+
+        <InputField
+          label="Next step"
+          value={form.nextStep}
+          onChange={onChange("nextStep")}
+        />
+
         <DateInput label="Opportunity create date" />
         <DateInput label="Opportunity Close Date" />
       </div>
@@ -74,22 +148,64 @@ function StepOne({ onNext }: { onNext: () => void }) {
     </div>
   );
 }
+
 function StepTwo({
+  form,
+  onChange,
   onBack,
   onSubmit,
 }: {
+  form: OpportunityForm;
+  onChange: ChangeHandler;
   onBack: () => void;
   onSubmit: () => void;
 }) {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-6">
-        <Select label="Company" plus options={["Company A"]} />
-        <Select label="Contact" plus options={["Contact A"]} />
-        <Input label="Competitors" />
-        <Select label="Opportunity Type" plus options={["New Business"]} />
-        <Select label="Opportunity Source" plus options={["Website"]} />
-        <Select label="Opportunity Stage" plus options={["Prospect"]} />
+        <SelectDropdown
+          label="Company"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
+        <SelectDropdown
+          label="Contact"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
+
+        <InputField
+          label="Competitors"
+          placeholder="Enter Competitors"
+          value={form.competitors}
+          onChange={onChange("competitors")}
+        />
+
+        <SelectDropdown
+          label="Opportunity Type"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
+        <SelectDropdown
+          label="Opportunity Source"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
+        <SelectDropdown
+          label="Opportunity Stage"
+          options={[
+            { label: "Owner 1", value: "owner1" },
+            { label: "Owner 2", value: "owner2" },
+          ]}
+        />
       </div>
 
       <div>
@@ -114,45 +230,11 @@ function StepTwo({
     </div>
   );
 }
-function Input({ label }: { label: string }) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <input className="w-full mt-1 border rounded-md px-3 py-2" />
-    </div>
-  );
-}
-
 function DateInput({ label }: { label: string }) {
   return (
     <div>
       <label className="text-sm font-medium">{label}</label>
       <input type="date" className="w-full mt-1 border rounded-md px-3 py-2" />
-    </div>
-  );
-}
-
-function Select({
-  label,
-  options,
-  plus,
-}: {
-  label: string;
-  options: string[];
-  plus?: boolean;
-}) {
-  return (
-    <div>
-      <label className="flex items-center gap-2 text-sm font-medium">
-        {label}
-        {plus && <Plus size={14} className="text-blue-600" />}
-      </label>
-      <select className="w-full mt-1 border rounded-md px-3 py-2">
-        <option>Select</option>
-        {options.map((o) => (
-          <option key={o}>{o}</option>
-        ))}
-      </select>
     </div>
   );
 }

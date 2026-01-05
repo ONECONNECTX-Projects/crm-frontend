@@ -9,7 +9,7 @@ import Pagination from "@/app/common/pagination";
 import CreateCompanyForm from "./create/page";
 import { useRouter } from "next/navigation";
 
-interface Company {
+export interface Company {
   id: number;
   name: string;
   email: string;

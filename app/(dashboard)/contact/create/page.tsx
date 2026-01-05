@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import InputField from "@/app/common/InputFeild";
 
 interface CreateStaffFormProps {
   mode: "create" | "edit";
@@ -40,15 +41,15 @@ export default function CreateStaffForm({
   const [loading, setLoading] = useState(false);
 
   /* ---------- LOAD DATA ON EDIT ---------- */
-  useEffect(() => {
-    if (mode === "edit" && staffId) {
-      setLoading(true);
-      fetch(`/api/staff/${staffId}`)
-        .then((res) => res.json())
-        .then((data) => setForm({ ...initialForm, ...data }))
-        .finally(() => setLoading(false));
-    }
-  }, [mode, staffId]);
+  // useEffect(() => {
+  //   if (mode === "edit" && staffId) {
+  //     setLoading(true);
+  //     fetch(`/api/staff/${staffId}`)
+  //       .then((res) => res.json())
+  //       .then((data) => setForm({ ...initialForm, ...data }))
+  //       .finally(() => setLoading(false));
+  //   }
+  // }, [mode, staffId]);
 
   /* ---------- SUBMIT ---------- */
   const handleSubmit = async () => {
@@ -101,35 +102,96 @@ export default function CreateStaffForm({
             {/* BASIC INFO TAB */}
             {activeTab === "basic" && (
               <Grid>
-                <Field
+                <InputField
+                  label="Staff Name *"
+                  value={form.firstName}
+                  noLeadingSpace
+                  placeholder="Enter Staff Name"
+                  onChange={(v) => setForm({ ...form, firstName: v })}
+                ></InputField>
+                <InputField
                   label="First name *"
+                  noLeadingSpace
+                  placeholder="Enter First Name"
                   value={form.firstName}
                   onChange={(v) => setForm({ ...form, firstName: v })}
                 />
-                <Field
+                <InputField
                   label="Last name"
                   value={form.lastName}
                   onChange={(v) => setForm({ ...form, lastName: v })}
+                  noLeadingSpace
+                  placeholder="Enter Last Name"
                 />
-                <Field
+                <InputField
                   label="Email *"
                   value={form.email}
                   onChange={(v) => setForm({ ...form, email: v })}
+                  noLeadingSpace
+                  placeholder="Enter Email Address"
                 />
-                <Field
+                <InputField
                   label="Phone"
                   value={form.phone}
                   onChange={(v) => setForm({ ...form, phone: v })}
+                  noLeadingSpace
+                  placeholder="Enter Phone Number"
                 />
-                <Field
+                <InputField
                   label="Username"
                   value={form.username}
                   onChange={(v) => setForm({ ...form, username: v })}
+                  noLeadingSpace
+                  placeholder="Enter Username"
                 />
-                <Field
+                <InputField
                   label="Role"
                   value={form.role}
                   onChange={(v) => setForm({ ...form, role: v })}
+                  noLeadingSpace
+                  placeholder="Enter Role"
+                />
+                <InputField
+                  label="First name *"
+                  value={form.firstName}
+                  onChange={(v) => setForm({ ...form, firstName: v })}
+                  noLeadingSpace
+                  placeholder="Enter First Name"
+                />
+                <InputField
+                  label="Last name"
+                  value={form.lastName}
+                  onChange={(v) => setForm({ ...form, lastName: v })}
+                  noLeadingSpace
+                  placeholder="Enter Last Name"
+                />
+                <InputField
+                  label="Email *"
+                  value={form.email}
+                  onChange={(v) => setForm({ ...form, email: v })}
+                  noLeadingSpace
+                  placeholder="Enter Email Address"
+                />
+                <InputField
+                  label="Phone"
+                  value={form.phone}
+                  onChange={(v) => setForm({ ...form, phone: v })}
+                  noLeadingSpace
+                  placeholder="Enter Phone Number"
+                />
+                <InputField
+                  label="Username"
+                  value={form.username}
+                  onChange={(v) => setForm({ ...form, username: v })}
+                  noLeadingSpace
+                  placeholder="Enter Username"
+                />
+                <InputField
+                  label="Role"
+                  value={form.role}
+                  onChange={(v) => setForm({ ...form, role: v })}
+                  noLeadingSpace
+                  placeholder="Enter Role"
                 />
               </Grid>
             )}
@@ -137,50 +199,67 @@ export default function CreateStaffForm({
             {/* EMPLOYMENT TAB */}
             {activeTab === "employment" && (
               <Grid>
-                <Field
+                <InputField
                   label="Employee ID"
                   value={form.employeeId}
                   onChange={(v) => setForm({ ...form, employeeId: v })}
+                  noLeadingSpace
+                  placeholder="Enter Employee ID"
                 />
-                <Field
+                <InputField
                   label="Department"
                   value={form.department}
                   onChange={(v) => setForm({ ...form, department: v })}
+                  noLeadingSpace
+                  placeholder="Enter Department"
                 />
-                <Field
+                <InputField
                   label="Designation"
                   value={form.designation}
                   onChange={(v) => setForm({ ...form, designation: v })}
+                  noLeadingSpace
+                  placeholder="Enter Designation"
                 />
-                <Field
+                <InputField
                   label="Joining date"
                   value={form.joiningDate}
                   onChange={(v) => setForm({ ...form, joiningDate: v })}
                 />
-                <Field
+                <InputField
                   label="Salary"
                   value={form.salary}
                   onChange={(v) => setForm({ ...form, salary: v })}
+                  noLeadingSpace
+                  placeholder="Enter Salary"
                 />
-                <Field
+                <InputField
                   label="Address"
                   value={form.address}
                   onChange={(v) => setForm({ ...form, address: v })}
+                  noLeadingSpace
+                  placeholder="Enter Address"
+                  multiline
                 />
-                <Field
+                <InputField
                   label="City"
                   value={form.city}
                   onChange={(v) => setForm({ ...form, city: v })}
+                  noLeadingSpace
+                  placeholder="Enter City"
                 />
-                <Field
+                <InputField
                   label="State"
                   value={form.state}
                   onChange={(v) => setForm({ ...form, state: v })}
+                  noLeadingSpace
+                  placeholder="Enter State"
                 />
-                <Field
+                <InputField
                   label="Country"
                   value={form.country}
                   onChange={(v) => setForm({ ...form, country: v })}
+                  noLeadingSpace
+                  placeholder="Enter Country"
                 />
               </Grid>
             )}
@@ -228,27 +307,6 @@ function Grid({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
       {children}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className="block text-sm text-gray-700 mb-1">{label}</label>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-      />
     </div>
   );
 }

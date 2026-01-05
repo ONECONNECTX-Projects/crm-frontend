@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { Company } from "../page";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
 
 type Mode = "create" | "edit";
 type Tab = "company" | "billing";
@@ -10,9 +13,11 @@ type Tab = "company" | "billing";
 export default function CreateCompanyForm({
   onClose,
   mode = "create",
+  companies,
 }: {
   onClose: () => void;
   mode?: Mode;
+  companies?: Company;
 }) {
   const [activeTab, setActiveTab] = useState<Tab>("company");
   const isEdit = mode === "edit";
@@ -68,91 +73,229 @@ export default function CreateCompanyForm({
 /* ---------- Step Components ---------- */
 
 function CompanyInfo() {
+  const [formData, setFormData] = useState({
+    companyName: "",
+    companyOwner: "",
+    industry: "",
+    companyType: "",
+    companySize: "",
+    annualRevenue: "",
+    phone: "",
+    email: "",
+    website: "",
+    linkedIn: "",
+    twitter: "",
+    instagram: "",
+    facebook: "",
+  });
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-      <Field label="Company name *" />
-      <Field label="Company owner" type="select" />
-      <Field label="Industry" type="select" />
-      <Field label="Company Type" type="select" />
-      <Field label="Company size" />
-      <Field label="Annual revenue" />
-      <Field label="Phone" />
-      <Field label="Email" />
-      <Field label="Website" />
-      <Field label="LinkedIn" />
-      <Field label="Twitter" />
-      <Field label="Instagram" />
-      <Field label="Facebook" />
+      <InputField
+        label="Company name *"
+        value={formData.companyName}
+        onChange={(value) => handleChange("companyName", value)}
+        placeholder="Enter company name"
+      />
+      <SelectDropdown
+        label="Company owner"
+        value={formData.companyOwner}
+        onChange={(value) => handleChange("companyOwner", value)}
+        options={[
+          { label: "Owner 1", value: "owner1" },
+          { label: "Owner 2", value: "owner2" },
+        ]}
+        placeholder="Select owner"
+      />
+      <SelectDropdown
+        label="Industry"
+        value={formData.industry}
+        onChange={(value) => handleChange("industry", value)}
+        options={[
+          { label: "Technology", value: "technology" },
+          { label: "Finance", value: "finance" },
+          { label: "Healthcare", value: "healthcare" },
+        ]}
+        placeholder="Select industry"
+      />
+      <SelectDropdown
+        label="Company Type"
+        value={formData.companyType}
+        onChange={(value) => handleChange("companyType", value)}
+        options={[
+          { label: "Private", value: "private" },
+          { label: "Public", value: "public" },
+        ]}
+        placeholder="Select type"
+      />
+      <InputField
+        label="Company size"
+        value={formData.companySize}
+        onChange={(value) => handleChange("companySize", value)}
+        placeholder="Enter company size"
+      />
+      <InputField
+        label="Annual revenue"
+        value={formData.annualRevenue}
+        onChange={(value) => handleChange("annualRevenue", value)}
+        placeholder="Enter annual revenue"
+      />
+      <InputField
+        label="Phone"
+        value={formData.phone}
+        onChange={(value) => handleChange("phone", value)}
+        placeholder="Enter phone number"
+      />
+      <InputField
+        label="Email"
+        type="email"
+        value={formData.email}
+        onChange={(value) => handleChange("email", value)}
+        placeholder="Enter email"
+      />
+      <InputField
+        label="Website"
+        value={formData.website}
+        onChange={(value) => handleChange("website", value)}
+        placeholder="Enter website URL"
+      />
+      <InputField
+        label="LinkedIn"
+        value={formData.linkedIn}
+        onChange={(value) => handleChange("linkedIn", value)}
+        placeholder="Enter LinkedIn URL"
+      />
+      <InputField
+        label="Twitter"
+        value={formData.twitter}
+        onChange={(value) => handleChange("twitter", value)}
+        placeholder="Enter Twitter handle"
+      />
+      <InputField
+        label="Instagram"
+        value={formData.instagram}
+        onChange={(value) => handleChange("instagram", value)}
+        placeholder="Enter Instagram handle"
+      />
+      <InputField
+        label="Facebook"
+        value={formData.facebook}
+        onChange={(value) => handleChange("facebook", value)}
+        placeholder="Enter Facebook page"
+      />
     </div>
   );
 }
 
 function BillingInfo() {
+  const [formData, setFormData] = useState({
+    billingStreet: "",
+    billingCity: "",
+    billingZipCode: "",
+    billingState: "",
+    billingCountry: "",
+    shippingStreet: "",
+    shippingCity: "",
+    shippingZipCode: "",
+    shippingState: "",
+    shippingCountry: "",
+  });
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const copyBillingToShipping = () => {
+    setFormData((prev) => ({
+      ...prev,
+      shippingStreet: prev.billingStreet,
+      shippingCity: prev.billingCity,
+      shippingZipCode: prev.billingZipCode,
+      shippingState: prev.billingState,
+      shippingCountry: prev.billingCountry,
+    }));
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
-      <Field label="Billing street" />
-      <Field label="Billing city" />
-      <Field label="Billing zip code" />
-      <Field label="Billing state" />
-      <Field label="Billing country" />
+      <InputField
+        label="Billing street"
+        value={formData.billingStreet}
+        onChange={(value) => handleChange("billingStreet", value)}
+        placeholder="Enter billing street"
+      />
+      <InputField
+        label="Billing city"
+        value={formData.billingCity}
+        onChange={(value) => handleChange("billingCity", value)}
+        placeholder="Enter billing city"
+      />
+      <InputField
+        label="Billing zip code"
+        value={formData.billingZipCode}
+        onChange={(value) => handleChange("billingZipCode", value)}
+        placeholder="Enter billing zip code"
+      />
+      <InputField
+        label="Billing state"
+        value={formData.billingState}
+        onChange={(value) => handleChange("billingState", value)}
+        placeholder="Enter billing state"
+      />
+      <InputField
+        label="Billing country"
+        value={formData.billingCountry}
+        onChange={(value) => handleChange("billingCountry", value)}
+        placeholder="Enter billing country"
+      />
 
-      <div className="md:col-span-2 text-sm font-medium text-blue-600 cursor-pointer">
+      <div
+        onClick={copyBillingToShipping}
+        className="md:col-span-2 text-sm font-medium text-blue-600 cursor-pointer hover:underline"
+      >
         Copy Billing Information
       </div>
 
-      <Field label="Shipping street" />
-      <Field label="Shipping city" />
-      <Field label="Shipping zip code" />
-      <Field label="Shipping state" />
-      <Field label="Shipping country" />
+      <InputField
+        label="Shipping street"
+        value={formData.shippingStreet}
+        onChange={(value) => handleChange("shippingStreet", value)}
+        placeholder="Enter shipping street"
+      />
+      <InputField
+        label="Shipping city"
+        value={formData.shippingCity}
+        onChange={(value) => handleChange("shippingCity", value)}
+        placeholder="Enter shipping city"
+      />
+      <InputField
+        label="Shipping zip code"
+        value={formData.shippingZipCode}
+        onChange={(value) => handleChange("shippingZipCode", value)}
+        placeholder="Enter shipping zip code"
+      />
+      <InputField
+        label="Shipping state"
+        value={formData.shippingState}
+        onChange={(value) => handleChange("shippingState", value)}
+        placeholder="Enter shipping state"
+      />
+      <InputField
+        label="Shipping country"
+        value={formData.shippingCountry}
+        onChange={(value) => handleChange("shippingCountry", value)}
+        placeholder="Enter shipping country"
+      />
     </div>
   );
 }
 
 /* ---------- Reusable ---------- */
 
-function Step({
-  label,
-  active,
-  completed,
-}: {
-  label: string;
-  active?: boolean;
-  completed?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium
-        ${active || completed ? "bg-blue-600 text-white" : "bg-gray-200"}`}
-      >
-        {completed ? <Check size={14} /> : ""}
-      </div>
-      <span className="text-sm font-medium">{label}</span>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  type = "input",
-}: {
-  label: string;
-  type?: "input" | "select";
-}) {
-  return (
-    <div>
-      <label className="block text-sm text-gray-700 mb-1">{label}</label>
-      {type === "select" ? (
-        <select className="w-full rounded-md border px-3 py-2 text-sm">
-          <option>Select</option>
-        </select>
-      ) : (
-        <input className="w-full rounded-md border px-3 py-2 text-sm" />
-      )}
-    </div>
-  );
-}
 function TabButton({
   label,
   active,
