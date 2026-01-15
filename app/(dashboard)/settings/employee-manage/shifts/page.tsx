@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
@@ -8,58 +8,12 @@ import SlideOver from "@/app/common/slideOver";
 import CreateShiftForm from "./create/page";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
-
-interface Shift {
-  id: number;
-  name: string;
-  startTime: string;
-  endTime: string;
-  status: "active" | "inactive";
-  createdAt: string;
-}
-
-const shifts: Shift[] = [
-  {
-    id: 1,
-    name: "Morning Shift",
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    status: "active",
-    createdAt: "Jan 15, 2024",
-  },
-  {
-    id: 2,
-    name: "Evening Shift",
-    startTime: "02:00 PM",
-    endTime: "10:00 PM",
-    status: "active",
-    createdAt: "Jan 20, 2024",
-  },
-  {
-    id: 3,
-    name: "Night Shift",
-    startTime: "10:00 PM",
-    endTime: "06:00 AM",
-    status: "active",
-    createdAt: "Jan 10, 2024",
-  },
-  {
-    id: 4,
-    name: "Weekend Shift",
-    startTime: "08:00 AM",
-    endTime: "04:00 PM",
-    status: "active",
-    createdAt: "Jan 8, 2024",
-  },
-  {
-    id: 5,
-    name: "Flexible Shift",
-    startTime: "11:00 AM",
-    endTime: "07:00 PM",
-    status: "active",
-    createdAt: "Feb 1, 2024",
-  },
-];
+import {
+  getAllShifts,
+  deleteShift,
+  Shift,
+} from "@/app/services/shift/shifts.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 const statusColorMap = {
   active: {
@@ -75,20 +29,61 @@ const statusColorMap = {
 };
 
 export default function ShiftsPage() {
+  const { showSuccess } = useError();
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Shift Name", visible: true },
-    { key: "startTime", label: "Start Time", visible: true },
-    { key: "endTime", label: "End Time", visible: true },
+    { key: "start_time", label: "Start Time", visible: true },
+    { key: "end_time", label: "End Time", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
+
+  // Fetch shifts from API
+  const fetchShifts = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllShifts();
+      setShifts(response.AllShifts || []);
+    } catch (error) {
+      console.error("Failed to fetch shifts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchShifts();
+  }, []);
+
+  // Handle delete shift
+  const handleDelete = async (shift: Shift) => {
+    if (!confirm(`Are you sure you want to delete "${shift.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteShift(shift.id);
+      showSuccess("Shift deleted successfully");
+      fetchShifts();
+    } catch (error) {
+      console.error("Failed to delete shift:", error);
+    }
+  };
+
+  // Handle form close with refresh
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    fetchShifts();
+  };
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -103,13 +98,13 @@ export default function ShiftsPage() {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingShift(row);
         setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete", row),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
@@ -120,21 +115,34 @@ export default function ShiftsPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
+        const status = row.is_active ? "active" : "inactive";
         return (
           <StatusBadge
-            status={row.status}
+            status={status}
             colorMap={statusColorMap}
             variant="default"
           />
         );
       }
-      return <span>{(row as any)[col.key]}</span>;
+      if (col.key === "createdAt" && row.created_at) {
+        return (
+          <span>
+            {new Date(row.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof Shift];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
     },
   }));
 
-  const filteredShifts = shifts.filter((shift) =>
+  const filteredShifts = shifts?.filter((shift) =>
     Object.values(shift).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
@@ -157,7 +165,7 @@ export default function ShiftsPage() {
           createButtonText="Create Shift"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
+            setEditingShift(null);
             setOpenCreate(true);
           }}
         />
@@ -175,12 +183,18 @@ export default function ShiftsPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedShifts}
-          actions={tableActions}
-          emptyMessage="No shifts found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading shifts...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedShifts}
+            actions={tableActions}
+            emptyMessage="No shifts found."
+          />
+        )}
       </div>
 
       <Pagination
@@ -195,15 +209,11 @@ export default function ShiftsPage() {
       />
 
       {/* SlideOver with Form */}
-      <SlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        width="max-w-2xl"
-      >
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-2xl">
         <CreateShiftForm
           mode={mode}
-          shiftId={editingId}
-          onClose={() => setOpenCreate(false)}
+          shiftData={editingShift}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

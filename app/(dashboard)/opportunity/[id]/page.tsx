@@ -8,7 +8,11 @@ import {
   Mail,
   FileText,
   Plus,
+  Pencil,
 } from "lucide-react";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
+import { Button } from "@/components/ui/button";
 
 const stages = [
   "Prospect",
@@ -28,9 +32,56 @@ const tabs = [
   { key: "quotes", label: "Quotes", icon: FileText },
 ];
 
+const opportunityOwners = [
+  { label: "John Doe", value: "John Doe" },
+  { label: "Jane Smith", value: "Jane Smith" },
+];
+
+const contacts = [
+  { label: "Select Contact", value: "" },
+  { label: "Contact 1", value: "Contact 1" },
+  { label: "Contact 2", value: "Contact 2" },
+];
+
+const companies = [
+  { label: "Select Company", value: "" },
+  { label: "Company A", value: "Company A" },
+  { label: "Company B", value: "Company B" },
+];
+
 export default function OpportunityViewPage() {
   const [activeTab, setActiveTab] = useState("tasks");
   const [activeStage, setActiveStage] = useState("Closed Lost");
+
+  const initialData = {
+    owner: "John Doe",
+    name: "d",
+    contact: "",
+    company: "",
+    amount: "0",
+  };
+
+  const [editableFields, setEditableFields] = useState({
+    name: false,
+    amount: false,
+  });
+
+  const [formData, setFormData] = useState(initialData);
+  const [originalData] = useState(initialData);
+
+  const handleEdit = (field: keyof typeof editableFields) => {
+    setEditableFields({ ...editableFields, [field]: true });
+  };
+
+  const handleSave = () => {
+    console.log("Saving opportunity data:", formData);
+    setEditableFields({ name: false, amount: false });
+  };
+
+  const hasChanges =
+    JSON.stringify(formData) !== JSON.stringify(originalData);
+  const isEditing =
+    Object.values(editableFields).some((val) => val === true) || hasChanges;
 
   return (
     <div className="p-6 space-y-6 bg-white rounded-xl min-h-screen">
@@ -66,47 +117,106 @@ export default function OpportunityViewPage() {
       <div className="grid grid-cols-12 gap-6">
         {/* LEFT PANEL */}
         <div className="col-span-4 bg-gray-50 rounded-lg p-4 space-y-4">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start gap-2">
             <div>
-              <h2 className="text-lg font-semibold">d</h2>
-              <p className="text-green-600 text-xl font-bold">$0</p>
+              <h2 className="text-lg font-semibold">{formData.name}</h2>
+              <p className="text-green-600 text-xl font-bold">
+                ${formData.amount}
+              </p>
             </div>
-            <button className="border border-red-500 text-red-500 px-3 py-1 rounded-md text-sm">
-              Delete Opportunity
-            </button>
+            <div className="flex flex-col gap-2">
+              {isEditing && (
+                <Button
+                  onClick={handleSave}
+                  className="px-4 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700"
+                >
+                  Save
+                </Button>
+              )}
+              <button className="border border-red-500 text-red-500 px-3 py-1 rounded-md text-sm hover:bg-red-50">
+                Delete Opportunity
+              </button>
+            </div>
           </div>
 
-          <Field label="Opportunity Owner">
-            <select className="input">
-              <option>John Doe</option>
-            </select>
-          </Field>
+          {/* Opportunity Owner */}
+          <div>
+            <SelectDropdown
+              label="Opportunity Owner"
+              value={formData.owner}
+              onChange={(v) => setFormData({ ...formData, owner: v })}
+              options={opportunityOwners}
+            />
+          </div>
 
-          <Field label="Opportunity Name">
-            <div className="flex justify-between items-center">
-              <span>d</span>
-              ✏️
-            </div>
-          </Field>
+          {/* Opportunity Name */}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">
+              Opportunity Name
+            </label>
+            {editableFields.name ? (
+              <InputField
+                value={formData.name}
+                onChange={(v) => setFormData({ ...formData, name: v })}
+              />
+            ) : (
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-gray-900 p-3">{formData.name}</p>
+                <button
+                  onClick={() => handleEdit("name")}
+                  className="cursor-pointer text-gray-500 hover:text-gray-700"
+                >
+                  <Pencil size={18} />
+                </button>
+              </div>
+            )}
+          </div>
 
-          <Field label="Contact">
-            <select className="input">
-              <option>Select Contact</option>
-            </select>
-          </Field>
+          {/* Contact */}
+          <div>
+            <SelectDropdown
+              label="Contact"
+              value={formData.contact}
+              onChange={(v) => setFormData({ ...formData, contact: v })}
+              options={contacts}
+            />
+          </div>
 
-          <Field label="Company">
-            <select className="input">
-              <option>Select Company</option>
-            </select>
-          </Field>
+          {/* Company */}
+          <div>
+            <SelectDropdown
+              label="Company"
+              value={formData.company}
+              onChange={(v) => setFormData({ ...formData, company: v })}
+              options={companies}
+            />
+          </div>
 
-          <Field label="Amount ($)">
-            <div className="flex justify-between items-center">
-              <span>—</span>
-              ✏️
-            </div>
-          </Field>
+          {/* Amount */}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">
+              Amount ($)
+            </label>
+            {editableFields.amount ? (
+              <InputField
+                type="number"
+                value={formData.amount}
+                onChange={(v) => setFormData({ ...formData, amount: v })}
+              />
+            ) : (
+              <div className="mt-2 flex items-center gap-2">
+                <p className="text-gray-900 p-3">
+                  {formData.amount || "—"}
+                </p>
+                <button
+                  onClick={() => handleEdit("amount")}
+                  className="cursor-pointer text-gray-500 hover:text-gray-700"
+                >
+                  <Pencil size={18} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* RIGHT PANEL */}
@@ -143,21 +253,6 @@ export default function OpportunityViewPage() {
 }
 
 /* -------------------- SUB COMPONENTS -------------------- */
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium text-gray-600">{label}</label>
-      <div className="mt-1">{children}</div>
-    </div>
-  );
-}
 
 function TasksTab() {
   return (

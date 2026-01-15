@@ -1,63 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
+import CreateIndustryForm from "./create/page";
 import Pagination from "@/app/common/pagination";
-import CreateIndustryTypeForm from "./create/page";
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  deleteIndustry,
+  getAllIndustry,
+  Industry,
+} from "@/app/services/Industry/industry.service";
 
-interface IndustryType {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export default function IndustrysPage() {
+  const { showSuccess } = useError();
 
-const IndustryTypes: IndustryType[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
-
-export default function IndustryPage() {
+  const [industries, setIndustry] = useState<Industry[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [openForm, setOpenForm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingIndustry, setEditingIndustry] = useState<Industry | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
-    { key: "name", label: "Name", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
+    { key: "name", label: "Industry Name", visible: true },
+    { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  /* =========================
+     Fetch Industry
+  ========================== */
+  const fetchIndustry = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllIndustry();
+      setIndustry(response.AllIndustries || []);
+    } catch (error) {
+      console.error("Failed to fetch Industry:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchIndustry();
+  }, []);
+
+  /* =========================
+     Delete Industry
+  ========================== */
+  const handleDelete = async (Industry: Industry) => {
+    if (!confirm(`Are you sure you want to delete "${Industry.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteIndustry(Industry.id);
+      showSuccess("Industry deleted successfully");
+      fetchIndustry();
+    } catch (error) {
+      console.error("Failed to delete Industry:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    setEditingIndustry(null);
+    fetchIndustry();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -66,36 +82,61 @@ export default function IndustryPage() {
     );
   };
 
-  const tableActions: TableAction<IndustryType>[] = [
+  /* =========================
+     Table Actions
+  ========================== */
+  const tableActions: TableAction<Industry>[] = [
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
-        setOpenForm(true);
+        setEditingIndustry(row);
+        setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete Industry Type", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
-  const tableColumns: TableColumn<IndustryType>[] = columns.map((col) => ({
-    key: col.key as keyof IndustryType,
+  /* =========================
+     Table Columns
+  ========================== */
+  const tableColumns: TableColumn<Industry>[] = columns.map((col) => ({
+    key: col.key as keyof Industry,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof Industry];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = IndustryTypes.filter((item) =>
-    Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredIndustry = industries.filter((Industry) =>
+    Object.values(Industry).some((val) =>
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
-  const paginatedData = filteredData.slice(
+  const totalItems = filteredIndustry.length;
+
+  const paginatedIndustry = filteredIndustry.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -105,12 +146,12 @@ export default function IndustryPage() {
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Industry Types"
-          createButtonText="Create Industry Type"
+          title="Industry"
+          createButtonText="Create Industry"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
-            setOpenForm(true);
+            setEditingIndustry(null);
+            setOpenCreate(true);
           }}
         />
 
@@ -118,7 +159,7 @@ export default function IndustryPage() {
         <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          searchPlaceholder="Search Industry types..."
+          searchPlaceholder="Search Industry..."
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
@@ -127,18 +168,24 @@ export default function IndustryPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No Industry types found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Industry...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedIndustry}
+            actions={tableActions}
+            emptyMessage="No Industry found."
+          />
+        )}
       </div>
 
       {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -147,16 +194,12 @@ export default function IndustryPage() {
         }}
       />
 
-      {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
-        <CreateIndustryTypeForm
+      {/* SlideOver */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
+        <CreateIndustryForm
           mode={mode}
-          IndustryTypeId={editingId}
-          onClose={() => setOpenForm(false)}
+          IndustryData={editingIndustry}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

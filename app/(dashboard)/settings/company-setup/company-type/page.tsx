@@ -1,63 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
-import Pagination from "@/app/common/pagination";
 import CreateCompanyTypeForm from "./create/page";
+import Pagination from "@/app/common/pagination";
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  CompanyType,
+  deleteCompanyType,
+  getAllCompanyTypes,
+} from "@/app/services/company-type/company-type.service";
 
-interface CompanyType {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export default function CompanyTypesPage() {
+  const { showSuccess } = useError();
 
-const companyTypes: CompanyType[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
-
-export default function CompanyTypePage() {
+  const [companies, setCompanyType] = useState<CompanyType[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [openForm, setOpenForm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingCompanyType, setEditingCompanyType] =
+    useState<CompanyType | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
-    { key: "name", label: "Name", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
+    { key: "name", label: "CompanyType Name", visible: true },
+    { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  /* =========================
+     Fetch CompanyType
+  ========================== */
+  const fetchCompanyType = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCompanyTypes();
+      setCompanyType(response.AllCompanyTypes || []);
+    } catch (error) {
+      console.error("Failed to fetch Company Type:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanyType();
+  }, []);
+
+  /* =========================
+     Delete CompanyType
+  ========================== */
+  const handleDelete = async (CompanyType: CompanyType) => {
+    if (!confirm(`Are you sure you want to delete "${CompanyType.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteCompanyType(CompanyType.id);
+      showSuccess("CompanyType deleted successfully");
+      fetchCompanyType();
+    } catch (error) {
+      console.error("Failed to delete Company Type:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    setEditingCompanyType(null);
+    fetchCompanyType();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -66,36 +83,61 @@ export default function CompanyTypePage() {
     );
   };
 
+  /* =========================
+     Table Actions
+  ========================== */
   const tableActions: TableAction<CompanyType>[] = [
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
-        setOpenForm(true);
+        setEditingCompanyType(row);
+        setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete Company Type", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
+  /* =========================
+     Table Columns
+  ========================== */
   const tableColumns: TableColumn<CompanyType>[] = columns.map((col) => ({
     key: col.key as keyof CompanyType,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof CompanyType];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = companyTypes.filter((item) =>
-    Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredCompanyType = companies.filter((CompanyType) =>
+    Object.values(CompanyType).some((val) =>
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
-  const paginatedData = filteredData.slice(
+  const totalItems = filteredCompanyType.length;
+
+  const paginatedCompanyType = filteredCompanyType.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -105,12 +147,12 @@ export default function CompanyTypePage() {
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Company Types"
+          title="Company Type"
           createButtonText="Create Company Type"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
-            setOpenForm(true);
+            setEditingCompanyType(null);
+            setOpenCreate(true);
           }}
         />
 
@@ -118,7 +160,7 @@ export default function CompanyTypePage() {
         <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          searchPlaceholder="Search company types..."
+          searchPlaceholder="Search Company Type..."
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
@@ -127,18 +169,24 @@ export default function CompanyTypePage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No company types found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Company Type...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedCompanyType}
+            actions={tableActions}
+            emptyMessage="No Company Type found."
+          />
+        )}
       </div>
 
       {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -147,16 +195,12 @@ export default function CompanyTypePage() {
         }}
       />
 
-      {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
+      {/* SlideOver */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateCompanyTypeForm
           mode={mode}
-          companyTypeId={editingId}
-          onClose={() => setOpenForm(false)}
+          CompanyTypeData={editingCompanyType}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

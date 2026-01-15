@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
@@ -9,64 +9,12 @@ import SlideOver from "@/app/common/slideOver";
 import CreateRoleForm from "./create/page";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
-
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-  permissionsCount: number;
-  usersCount: number;
-  status: "active" | "inactive";
-  createdAt: string;
-}
-
-const roles: Role[] = [
-  {
-    id: 1,
-    name: "Administrator",
-    description: "Full system access and control",
-    permissionsCount: 50,
-    usersCount: 2,
-    status: "active",
-    createdAt: "Jan 15, 2024",
-  },
-  {
-    id: 2,
-    name: "Sales Manager",
-    description: "Manage sales team and operations",
-    permissionsCount: 25,
-    usersCount: 5,
-    status: "active",
-    createdAt: "Jan 20, 2024",
-  },
-  {
-    id: 3,
-    name: "Sales Representative",
-    description: "Handle customer interactions and sales",
-    permissionsCount: 15,
-    usersCount: 12,
-    status: "active",
-    createdAt: "Jan 10, 2024",
-  },
-  {
-    id: 4,
-    name: "Support Agent",
-    description: "Customer support and ticket management",
-    permissionsCount: 12,
-    usersCount: 8,
-    status: "active",
-    createdAt: "Jan 8, 2024",
-  },
-  {
-    id: 5,
-    name: "Viewer",
-    description: "Read-only access to system data",
-    permissionsCount: 8,
-    usersCount: 15,
-    status: "active",
-    createdAt: "Feb 1, 2024",
-  },
-];
+import {
+  getAllRoles,
+  deleteRole,
+  Role,
+} from "@/app/services/roles/roles.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 const statusColorMap = {
   active: {
@@ -83,10 +31,13 @@ const statusColorMap = {
 
 export default function RolesPage() {
   const router = useRouter();
+  const { showSuccess, showError } = useError();
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -98,6 +49,47 @@ export default function RolesPage() {
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
+
+  // Fetch roles from API
+  const fetchRoles = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllRoles();
+      setRoles(response.roles || []);
+    } catch (error) {
+      // Error is handled by global error handler
+      console.error("Failed to fetch roles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch roles on component mount
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  // Handle delete role
+  const handleDelete = async (role: Role) => {
+    if (!confirm(`Are you sure you want to delete "${role.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteRole(role.id);
+      showSuccess("Role deleted successfully");
+      fetchRoles(); // Refresh the list
+    } catch (error) {
+      // Error is handled by global error handler
+      console.error("Failed to delete role:", error);
+    }
+  };
+
+  // Handle form close with refresh
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    fetchRoles(); // Refresh the list after create/update
+  };
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -118,13 +110,13 @@ export default function RolesPage() {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingRole(row);
         setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete", row),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
@@ -135,19 +127,40 @@ export default function RolesPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
+        const status = row.is_active ? "active" : "inactive";
         return (
           <StatusBadge
-            status={row.status}
+            status={status}
             colorMap={statusColorMap}
             variant="default"
           />
         );
       }
-      return <span>{(row as any)[col.key]}</span>;
+      if (col.key === "createdAt") {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      if (col.key === "permissionsCount") {
+        return <span>{row.permissionsCount || 0}</span>;
+      }
+      if (col.key === "usersCount") {
+        return <span>{row.usersCount || 0}</span>;
+      }
+
+      // Safe access to role properties
+      const value = row[col.key as keyof Role];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
     },
   }));
 
-  const filteredRoles = roles.filter((role) =>
+  const filteredRoles = roles?.filter((role) =>
     Object.values(role).some((val) =>
       val.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
@@ -172,7 +185,7 @@ export default function RolesPage() {
           createButtonText="Create Role"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
+            setEditingRole(null);
             setOpenCreate(true);
           }}
         />
@@ -190,12 +203,18 @@ export default function RolesPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedRoles}
-          actions={tableActions}
-          emptyMessage="No roles found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading roles...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedRoles}
+            actions={tableActions}
+            emptyMessage="No roles found."
+          />
+        )}
       </div>
 
       <Pagination
@@ -210,15 +229,11 @@ export default function RolesPage() {
       />
 
       {/* SlideOver with Form */}
-      <SlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        width="max-w-4xl"
-      >
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-4xl">
         <CreateRoleForm
           mode={mode}
-          roleId={editingId}
-          onClose={() => setOpenCreate(false)}
+          roleData={editingRole}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

@@ -5,12 +5,15 @@ import { X, Plus } from "lucide-react";
 import InputField from "@/app/common/InputFeild";
 import SelectDropdown from "@/app/common/dropdown";
 import { label } from "framer-motion/client";
+import DateInput from "@/app/common/CommonDate";
 
 type OpportunityForm = {
   name: string;
   amount: string;
   nextStep: string;
   competitors: string;
+  createDate: string;
+  closeDate: string;
 };
 
 type ChangeHandler = (field: keyof OpportunityForm) => (value: string) => void;
@@ -26,6 +29,8 @@ export default function CreateOpportunity({
     amount: "",
     nextStep: "",
     competitors: "",
+    createDate: "",
+    closeDate: "",
   });
 
   const handleChange = (field: keyof OpportunityForm) => (value: string) => {
@@ -133,8 +138,20 @@ function StepOne({
           onChange={onChange("nextStep")}
         />
 
-        <DateInput label="Opportunity create date" />
-        <DateInput label="Opportunity Close Date" />
+        <DateInput
+          label="Opportunity Create Date"
+          value={form.createDate}
+          onChange={onChange("createDate")}
+          error={!form.createDate ? "Date is required" : ""}
+        />
+
+        {/* CLOSE DATE */}
+        <DateInput
+          label="Opportunity Close Date"
+          value={form.closeDate}
+          onChange={onChange("closeDate")}
+          error={!form.closeDate ? "Date is required" : ""}
+        />
       </div>
 
       <div className="flex justify-end">
@@ -227,14 +244,6 @@ function StepTwo({
           Submit
         </button>
       </div>
-    </div>
-  );
-}
-function DateInput({ label }: { label: string }) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <input type="date" className="w-full mt-1 border rounded-md px-3 py-2" />
     </div>
   );
 }

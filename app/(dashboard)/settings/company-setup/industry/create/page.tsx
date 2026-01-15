@@ -1,70 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
-interface Props {
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  createIndustry,
+  Industry,
+  updateIndustry,
+} from "@/app/services/Industry/industry.service";
+
+interface CreateIndustryFormProps {
   mode: "create" | "edit";
-  IndustryTypeId: number | null;
+  IndustryData?: Industry | null;
   onClose: () => void;
 }
 
-export default function CreateIndustryTypeForm({
+export default function CreateIndustryForm({
   mode,
-  IndustryTypeId,
+  IndustryData,
   onClose,
-}: Props) {
-  const [name, setName] = useState("");
+}: CreateIndustryFormProps) {
+  const { showSuccess, showError } = useError();
 
+  const [IndustryName, setIndustryName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
-    if (mode === "edit" && IndustryTypeId) {
-      // fetch by id (mock)
-      setName("Private");
-    }
-  }, [mode, IndustryTypeId]);
-
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-
-    if (mode === "edit") {
-      console.log("UPDATE Industry TYPE", { IndustryTypeId, name });
+    if (mode === "edit" && IndustryData) {
+      setIndustryName(IndustryData.name || "");
     } else {
-      console.log("CREATE Industry TYPE", { name });
+      setIndustryName("");
+    }
+  }, [mode, IndustryData]);
+
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async () => {
+    if (!IndustryName.trim()) {
+      showError("Please enter a Industry name");
+      return;
     }
 
-    onClose();
+    setSubmitting(true);
+    try {
+      if (mode === "edit" && IndustryData?.id) {
+        await updateIndustry(IndustryData.id, {
+          name: IndustryName,
+        });
+        showSuccess("Industry updated successfully");
+      } else {
+        await createIndustry({
+          name: IndustryName,
+        });
+        showSuccess("Industry created successfully");
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save Industry:", error);
+      showError("Failed to save Industry");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-xl font-semibold">
-          {mode === "edit" ? "Edit Industry Type" : "Create Industry Type"}
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">
+          {mode === "edit" ? "Edit Industry" : "Create Industry"}
         </h2>
-        <button onClick={onClose} className="text-xl">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           ✕
         </button>
       </div>
 
-      {/* Form */}
-      <div>
-        <label className="block font-medium mb-1">
-          <span className="text-red-500">*</span> Industry Type Name
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Industry Type name"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Industry Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={IndustryName}
+            onChange={(e) => setIndustryName(e.target.value)}
+            placeholder="Enter Industry name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-      >
-        {mode === "edit" ? "Update" : "Create"}
-      </button>
+      {/* Footer */}
+      <div className="flex justify-end gap-3 px-6 py-4 border-t">
+        <Button variant="outline" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Creating..."
+            : mode === "edit"
+            ? "Update Industry"
+            : "Create Industry"}
+        </Button>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
@@ -8,64 +8,12 @@ import SlideOver from "@/app/common/slideOver";
 import CreateDepartmentForm from "./create/page";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
-
-interface Department {
-  id: number;
-  name: string;
-  status: "active" | "inactive";
-  createdAt: string;
-}
-
-const departments: Department[] = [
-  {
-    id: 1,
-    name: "Sales",
-    status: "active",
-    createdAt: "Jan 15, 2024",
-  },
-  {
-    id: 2,
-    name: "Marketing",
-    status: "active",
-    createdAt: "Jan 20, 2024",
-  },
-  {
-    id: 3,
-    name: "IT",
-    status: "active",
-    createdAt: "Jan 10, 2024",
-  },
-  {
-    id: 4,
-    name: "Human Resources",
-    status: "active",
-    createdAt: "Jan 5, 2024",
-  },
-  {
-    id: 5,
-    name: "Finance",
-    status: "active",
-    createdAt: "Jan 8, 2024",
-  },
-  {
-    id: 6,
-    name: "Customer Support",
-    status: "active",
-    createdAt: "Feb 1, 2024",
-  },
-  {
-    id: 7,
-    name: "Research & Development",
-    status: "active",
-    createdAt: "Dec 15, 2023",
-  },
-  {
-    id: 8,
-    name: "Operations",
-    status: "active",
-    createdAt: "Jan 25, 2024",
-  },
-];
+import {
+  getAllDepartments,
+  deleteDepartment,
+  Department,
+} from "@/app/services/department/departments.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 const statusColorMap = {
   active: {
@@ -81,10 +29,15 @@ const statusColorMap = {
 };
 
 export default function DepartmentsPage() {
+  const { showSuccess } = useError();
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingDepartment, setEditingDepartment] = useState<Department | null>(
+    null
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -93,6 +46,44 @@ export default function DepartmentsPage() {
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
+
+  // Fetch departments from API
+  const fetchDepartments = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllDepartments();
+      setDepartments(response.AllDepartments || []);
+    } catch (error) {
+      console.error("Failed to fetch departments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  // Handle delete department
+  const handleDelete = async (department: Department) => {
+    if (!confirm(`Are you sure you want to delete "${department.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteDepartment(department.id);
+      showSuccess("Department deleted successfully");
+      fetchDepartments();
+    } catch (error) {
+      console.error("Failed to delete department:", error);
+    }
+  };
+
+  // Handle form close with refresh
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    fetchDepartments();
+  };
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -107,13 +98,13 @@ export default function DepartmentsPage() {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingDepartment(row);
         setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete", row),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
@@ -124,21 +115,34 @@ export default function DepartmentsPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
+        const status = row.is_active ? "active" : "inactive";
         return (
           <StatusBadge
-            status={row.status}
+            status={status}
             colorMap={statusColorMap}
             variant="default"
           />
         );
       }
-      return <span>{(row as any)[col.key]}</span>;
+      if (col.key === "createdAt" && row.created_at) {
+        return (
+          <span>
+            {new Date(row.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof Department];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
     },
   }));
 
-  const filteredDepartments = departments.filter((department) =>
+  const filteredDepartments = departments?.filter((department) =>
     Object.values(department).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
@@ -161,7 +165,7 @@ export default function DepartmentsPage() {
           createButtonText="Create Department"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
+            setEditingDepartment(null);
             setOpenCreate(true);
           }}
         />
@@ -179,12 +183,18 @@ export default function DepartmentsPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedDepartments}
-          actions={tableActions}
-          emptyMessage="No departments found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading departments...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedDepartments}
+            actions={tableActions}
+            emptyMessage="No departments found."
+          />
+        )}
       </div>
 
       <Pagination
@@ -199,15 +209,11 @@ export default function DepartmentsPage() {
       />
 
       {/* SlideOver with Form */}
-      <SlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        width="max-w-lg"
-      >
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateDepartmentForm
           mode={mode}
-          departmentId={editingId}
-          onClose={() => setOpenCreate(false)}
+          departmentData={editingDepartment}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

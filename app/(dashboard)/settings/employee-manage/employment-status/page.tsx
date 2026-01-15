@@ -1,55 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import CreateEmploymentStatusForm from "./create/page";
 import Pagination from "@/app/common/pagination";
-
-interface EmploymentStatus {
-  id: number;
-  name: string;
-  createdAt: string;
-}
-
-const employmentStatuses: EmploymentStatus[] = [
-  {
-    id: 1,
-    name: "Full Time",
-    createdAt: "Jan 15, 2024",
-  },
-  {
-    id: 2,
-    name: "Part Time",
-    createdAt: "Jan 20, 2024",
-  },
-  {
-    id: 3,
-    name: "Contract",
-    createdAt: "Jan 10, 2024",
-  },
-  {
-    id: 4,
-    name: "Temporary",
-    createdAt: "Jan 8, 2024",
-  },
-  {
-    id: 5,
-    name: "Intern",
-    createdAt: "Feb 1, 2024",
-  },
-];
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  deleteEmploymentStatus,
+  EmploymentStatus,
+  getAllEmploymentStatus,
+} from "@/app/services/employment-statuses/employment-statuses.service";
+import { useRouter } from "next/navigation";
 
 export default function EmploymentStatusPage() {
   const router = useRouter();
+
+  const { showSuccess } = useError();
+
+  const [statuses, setStatuses] = useState<EmploymentStatus[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingStatus, setEditingStatus] = useState<EmploymentStatus | null>(
+    null
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -57,6 +36,48 @@ export default function EmploymentStatusPage() {
     { key: "name", label: "Employment Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
+
+  /* =========================
+     Fetch Employment Status
+  ========================== */
+  const fetchEmploymentStatuses = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllEmploymentStatus();
+      setStatuses(response.AllEmploymentStatuses || []);
+    } catch (error) {
+      console.error("Failed to fetch employment statuses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmploymentStatuses();
+  }, []);
+
+  /* =========================
+     Delete Employment Status
+  ========================== */
+  const handleDelete = async (status: EmploymentStatus) => {
+    if (!confirm(`Are you sure you want to delete "${status.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteEmploymentStatus(status.id);
+      showSuccess("Employment status deleted successfully");
+      fetchEmploymentStatuses();
+    } catch (error) {
+      console.error("Failed to delete employment status:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    setEditingStatus(null);
+    fetchEmploymentStatuses();
+  };
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -66,6 +87,9 @@ export default function EmploymentStatusPage() {
     );
   };
 
+  /* =========================
+     Table Actions
+  ========================== */
   const tableActions: TableAction<EmploymentStatus>[] = [
     {
       label: "View Details",
@@ -77,63 +101,71 @@ export default function EmploymentStatusPage() {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingStatus(row);
         setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete", row),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
+  /* =========================
+     Table Columns
+  ========================== */
   const tableColumns: TableColumn<EmploymentStatus>[] = columns.map((col) => ({
     key: col.key as keyof EmploymentStatus,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.created_at) {
+        return (
+          <span>
+            {new Date(row.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+
+      const value = row[col.key as keyof EmploymentStatus];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredStatuses = employmentStatuses.filter((status) =>
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredStatuses = statuses.filter((status) =>
     Object.values(status).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
   const totalItems = filteredStatuses.length;
+
   const paginatedStatuses = filteredStatuses.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Employment Status</h1>
-            <p className="text-sm text-gray-500 mt-1"></p>
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={() => {
-                setMode("create");
-                setEditingId(null);
-                setOpenCreate(true);
-              }}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4" />
-              Create Employment Status
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          title="Employment Status"
+          createButtonText="Create Employment Status"
+          onCreateClick={() => {
+            setMode("create");
+            setEditingStatus(null);
+            setOpenCreate(true);
+          }}
+        />
 
         {/* Actions */}
         <PageActions
@@ -148,35 +180,38 @@ export default function EmploymentStatusPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedStatuses}
-          actions={tableActions}
-          emptyMessage="No employment status found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading employment status...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedStatuses}
+            actions={tableActions}
+            emptyMessage="No employment status found."
+          />
+        )}
       </div>
 
+      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
         totalItems={totalItems}
         pageSize={pageSize}
-        onPageChange={handlePageChange}
+        onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
           setPageSize(size);
           setCurrentPage(1);
         }}
       />
 
-      {/* SlideOver with Form */}
-      <SlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        width="max-w-2xl"
-      >
+      {/* SlideOver */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateEmploymentStatusForm
           mode={mode}
-          statusId={editingId}
-          onClose={() => setOpenCreate(false)}
+          employmentStatusData={editingStatus}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Sidebar from "./sidebar/sidebar";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import Header from "./header/header";
+import ProtectedRoute from "@/app/components/ProtectedRoute";
 
 export default function DashboardLayout({ children }: any) {
   const [collapsed, setCollapsed] = useState(false);

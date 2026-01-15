@@ -1,70 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
-interface Props {
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  ContactSource,
+  createContactSource,
+  updateContactSource,
+} from "@/app/services/contact-source/contact-source.service";
+
+interface CreateContactSourceFormProps {
   mode: "create" | "edit";
-  ContactSourceId: number | null;
+  ContactSourceData?: ContactSource | null;
   onClose: () => void;
 }
 
 export default function CreateContactSourceForm({
   mode,
-  ContactSourceId,
+  ContactSourceData,
   onClose,
-}: Props) {
-  const [name, setName] = useState("");
+}: CreateContactSourceFormProps) {
+  const { showSuccess, showError } = useError();
 
+  const [ContactSourceName, setContactSourceName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
-    if (mode === "edit" && ContactSourceId) {
-      // fetch by id (mock)
-      setName("Private");
-    }
-  }, [mode, ContactSourceId]);
-
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-
-    if (mode === "edit") {
-      console.log("UPDATE Contact Source", { ContactSourceId, name });
+    if (mode === "edit" && ContactSourceData) {
+      setContactSourceName(ContactSourceData.name || "");
     } else {
-      console.log("CREATE Contact Source", { name });
+      setContactSourceName("");
+    }
+  }, [mode, ContactSourceData]);
+
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async () => {
+    if (!ContactSourceName.trim()) {
+      showError("Please enter a Contact Source name");
+      return;
     }
 
-    onClose();
+    setSubmitting(true);
+    try {
+      if (mode === "edit" && ContactSourceData?.id) {
+        await updateContactSource(ContactSourceData.id, {
+          name: ContactSourceName,
+        });
+        showSuccess("Contact Source updated successfully");
+      } else {
+        await createContactSource({
+          name: ContactSourceName,
+        });
+        showSuccess("Contact Source created successfully");
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save Contact Source:", error);
+      showError("Failed to save Contact Source");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-xl font-semibold">
-          {mode === "edit" ? "Edit Contact Source" : "Create Contact Source"}
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">
+          {mode === "edit" ? "Edit Contact Source" : "Create ContactSource"}
         </h2>
-        <button onClick={onClose} className="text-xl">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           ✕
         </button>
       </div>
 
-      {/* Form */}
-      <div>
-        <label className="block font-medium mb-1">
-          <span className="text-red-500">*</span> Contact Source Name
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Contact Source name"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Contact Source Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={ContactSourceName}
+            onChange={(e) => setContactSourceName(e.target.value)}
+            placeholder="Enter Contact Source name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-      >
-        {mode === "edit" ? "Update" : "Create"}
-      </button>
+      {/* Footer */}
+      <div className="flex justify-end gap-3 px-6 py-4 border-t">
+        <Button variant="outline" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Creating..."
+            : mode === "edit"
+            ? "Update Contact Source"
+            : "Create Contact Source"}
+        </Button>
+      </div>
     </div>
   );
 }

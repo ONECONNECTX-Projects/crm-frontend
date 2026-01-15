@@ -2,18 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import { LuUser } from "react-icons/lu";
-import {
-  RxEnterFullScreen,
-  RxExitFullScreen,
-} from "react-icons/rx";
+import { RxEnterFullScreen, RxExitFullScreen } from "react-icons/rx";
 import { useRouter } from "next/navigation";
 import CommonButton from "@/app/common/button";
+import {
+  getAllProfiles,
+  Profile,
+} from "@/app/services/profile/profile.service";
 
 export default function Header() {
   const [isFull, setIsFull] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
-
+  const [profile, setProfile] = useState<Profile>({} as Profile);
+  const [loading, setLoading] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
@@ -28,6 +30,22 @@ export default function Header() {
     }
   };
 
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllProfiles();
+      setProfile(response.user);
+    } catch (error) {
+      console.error("Failed to fetch Profile:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
   // CLOSE MENU ON OUTSIDE CLICK
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -41,6 +59,7 @@ export default function Header() {
 
   // LOGOUT HANDLER
   const handleLogout = () => {
+    localStorage.removeItem("auth-token");
     setConfirmLogout(false);
     router.push("/login");
   };
@@ -72,7 +91,7 @@ export default function Header() {
               <div className="absolute right-0 mt-3 w-48 bg-white shadow-xl rounded-lg py-1 animate-fadeIn z-50">
                 <div className="px-4 py-2 flex items-center gap-3 text-gray-800 hover:bg-gray-50 cursor-pointer">
                   <LuUser className="text-lg" />
-                  <span className="font-medium">MR. STAFF</span>
+                  <span className="font-medium">{profile.name}</span>
                 </div>
 
                 <button
@@ -91,7 +110,9 @@ export default function Header() {
       {confirmLogout && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[999]">
           <div className="bg-white rounded-lg shadow-xl p-6 w-80 animate-fadeIn">
-            <h2 className="text-lg font-semibold text-gray-800">Confirm Logout</h2>
+            <h2 className="text-lg font-semibold text-gray-800">
+              Confirm Logout
+            </h2>
             <p className="text-gray-600 mt-2">
               Are you sure you want to log out?
             </p>
@@ -105,13 +126,10 @@ export default function Header() {
               </button>
 
               <CommonButton
-              label="Yes, Logout"
-
+                label="Yes, Logout"
                 onClick={handleLogout}
                 className="py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-              >
-
-              </CommonButton>
+              ></CommonButton>
             </div>
           </div>
         </div>

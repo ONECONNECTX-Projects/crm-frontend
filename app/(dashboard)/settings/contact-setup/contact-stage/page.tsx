@@ -1,63 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
-import Pagination from "@/app/common/pagination";
 import CreateContactStageForm from "./create/page";
+import Pagination from "@/app/common/pagination";
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  ContactStage,
+  deleteContactStage,
+  getAllContactStages,
+} from "@/app/services/contact-stages/contact-stages.service";
 
-interface ContactStage {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export default function ContactStagesPage() {
+  const { showSuccess } = useError();
 
-const ContactStages: ContactStage[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
-
-export default function ContactStagePage() {
+  const [ContactStages, setContactStages] = useState<ContactStage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [openForm, setOpenForm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingContactStage, setEditingContactStage] =
+    useState<ContactStage | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
-    { key: "name", label: "Name", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
+    { key: "name", label: "Contact Stage Name", visible: true },
+    { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  /* =========================
+     Fetch ContactStages
+  ========================== */
+  const fetchContactStages = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllContactStages();
+      setContactStages(response.AllStages || []);
+    } catch (error) {
+      console.error("Failed to fetch ContactStages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContactStages();
+  }, []);
+
+  /* =========================
+     Delete ContactStage
+  ========================== */
+  const handleDelete = async (ContactStage: ContactStage) => {
+    if (!confirm(`Are you sure you want to delete "${ContactStage.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteContactStage(ContactStage.id);
+      showSuccess("Contact Stage deleted successfully");
+      fetchContactStages();
+    } catch (error) {
+      console.error("Failed to delete Contact Stage:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    setEditingContactStage(null);
+    fetchContactStages();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -66,36 +83,61 @@ export default function ContactStagePage() {
     );
   };
 
+  /* =========================
+     Table Actions
+  ========================== */
   const tableActions: TableAction<ContactStage>[] = [
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
-        setOpenForm(true);
+        setEditingContactStage(row);
+        setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete Contact Stage", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
+  /* =========================
+     Table Columns
+  ========================== */
   const tableColumns: TableColumn<ContactStage>[] = columns.map((col) => ({
     key: col.key as keyof ContactStage,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof ContactStage];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = ContactStages.filter((item) =>
-    Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredContactStages = ContactStages.filter((ContactStage) =>
+    Object.values(ContactStage).some((val) =>
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
-  const paginatedData = filteredData.slice(
+  const totalItems = filteredContactStages.length;
+
+  const paginatedContactStages = filteredContactStages.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -105,12 +147,12 @@ export default function ContactStagePage() {
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Contact Stages"
+          title="Contact Stage"
           createButtonText="Create Contact Stage"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
-            setOpenForm(true);
+            setEditingContactStage(null);
+            setOpenCreate(true);
           }}
         />
 
@@ -118,7 +160,7 @@ export default function ContactStagePage() {
         <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          searchPlaceholder="Search Contact Stages..."
+          searchPlaceholder="Search Contact Stage..."
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
@@ -127,18 +169,24 @@ export default function ContactStagePage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No Contact Stages found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Contact Stage...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedContactStages}
+            actions={tableActions}
+            emptyMessage="No Contact Stage found."
+          />
+        )}
       </div>
 
       {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -147,16 +195,12 @@ export default function ContactStagePage() {
         }}
       />
 
-      {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
+      {/* SlideOver */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateContactStageForm
           mode={mode}
-          ContactStageId={editingId}
-          onClose={() => setOpenForm(false)}
+          ContactStageData={editingContactStage}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
@@ -8,56 +8,75 @@ import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import CreateLeadSourceForm from "./create/page";
 
-interface LeadSource {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const LeadSources: LeadSource[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  deleteLeadSource,
+  getAllLeadSources,
+  LeadSource,
+} from "@/app/services/lead-source/lead-source.service";
 
 export default function LeadSourcePage() {
+  const { showSuccess } = useError();
+
+  const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingLeadSource, setEditingLeadSource] = useState<LeadSource | null>(
+    null
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Name", visible: true },
     { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  /* =========================
+     Fetch Lead Sources
+  ========================== */
+  const fetchLeadSources = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllLeadSources();
+      setLeadSources(response.AllLeadSources || []);
+    } catch (error) {
+      console.error("Failed to fetch lead sources:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeadSources();
+  }, []);
+
+  /* =========================
+     Delete Lead Source
+  ========================== */
+  const handleDelete = async (leadSource: LeadSource) => {
+    if (!confirm(`Are you sure you want to delete "${leadSource.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteLeadSource(leadSource.id);
+      showSuccess("Lead source deleted successfully");
+      fetchLeadSources();
+    } catch (error) {
+      console.error("Failed to delete lead source:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenForm(false);
+    setEditingLeadSource(null);
+    fetchLeadSources();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -66,32 +85,55 @@ export default function LeadSourcePage() {
     );
   };
 
+  /* =========================
+     Table Actions
+  ========================== */
   const tableActions: TableAction<LeadSource>[] = [
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingLeadSource(row);
         setOpenForm(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete Lead Source Type", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
+  /* =========================
+     Table Columns
+  ========================== */
   const tableColumns: TableColumn<LeadSource>[] = columns.map((col) => ({
     key: col.key as keyof LeadSource,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof LeadSource];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = LeadSources.filter((item) =>
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredData = leadSources.filter((item) =>
     Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
@@ -109,7 +151,7 @@ export default function LeadSourcePage() {
           createButtonText="Create Lead Source"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
+            setEditingLeadSource(null);
             setOpenForm(true);
           }}
         />
@@ -127,12 +169,18 @@ export default function LeadSourcePage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No Lead Source  found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading lead sources...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedData}
+            actions={tableActions}
+            emptyMessage="No Lead Source found."
+          />
+        )}
       </div>
 
       {/* Pagination */}
@@ -148,15 +196,11 @@ export default function LeadSourcePage() {
       />
 
       {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
+      <SlideOver open={openForm} onClose={handleFormClose} width="max-w-lg">
         <CreateLeadSourceForm
           mode={mode}
-          LeadSourceId={editingId}
-          onClose={() => setOpenForm(false)}
+          leadSourceData={editingLeadSource}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

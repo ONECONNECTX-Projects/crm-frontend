@@ -1,92 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
-import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
+import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
-import StatusBadge from "@/app/common/StatusBadge";
 import CreatePriorityForm from "./create/page";
 
-interface Priority {
-  id: number;
-  name: string;
-  level: number;
-  color: string;
-  description: string;
-  status: "active" | "inactive";
-  usedBy: string[];
-}
-
-const priorities: Priority[] = [
-  {
-    id: 1,
-    name: "Low",
-    level: 1,
-    color: "#3B82F6",
-    description: "Non-urgent items that can be addressed later",
-    status: "active",
-    usedBy: ["Tasks", "Tickets"],
-  },
-  {
-    id: 2,
-    name: "Medium",
-    level: 2,
-    color: "#F59E0B",
-    description: "Important items that need attention soon",
-    status: "active",
-    usedBy: ["Tasks", "Tickets", "Leads"],
-  },
-  {
-    id: 3,
-    name: "High",
-    level: 3,
-    color: "#EF4444",
-    description: "Critical items requiring immediate attention",
-    status: "active",
-    usedBy: ["Tasks", "Tickets", "Leads", "Projects"],
-  },
-  {
-    id: 4,
-    name: "Urgent",
-    level: 4,
-    color: "#DC2626",
-    description: "Emergency items requiring immediate action",
-    status: "active",
-    usedBy: ["Tickets"],
-  },
-];
-
-const statusColorMap = {
-  active: {
-    bg: "bg-green-50",
-    text: "text-green-700",
-    border: "border-green-200",
-  },
-  inactive: {
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-  },
-};
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  deletePriority,
+  getAllPriority,
+  Priority,
+} from "@/app/services/priority/priority.service";
 
 export default function PriorityPage() {
-  const [openCreate, setOpenCreate] = useState(false);
+  const { showSuccess } = useError();
+
+  const [Priority, setPriority] = useState<Priority[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [openForm, setOpenForm] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
+  const [editingPriority, setEditingPriority] = useState<Priority | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [editPriority, setEditPriority] = useState<Priority | null>(null);
 
-  const [columns, setColumns] = useState<
-    { key: keyof Priority; label: string; visible: boolean }[]
-  >([
+  const [columns, setColumns] = useState([
     { key: "name", label: "Name", visible: true },
-    { key: "level", label: "Level", visible: true },
-    { key: "color", label: "Color", visible: true },
-    { key: "description", label: "Description", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "createdAt", label: "Create Date", visible: true },
   ]);
+
+  const fetchPriority = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllPriority();
+      setPriority(response.AllPriorities || []);
+    } catch (error) {
+      console.error("Failed to fetch Priority:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPriority();
+  }, []);
+
+  /* =========================
+     Delete Priority
+  ========================== */
+  const handleDelete = async (Priority: Priority) => {
+    if (!confirm(`Are you sure you want to delete "${Priority.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deletePriority(Priority.id);
+      showSuccess("Priority deleted successfully");
+      fetchPriority();
+    } catch (error) {
+      console.error("Failed to delete Priority:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenForm(false);
+    setEditingPriority(null);
+    fetchPriority();
+  };
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -96,96 +80,108 @@ export default function PriorityPage() {
     );
   };
 
-  const actions: TableAction<Priority>[] = [
+  /* =========================
+     Table Actions
+  ========================== */
+  const tableActions: TableAction<Priority>[] = [
     {
       label: "Edit",
       onClick: (row) => {
-        setEditPriority(row);
-        setOpenCreate(true);
+        setMode("edit");
+        setEditingPriority(row);
+        setOpenForm(true);
       },
     },
     {
       label: "Delete",
+      onClick: handleDelete,
       variant: "destructive",
-      onClick: (row) => console.log("Delete priority", row),
     },
   ];
 
-  const filtered = priorities.filter((priority) =>
-    `${priority.name} ${priority.description}`
-      .toLowerCase()
-      .includes(searchValue.toLowerCase())
+  /* =========================
+     Table Columns
+  ========================== */
+  const tableColumns: TableColumn<Priority>[] = columns.map((col) => ({
+    key: col.key as keyof Priority,
+    label: col.label,
+    visible: col.visible,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof Priority];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
+  }));
+
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredData = Priority.filter((item) =>
+    Object.values(item).some((val) =>
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
+    )
   );
 
-  const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
+  const paginatedData = filteredData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
 
-  const tableColumns: TableColumn<Priority>[] = columns
-    .filter((col) => col.visible)
-    .map((col) => ({
-      key: col.key,
-      label: col.label,
-      visible: col.visible,
-      render: (row) => {
-        if (col.key === "status") {
-          return (
-            <StatusBadge
-              status={row.status}
-              colorMap={statusColorMap}
-              variant="default"
-            />
-          );
-        }
-        if (col.key === "color") {
-          return (
-            <div className="flex items-center gap-2">
-              <div
-                className="w-6 h-6 rounded border"
-                style={{ backgroundColor: row.color }}
-              />
-              <span>{row.color}</span>
-            </div>
-          );
-        }
-        return (
-          <span className="truncate block max-w-[200px]">
-            {String(row[col.key])}
-          </span>
-        );
-      },
-    }));
-
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <PageHeader
-        title="Priority Levels"
-        createButtonText="Add Priority"
-        onCreateClick={() => setOpenCreate(true)}
-      />
+    <div className="min-h-screen bg-white rounded-xl p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <PageHeader
+          title="Priority"
+          createButtonText="Create Priority"
+          onCreateClick={() => {
+            setMode("create");
+            setEditingPriority(null);
+            setOpenForm(true);
+          }}
+        />
 
-      <PageActions
-        searchValue={searchValue}
-        onSearchChange={(val) => {
-          setSearchValue(val);
-          setCurrentPage(1);
-        }}
-        columns={columns}
-        onColumnToggle={handleColumnToggle}
-      />
+        {/* Actions */}
+        <PageActions
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          searchPlaceholder="Search Priority..."
+          columns={columns}
+          onColumnToggle={handleColumnToggle}
+          onFilterClick={() => {}}
+          onPrintPDF={() => {}}
+          onDownloadCSV={() => {}}
+        />
 
-      <DataTable
-        columns={tableColumns}
-        data={paginatedData}
-        actions={actions}
-        emptyMessage="No priorities found."
-      />
+        {/* Table */}
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Priority...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedData}
+            actions={tableActions}
+            emptyMessage="No Priority found."
+          />
+        )}
+      </div>
 
+      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={totalItems}
+        totalItems={filteredData.length}
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -194,35 +190,12 @@ export default function PriorityPage() {
         }}
       />
 
-      <SlideOver
-        open={openCreate}
-        onClose={() => {
-          setOpenCreate(false);
-          setEditPriority(null);
-        }}
-      >
+      {/* SlideOver Form */}
+      <SlideOver open={openForm} onClose={handleFormClose} width="max-w-lg">
         <CreatePriorityForm
-          mode={editPriority ? "edit" : "create"}
-          initialData={
-            editPriority
-              ? {
-                  id: editPriority.id,
-                  name: editPriority.name,
-                  color: editPriority.color,
-                }
-              : null
-          }
-          onClose={() => {
-            setOpenCreate(false);
-            setEditPriority(null);
-          }}
-          onSubmit={(data) => {
-            if (editPriority) {
-              console.log("Update Priority:", data);
-            } else {
-              console.log("Create Priority:", data);
-            }
-          }}
+          mode={mode}
+          PriorityData={editingPriority}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

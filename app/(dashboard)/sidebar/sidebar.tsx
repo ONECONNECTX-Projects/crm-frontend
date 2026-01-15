@@ -181,6 +181,7 @@ const settingsMenu: MenuItem[] = [
     icon: MdOutlineLeaderboard,
     children: [
       { name: "Lead Source", path: "/settings/lead-setup/lead-source" },
+      { name: "Lead Status", path: "/settings/lead-setup/lead-status" },
     ],
   },
   {

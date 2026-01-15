@@ -2,30 +2,67 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  createDesignation,
+  updateDesignation,
+  Designation,
+} from "@/app/services/designation/designation.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 interface CreateDesignationFormProps {
   mode: "create" | "edit";
-  designationId?: number | null;
+  designationData?: Designation | null;
   onClose: () => void;
 }
 
-const initialForm = {
-  name: "",
-};
-
 export default function CreateDesignationForm({
   mode,
-  designationId,
+  designationData,
   onClose,
 }: CreateDesignationFormProps) {
-  const [form, setForm] = useState(initialForm);
-  const [loading, setLoading] = useState(false);
+  const { showSuccess, showError } = useError();
+
+  const [designationName, setDesignationName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [file, setFile] = useState<File | null>(null);
 
-  /* ---------- HANDLE CHANGE ---------- */
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+  /* ---------- LOAD DATA ON EDIT ---------- */
+  useEffect(() => {
+    if (mode === "edit" && designationData) {
+      setDesignationName(designationData.name || "");
+    } else {
+      setDesignationName("");
+    }
+  }, [mode, designationData]);
+
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async () => {
+    if (!designationName.trim()) {
+      showError("Please enter a designation name");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      if (mode === "edit" && designationData?.id) {
+        await updateDesignation(designationData.id, {
+          name: designationName,
+        });
+        showSuccess("Designation updated successfully");
+      } else {
+        await createDesignation({
+          name: designationName,
+        });
+        showSuccess("Designation created successfully");
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save designation:", error);
+      showError("Failed to save designation");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -41,72 +78,69 @@ export default function CreateDesignationForm({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        {loading ? (
-          <p className="text-sm text-gray-500">Loading...</p>
-        ) : (
-          <>
-            {/* Designation Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Designation Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="e.g., Manager, Sales Man"
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                autoFocus
-              />
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Designation Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={designationName}
+            onChange={(e) => setDesignationName(e.target.value)}
+            placeholder="Enter designation name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
+
+        {mode === "create" && (
+          <div className="border-t pt-6 space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Bulk Upload:</strong> Upload multiple designations using
+                a CSV file.
+              </p>
             </div>
 
-            {/* CSV Upload – ONLY CREATE MODE */}
-            {mode === "create" && (
-              <div className="border-t pt-6 space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                  <p className="text-sm text-blue-800">
-                    <strong>Bulk Upload:</strong> Upload multiple designations
-                    using a CSV file.
-                  </p>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Upload CSV File
+              </label>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) =>
+                  setFile(e.target.files ? e.target.files[0] : null)
+                }
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {file && (
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected: {file.name}
+                </p>
+              )}
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload CSV File
-                  </label>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={(e) =>
-                      setFile(e.target.files ? e.target.files[0] : null)
-                    }
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  {file && (
-                    <p className="mt-2 text-sm text-gray-600">
-                      Selected: {file.name}
-                    </p>
-                  )}
-                </div>
-
-                <Button variant="outline" className="w-full">
-                  Download Sample CSV
-                </Button>
-              </div>
-            )}
-          </>
+            <Button variant="outline" className="w-full">
+              Download Sample CSV
+            </Button>
+          </div>
         )}
       </div>
 
       {/* Footer */}
       <div className="flex justify-end gap-3 px-6 py-4 border-t">
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={onClose} disabled={submitting}>
           Cancel
         </Button>
-        <Button>
-          {mode === "edit" ? "Update Designation" : "Create Designation"}
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Creating..."
+            : mode === "edit"
+            ? "Update Designation"
+            : "Create Designation"}
         </Button>
       </div>
     </div>

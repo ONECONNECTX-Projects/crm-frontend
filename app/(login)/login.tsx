@@ -1,14 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import InputField from "@/app/common/InputFeild";
 import { LoginModel } from "./Model/model";
 import { FiLock, FiUser } from "react-icons/fi";
 import CommonButton from "@/app/common/button";
+import { setAuthToken, api, isAuthenticated } from "@/app/utils/apiClient";
+import { useError } from "@/app/providers/ErrorProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { showSuccess, showError } = useError();
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState<LoginModel>({
@@ -20,6 +24,25 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
+
+  // Check if user is already authenticated
+  useEffect(() => {
+    if (isAuthenticated()) {
+      // User is already logged in, redirect to dashboard
+      router.push("/dashboard");
+      return;
+    }
+
+    // Handle error messages from URL params
+    const error = searchParams.get("error");
+    if (error === "session_expired") {
+      showError("Your session has expired. Please login again.");
+    } else if (error === "unauthorized") {
+      showError("You need to login to access this page.");
+    } else if (error) {
+      showError("Authentication failed. Please login.");
+    }
+  }, [router, searchParams, showError]);
 
   // VALIDATE form
   const validateForm = () => {
@@ -43,16 +66,39 @@ export default function LoginPage() {
 
   // HANDLE SUBMIT
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!validateForm()) return;
 
     setLoading(true);
 
-    setTimeout(() => {
+    try {
+      // Call login API
+      const response = await api.post(
+        "auth/login",
+        {
+          email: form.email,
+          password: form.password,
+        },
+        { skipAuth: true }
+      );
+
+      // Save token to localStorage
+      if (response.token) {
+        setAuthToken(response.token);
+        showSuccess(response.message || "Login successful!");
+
+        // Redirect to intended page or dashboard
+        const redirectTo = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
+        sessionStorage.removeItem("redirectAfterLogin");
+        router.push(redirectTo);
+      }
+    } catch (error) {
+      // Error is handled by the global error handler
+      console.error("Login failed:", error);
+    } finally {
       setLoading(false);
-      router.push("/dashboard");
-    }, 2000);
+    }
   };
 
   return (
@@ -72,7 +118,7 @@ export default function LoginPage() {
             noLeadingSpace={true}
             placeholder="Enter your email"
             value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            onChange={(e) => setForm({ ...form, email: e })}
             error={errors.email}
             icon={<FiUser size={18} />}
           />
@@ -84,7 +130,7 @@ export default function LoginPage() {
             noLeadingSpace={true}
             placeholder="Enter your password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(e) => setForm({ ...form, password: e })}
             error={errors.password}
             icon={<FiLock size={18} />}
           />
