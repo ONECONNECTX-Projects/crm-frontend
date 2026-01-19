@@ -8,26 +8,14 @@ import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import CreateRoleForm from "./create/page";
 import Pagination from "@/app/common/pagination";
-import StatusBadge from "@/app/common/StatusBadge";
 import {
   getAllRoles,
   deleteRole,
   Role,
+  updateRoleStatus,
 } from "@/app/services/roles/roles.service";
 import { useError } from "@/app/providers/ErrorProvider";
-
-const statusColorMap = {
-  active: {
-    bg: "bg-green-50",
-    text: "text-green-700",
-    border: "border-green-200",
-  },
-  inactive: {
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-  },
-};
+import { Toggle } from "@/app/common/toggle";
 
 export default function RolesPage() {
   const router = useRouter();
@@ -55,7 +43,7 @@ export default function RolesPage() {
     setLoading(true);
     try {
       const response = await getAllRoles();
-      setRoles(response.roles || []);
+      setRoles(response.data || []);
     } catch (error) {
       // Error is handled by global error handler
       console.error("Failed to fetch roles:", error);
@@ -85,6 +73,28 @@ export default function RolesPage() {
     }
   };
 
+  const handleStatusToggle = async (role: Role, newStatus: boolean) => {
+    // Optimistic UI update
+    setRoles((prev) =>
+      prev.map((r) => (r.id === role.id ? { ...r, is_active: newStatus } : r))
+    );
+
+    try {
+      await updateRoleStatus(role.id, newStatus);
+      showSuccess(
+        `Role ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setRoles((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, is_active: role.is_active } : r
+        )
+      );
+      showError("Failed to update role status");
+    }
+  };
+
   // Handle form close with refresh
   const handleFormClose = () => {
     setOpenCreate(false);
@@ -103,7 +113,10 @@ export default function RolesPage() {
     {
       label: "View Permissions",
       onClick: (row) => {
-        router.push(`/settings/employee-manage/roles/${row.id}`);
+        const roleData = encodeURIComponent(JSON.stringify(row));
+        router.push(
+          `/settings/employee-manage/roles/${row.id}?data=${roleData}`
+        );
       },
     },
     {
@@ -127,19 +140,17 @@ export default function RolesPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
-        const status = row.is_active ? "active" : "inactive";
         return (
-          <StatusBadge
-            status={status}
-            colorMap={statusColorMap}
-            variant="default"
+          <Toggle
+            checked={row.is_active}
+            onChange={(checked) => handleStatusToggle(row, checked)}
           />
         );
       }
       if (col.key === "createdAt") {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.createdAt || "").toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

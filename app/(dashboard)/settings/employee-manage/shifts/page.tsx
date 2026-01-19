@@ -12,8 +12,10 @@ import {
   getAllShifts,
   deleteShift,
   Shift,
+  updateShiftStatus,
 } from "@/app/services/shift/shifts.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { Toggle } from "@/app/common/toggle";
 
 const statusColorMap = {
   active: {
@@ -29,7 +31,7 @@ const statusColorMap = {
 };
 
 export default function ShiftsPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -52,7 +54,7 @@ export default function ShiftsPage() {
     setLoading(true);
     try {
       const response = await getAllShifts();
-      setShifts(response.AllShifts || []);
+      setShifts(response.data || []);
     } catch (error) {
       console.error("Failed to fetch shifts:", error);
     } finally {
@@ -71,11 +73,33 @@ export default function ShiftsPage() {
     }
 
     try {
-      await deleteShift(shift.id);
+      await deleteShift(shift.id || 0);
       showSuccess("Shift deleted successfully");
       fetchShifts();
     } catch (error) {
       console.error("Failed to delete shift:", error);
+    }
+  };
+
+  const handleStatusToggle = async (shift: Shift, newStatus: boolean) => {
+    // Optimistic UI update
+    setShifts((prev) =>
+      prev.map((s) => (s.id === shift.id ? { ...s, is_active: newStatus } : s))
+    );
+
+    try {
+      await updateShiftStatus(shift.id || 0, newStatus);
+      showSuccess(
+        `Shift ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setShifts((prev) =>
+        prev.map((s) =>
+          s.id === shift.id ? { ...s, is_active: shift.is_active } : s
+        )
+      );
+      showError("Failed to update shift status");
     }
   };
 
@@ -115,12 +139,10 @@ export default function ShiftsPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
-        const status = row.is_active ? "active" : "inactive";
         return (
-          <StatusBadge
-            status={status}
-            colorMap={statusColorMap}
-            variant="default"
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
           />
         );
       }

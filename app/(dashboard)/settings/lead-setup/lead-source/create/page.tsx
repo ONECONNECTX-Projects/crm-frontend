@@ -97,8 +97,8 @@ export default function CreateLeadSourceForm({
               ? "Updating..."
               : "Creating..."
             : mode === "edit"
-            ? "Update Lead Source"
-            : "Create Lead Source"}
+              ? "Update Lead Source"
+              : "Create Lead Source"}
         </Button>
       </div>
     </div>

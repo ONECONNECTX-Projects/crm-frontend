@@ -13,11 +13,12 @@ import {
   deleteLeadStatus,
   getAllLeadStatus,
   LeadStatus,
+  updateLeadStatusStatus,
 } from "@/app/services/lead-status/lead-status.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function LeadStatusPage() {
-  const { showSuccess } = useError();
-
+  const { showSuccess, showError } = useError();
   const [leadStatus, setLeadStatus] = useState<LeadStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -32,6 +33,7 @@ export default function LeadStatusPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Name", visible: true },
+    { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Create Date", visible: true },
   ]);
 
@@ -39,7 +41,7 @@ export default function LeadStatusPage() {
     setLoading(true);
     try {
       const response = await getAllLeadStatus();
-      setLeadStatus(response.AllStatus || []);
+      setLeadStatus(response.data || []);
     } catch (error) {
       console.error("Failed to fetch Lead Status:", error);
     } finally {
@@ -60,7 +62,7 @@ export default function LeadStatusPage() {
     }
 
     try {
-      await deleteLeadStatus(leadStatus.id);
+      await deleteLeadStatus(leadStatus.id || 0);
       showSuccess("Lead Status deleted successfully");
       fetchLeadStatus();
     } catch (error) {
@@ -80,6 +82,28 @@ export default function LeadStatusPage() {
         col.key === key ? { ...col, visible: !col.visible } : col
       )
     );
+  };
+
+  const handleStatusToggle = async (role: LeadStatus, newStatus: boolean) => {
+    // Optimistic UI update
+    setLeadStatus((prev) =>
+      prev.map((r) => (r.id === role.id ? { ...r, is_active: newStatus } : r))
+    );
+
+    try {
+      await updateLeadStatusStatus(role.id || 0, newStatus);
+      showSuccess(
+        `Lead Status ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setLeadStatus((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, is_active: role.is_active } : r
+        )
+      );
+      showError("Failed to update lead status");
+    }
   };
 
   /* =========================
@@ -109,6 +133,14 @@ export default function LeadStatusPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
       if (col.key === "createdAt" && row.createdAt) {
         return (
           <span>

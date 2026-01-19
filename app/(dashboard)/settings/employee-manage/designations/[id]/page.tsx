@@ -65,7 +65,6 @@ export default function ViewDesignationPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   useEffect(() => {
-    setLoading(true);
     setTimeout(() => {
       setDesignation(mockDesignation);
       setLoading(false);
@@ -171,7 +170,6 @@ export default function ViewDesignationPage() {
       >
         <CreateDesignationForm
           mode={mode}
-          designationId={editingId}
           onClose={() => setOpenCreate(false)}
         />
       </SlideOver>

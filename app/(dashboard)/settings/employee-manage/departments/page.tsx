@@ -12,8 +12,10 @@ import {
   getAllDepartments,
   deleteDepartment,
   Department,
+  updateDepartmentStatus,
 } from "@/app/services/department/departments.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { Toggle } from "@/app/common/toggle";
 
 const statusColorMap = {
   active: {
@@ -29,7 +31,7 @@ const statusColorMap = {
 };
 
 export default function DepartmentsPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -52,7 +54,7 @@ export default function DepartmentsPage() {
     setLoading(true);
     try {
       const response = await getAllDepartments();
-      setDepartments(response.AllDepartments || []);
+      setDepartments(response.data || []);
     } catch (error) {
       console.error("Failed to fetch departments:", error);
     } finally {
@@ -64,6 +66,33 @@ export default function DepartmentsPage() {
     fetchDepartments();
   }, []);
 
+  const handleStatusToggle = async (
+    department: Department,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setDepartments((prev) =>
+      prev.map((r) =>
+        r.id === department.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateDepartmentStatus(department.id || 0, newStatus);
+      showSuccess(
+        `Department ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setDepartments((prev) =>
+        prev.map((r) =>
+          r.id === department.id ? { ...r, is_active: department.is_active } : r
+        )
+      );
+      showError("Failed to update department status");
+    }
+  };
+
   // Handle delete department
   const handleDelete = async (department: Department) => {
     if (!confirm(`Are you sure you want to delete "${department.name}"?`)) {
@@ -71,7 +100,7 @@ export default function DepartmentsPage() {
     }
 
     try {
-      await deleteDepartment(department.id);
+      await deleteDepartment(department.id || 0);
       showSuccess("Department deleted successfully");
       fetchDepartments();
     } catch (error) {
@@ -115,12 +144,10 @@ export default function DepartmentsPage() {
     visible: col.visible,
     render: (row) => {
       if (col.key === "status") {
-        const status = row.is_active ? "active" : "inactive";
         return (
-          <StatusBadge
-            status={status}
-            colorMap={statusColorMap}
-            variant="default"
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
           />
         );
       }

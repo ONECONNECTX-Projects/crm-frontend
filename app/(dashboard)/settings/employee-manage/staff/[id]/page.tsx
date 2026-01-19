@@ -1,166 +1,232 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { Mail, Phone, User, Briefcase, Calendar } from "lucide-react";
-
-interface Staff {
-  id: string;
-  name: string;
-  role: string;
-  designation?: string;
-  department: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  employeeId: string;
-  address: string;
-  bloodGroup: string;
-  shift: string;
-}
-
-/* 🔹 Mock fetch (replace with API later) */
-const getStaffById = (id: string): Staff => ({
-  id,
-  name: "Staff",
-  role: "admin",
-  designation: "No Designation",
-  department: "Demo Department",
-  email: "staff@gmail.com",
-  phone: "01700000000",
-  joinDate: "15/01/2022",
-  employeeId: "007",
-  address: "Street: Gulshan, City: Dhaka, Country: Bangladesh",
-  bloodGroup: "B+",
-  shift: "Demo Shift (10AM - 7PM)",
-});
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Staff,
+  deleteStaff,
+  getStaffById,
+} from "@/app/services/staff/staff.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 export default function StaffViewPage() {
+  const router = useRouter();
   const params = useParams();
-  const staff = getStaffById(params.id as string);
+  const { showSuccess, showError } = useError();
+  const staffId = Number(params.id);
+  const [staff, setStaff] = useState<Staff | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Parse staff data from URL
+  useEffect(() => {
+    if (!staffId) return;
+
+    const fetchStaff = async () => {
+      try {
+        setLoading(true);
+        const res = await getStaffById(staffId);
+        setStaff(res.data || null); // ← API response
+      } catch (error) {
+        console.error("Failed to fetch staff:", error);
+        showError("Failed to fetch staff details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStaff();
+  }, [staffId, showError]);
+
+  const handleDelete = async () => {
+    if (!staff) return;
+
+    if (
+      window.confirm(`Are you sure you want to delete "${staff.user?.name}"?`)
+    ) {
+      try {
+        await deleteStaff(staff.id);
+        showSuccess("Staff deleted successfully");
+        router.push("/staff");
+      } catch (error) {
+        console.error("Failed to delete staff:", error);
+        showError("Failed to delete staff");
+      }
+    }
+  };
+
+  if (loading) {
+    return <div className="p-10 text-center text-gray-500">Loading...</div>;
+  }
+
+  if (!staff) {
+    return (
+      <div className="p-10 text-center text-gray-500">Staff not found.</div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* ================= Header ================= */}
-      <div className="bg-white rounded-xl p-6">
-        <h1 className="text-xl font-semibold">{staff.name}</h1>
-
-        <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
-          <span>{staff.designation}</span>
-          <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">
-            {staff.role}
-          </span>
+    <div className="p-6 bg-white rounded-xl shadow-md">
+      {/* Header */}
+      <div className="flex flex-wrap justify-between items-center mb-6 gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {staff.user?.name}
+          </h1>
+          <p className="text-gray-500">{staff.employee_code}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 text-sm">
-          <Info icon={<Mail size={16} />} label="Email" value={staff.email} />
-          <Info
-            icon={<User size={16} />}
-            label="Employee ID"
-            value={staff.employeeId}
-          />
-          <Info icon={<Phone size={16} />} label="Phone" value={staff.phone} />
-          <Info
-            icon={<Calendar size={16} />}
-            label="Join Date"
-            value={staff.joinDate}
-          />
-          <Info
-            icon={<Briefcase size={16} />}
-            label="Department"
-            value={staff.department}
-          />
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 text-gray-700 border rounded-lg hover:bg-gray-100"
+          >
+            Back
+          </button>
+          <button
+            onClick={handleDelete}
+            className="px-5 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50"
+          >
+            Delete
+          </button>
         </div>
       </div>
 
-      {/* ================= Detailed Information ================= */}
-      <div className="bg-white rounded-xl p-6">
-        <h2 className="text-sm font-semibold mb-4">Detailed Information</h2>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Personal */}
-          <Section title="Personal Information">
-            <Item label="Department" value={staff.department} />
-            <Item label="Employee Status" value="Demo Employment" />
-            <Item label="Join Date" value={staff.joinDate} />
-            <Item label="Role" value={staff.role} />
-            <Item label="Shift" value={staff.shift} />
-          </Section>
-
-          {/* Contact */}
-          <Section title="Contact Information">
-            <Item label="Email" value={staff.email} />
-            <Item label="Phone" value={staff.phone} />
-            <Item label="Address" value={staff.address} />
-            <Item label="Blood Group" value={staff.bloodGroup} />
-          </Section>
+      {/* Details Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* User Info Section */}
+        <div className="border rounded-lg p-4">
+          <h2 className="font-semibold text-gray-800 mb-4 border-b pb-2">
+            User Information
+          </h2>
+          <div className="space-y-3">
+            <InfoRow label="Name" value={staff.user?.name} />
+            <InfoRow label="Email" value={staff.user?.email} />
+            <InfoRow label="Mobile" value={staff.user?.mobile} />
+            <InfoRow label="Role" value={staff.user?.role?.name} />
+          </div>
         </div>
-      </div>
 
-      {/* ================= History Cards ================= */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <HistoryCard title="Designation History" />
-        <HistoryCard title="Education History" />
-        <HistoryCard title="Salary History" />
-        <HistoryCard title="Award History" />
+        {/* Staff Info Section */}
+        <div className="border rounded-lg p-4">
+          <h2 className="font-semibold text-gray-800 mb-4 border-b pb-2">
+            Staff Information
+          </h2>
+          <div className="space-y-3">
+            <InfoRow label="Employee Code" value={staff.employee_code} />
+            <InfoRow
+              label="Joining Date"
+              value={
+                staff.joining_date
+                  ? new Date(staff.joining_date).toLocaleDateString()
+                  : "-"
+              }
+            />
+            <InfoRow label="Blood Group" value={staff.blood_group} />
+            <InfoRow label="Department" value={staff.department?.name} />
+            <InfoRow label="Designation" value={staff.designation?.name} />
+            <InfoRow label="Shift" value={staff.shift?.name} />
+            <InfoRow
+              label="Employment Status"
+              value={staff.employment_status?.name}
+            />
+          </div>
+        </div>
+
+        {/* Address Section */}
+        <div className="border rounded-lg p-4">
+          <h2 className="font-semibold text-gray-800 mb-4 border-b pb-2">
+            Address
+          </h2>
+          <div className="space-y-3">
+            <InfoRow label="Street" value={staff.address?.street} />
+            <InfoRow label="City" value={staff.address?.city} />
+            <InfoRow label="State" value={staff.address?.state} />
+            <InfoRow label="ZIP Code" value={staff.address?.zip_code} />
+            <InfoRow label="Country" value={staff.address?.country} />
+          </div>
+        </div>
+
+        {/* Salary Section */}
+        <div className="border rounded-lg p-4">
+          <h2 className="font-semibold text-gray-800 mb-4 border-b pb-2">
+            Salary Details
+          </h2>
+          <div className="space-y-3">
+            <InfoRow
+              label="Salary Amount"
+              value={
+                staff.designation_salaries?.salary_amount
+                  ? `₹${staff.designation_salaries.salary_amount.toLocaleString()}`
+                  : "-"
+              }
+            />
+            <InfoRow
+              label="Salary Type"
+              value={staff.designation_salaries?.salary_type}
+            />
+            <InfoRow
+              label="Commission Type"
+              value={staff.designation_salaries?.commission_type}
+            />
+            <InfoRow
+              label="Start Date"
+              value={
+                staff.designation_salaries?.start_date
+                  ? new Date(
+                      staff.designation_salaries.start_date
+                    ).toLocaleDateString()
+                  : "-"
+              }
+            />
+          </div>
+        </div>
+
+        {/* Education Section */}
+        {staff.educations && staff.educations.length > 0 && (
+          <div className="border rounded-lg p-4 md:col-span-2">
+            <h2 className="font-semibold text-gray-800 mb-4 border-b pb-2">
+              Education
+            </h2>
+            <div className="space-y-4">
+              {staff.educations.map((edu, index) => (
+                <div key={index} className="bg-gray-50 p-3 rounded">
+                  <div className="grid grid-cols-2 gap-2">
+                    <InfoRow label="Degree" value={edu.degree} />
+                    <InfoRow label="Institution" value={edu.institution} />
+                    <InfoRow
+                      label="Field of Study"
+                      value={edu.field_of_study}
+                    />
+                    <InfoRow label="Result" value={edu.result} />
+                    <InfoRow
+                      label="Duration"
+                      value={`${
+                        edu.study_start_date
+                          ? new Date(edu.study_start_date).toLocaleDateString()
+                          : ""
+                      } - ${
+                        edu.study_end_date
+                          ? new Date(edu.study_end_date).toLocaleDateString()
+                          : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-/* ================= Reusable Components ================= */
-
-function Info({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="text-gray-400 mt-0.5">{icon}</div>
-      <div>
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <h3 className="text-sm font-semibold mb-3 border-b pb-2">{title}</h3>
-      <div className="space-y-2 text-sm">{children}</div>
-    </div>
-  );
-}
-
-function Item({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex justify-between">
-      <span className="text-gray-500">{label}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-}
-
-function HistoryCard({ title }: { title: string }) {
-  return (
-    <div className="bg-white rounded-xl p-6 text-center">
-      <h4 className="text-sm font-semibold mb-4">{title}</h4>
-      <p className="text-xs text-gray-400 mb-4">No {title} Found</p>
-      <button className="text-sm text-blue-600 border border-blue-600 px-4 py-1.5 rounded hover:bg-blue-50">
-        Click on edit button to add new
-      </button>
+      <span className="text-gray-500 text-sm">{label}:</span>
+      <span className="text-gray-800 text-sm font-medium">{value || "-"}</span>
     </div>
   );
 }

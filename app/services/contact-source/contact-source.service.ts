@@ -1,7 +1,7 @@
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface ContactSource {
-  id: number;
+  id?: number;
   name: string;
   is_active?: boolean;
   createdAt?: string;
@@ -14,14 +14,6 @@ export interface ContactSourcesResponse {
   AllSources: ContactSource[];
 }
 
-export interface CreateContactSourceDto {
-  name: string;
-}
-
-export interface UpdateContactSourceDto {
-  name?: string;
-}
-
 // Get all ContactSources
 export async function getAllContactSources(): Promise<ContactSourcesResponse> {
   const response = await api.get("contact-sources");
@@ -30,7 +22,7 @@ export async function getAllContactSources(): Promise<ContactSourcesResponse> {
 
 // Create ContactSource
 export async function createContactSource(
-  data: CreateContactSourceDto
+  data: ContactSource
 ): Promise<ApiResponse<ContactSource>> {
   return api.post("contact-sources", data) as Promise<
     ApiResponse<ContactSource>
@@ -40,7 +32,7 @@ export async function createContactSource(
 // Update ContactSource
 export async function updateContactSource(
   id: number,
-  data: UpdateContactSourceDto
+  data: ContactSource
 ): Promise<ApiResponse<ContactSource>> {
   return api.put(`contact-sources/${id}`, data) as Promise<
     ApiResponse<ContactSource>

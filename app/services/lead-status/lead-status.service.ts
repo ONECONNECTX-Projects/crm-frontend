@@ -1,7 +1,8 @@
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface LeadStatus {
-  id: number;
+  id?: number;
   name: string;
   color?: string;
   is_active?: boolean;
@@ -9,31 +10,15 @@ export interface LeadStatus {
   updatedAt?: string;
 }
 
-export interface LeadStatusResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllStatus: LeadStatus[];
-}
-
-export interface CreateLeadStatusDto {
-  name: string;
-  color?: string;
-}
-
-export interface UpdateLeadStatusDto {
-  name?: string;
-  color?: string;
-}
-
 // Get all LeadStatus
-export async function getAllLeadStatus(): Promise<LeadStatusResponse> {
+export async function getAllLeadStatus(): Promise<ApiResponse<LeadStatus[]>> {
   const response = await api.get("lead-statuses");
-  return response as unknown as LeadStatusResponse;
+  return response as unknown as ApiResponse<LeadStatus[]>;
 }
 
 // Create LeadStatus
 export async function createLeadStatus(
-  data: CreateLeadStatusDto
+  data: LeadStatus
 ): Promise<ApiResponse<LeadStatus>> {
   return api.post("lead-statuses", data) as Promise<ApiResponse<LeadStatus>>;
 }
@@ -41,7 +26,7 @@ export async function createLeadStatus(
 // Update LeadStatus
 export async function updateLeadStatus(
   id: number,
-  data: UpdateLeadStatusDto
+  data: LeadStatus
 ): Promise<ApiResponse<LeadStatus>> {
   return api.put(`lead-statuses/${id}`, data) as Promise<
     ApiResponse<LeadStatus>
@@ -52,3 +37,19 @@ export async function updateLeadStatus(
 export async function deleteLeadStatus(id: number): Promise<ApiResponse<void>> {
   return api.delete(`lead-statuses/${id}`) as Promise<ApiResponse<void>>;
 }
+
+export async function getAllActiveLeadStatuses(): Promise<
+  ApiResponse<OptionDropDownModel[]>
+> {
+  const response = await api.get("lead-statuses/active");
+  return response as unknown as ApiResponse<OptionDropDownModel[]>;
+}
+
+export const updateLeadStatusStatus = (
+  leadStatusId: number,
+  isActive: boolean
+) => {
+  return api.patch(`lead-statuses/${leadStatusId}/status`, {
+    is_active: isActive,
+  });
+};

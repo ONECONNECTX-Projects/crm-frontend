@@ -1,63 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
-import Pagination from "@/app/common/pagination";
 import CreateTaskStatusForm from "./create/page";
+import Pagination from "@/app/common/pagination";
+import { useError } from "@/app/providers/ErrorProvider";
 
-interface TaskStatus {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const TaskStatus: TaskStatus[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
+import { Toggle } from "@/app/common/toggle";
+import {
+  deleteTaskStatus,
+  getAllTaskStatus,
+  TaskStatus,
+  updateTaskStatusStatus,
+} from "@/app/services/task-status/task-status.service";
 
 export default function TaskStatusPage() {
+  const [companies, setTaskStatus] = useState<TaskStatus[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [openForm, setOpenForm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingTaskStatus, setEditingTaskStatus] = useState<TaskStatus | null>(
+    null
+  );
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { showSuccess, showError } = useError();
 
   const [columns, setColumns] = useState([
-    { key: "name", label: "Name", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
+    { key: "name", label: "Task Type Name", visible: true },
+    { key: "createdAt", label: "Created Date", visible: true },
+    { key: "status", label: "Status", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  /* =========================
+     Fetch TaskStatus
+  ========================== */
+  const fetchTaskStatus = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllTaskStatus();
+      setTaskStatus(response.AllStatus || []);
+    } catch (error) {
+      console.error("Failed to fetch Task Status:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTaskStatus();
+  }, []);
+
+  /* =========================
+     Delete TaskStatus
+  ========================== */
+  const handleDelete = async (TaskStatus: TaskStatus) => {
+    if (!confirm(`Are you sure you want to delete "${TaskStatus.name}"?`)) {
+      return;
+    }
+
+    try {
+      await deleteTaskStatus(TaskStatus.id || 0);
+      showSuccess("Task Status deleted successfully");
+      fetchTaskStatus();
+    } catch (error) {
+      console.error("Failed to delete Task Status:", error);
+    }
+  };
+
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    setEditingTaskStatus(null);
+    fetchTaskStatus();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -66,36 +87,92 @@ export default function TaskStatusPage() {
     );
   };
 
+  const handleStatusToggle = async (role: TaskStatus, newStatus: boolean) => {
+    // Optimistic UI update
+    setTaskStatus((prev) =>
+      prev.map((r) => (r.id === role.id ? { ...r, is_active: newStatus } : r))
+    );
+
+    try {
+      await updateTaskStatusStatus(role.id || 0, newStatus);
+      showSuccess(
+        `Task Status ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setTaskStatus((prev) =>
+        prev.map((r) =>
+          r.id === role.id ? { ...r, is_active: role.is_active } : r
+        )
+      );
+      showError("Failed to update task status");
+    }
+  };
+
+  /* =========================
+     Table Actions
+  ========================== */
   const tableActions: TableAction<TaskStatus>[] = [
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
-        setOpenForm(true);
+        setEditingTaskStatus(row);
+        setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete Task Status", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
 
+  /* =========================
+     Table Columns
+  ========================== */
   const tableColumns: TableColumn<TaskStatus>[] = columns.map((col) => ({
     key: col.key as keyof TaskStatus,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "createdAt" && row.createdAt) {
+        return (
+          <span>
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      const value = row[col.key as keyof TaskStatus];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = TaskStatus.filter((item) =>
-    Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
+  /* =========================
+     Search + Pagination
+  ========================== */
+  const filteredTaskStatus = companies.filter((TaskStatus) =>
+    Object.values(TaskStatus).some((val) =>
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
     )
   );
 
-  const paginatedData = filteredData.slice(
+  const totalItems = filteredTaskStatus.length;
+
+  const paginatedTaskStatus = filteredTaskStatus.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -109,8 +186,8 @@ export default function TaskStatusPage() {
           createButtonText="Create Task Status"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
-            setOpenForm(true);
+            setEditingTaskStatus(null);
+            setOpenCreate(true);
           }}
         />
 
@@ -127,18 +204,24 @@ export default function TaskStatusPage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No Task Status  found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Task Status...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedTaskStatus}
+            actions={tableActions}
+            emptyMessage="No Task Status found."
+          />
+        )}
       </div>
 
       {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         pageSize={pageSize}
         onPageChange={setCurrentPage}
         onPageSizeChange={(size) => {
@@ -147,16 +230,12 @@ export default function TaskStatusPage() {
         }}
       />
 
-      {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
+      {/* SlideOver */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateTaskStatusForm
           mode={mode}
-          TaskStatusId={editingId}
-          onClose={() => setOpenForm(false)}
+          TaskStatusData={editingTaskStatus}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

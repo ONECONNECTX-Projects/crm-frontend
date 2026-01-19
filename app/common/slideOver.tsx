@@ -4,7 +4,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 
-export default function SlideOver({ open, onClose, children }: any) {
+interface SlideOverProps {
+  open: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  width?: string;
+}
+
+export default function SlideOver({ open, onClose, children, width = "sm:w-[50vw]" }: SlideOverProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -26,7 +33,7 @@ export default function SlideOver({ open, onClose, children }: any) {
 
           {/* Slide-over panel */}
           <motion.div
-className="fixed right-0 top-0 h-full w-full sm:w-[50vw] bg-white shadow-xl z-50 p-6 overflow-y-auto"
+            className={`fixed right-0 top-0 h-full w-full ${width} bg-white shadow-xl z-50 p-6 overflow-y-auto`}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

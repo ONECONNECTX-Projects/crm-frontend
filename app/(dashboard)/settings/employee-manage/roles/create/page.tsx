@@ -15,9 +15,11 @@ interface CreateRoleFormProps {
   onClose: () => void;
 }
 
-const initialForm = {
+const initialForm: Role = {
+  id: 0,
   name: "",
   description: "",
+  is_active: true,
 };
 
 export default function CreateRoleForm({
@@ -35,6 +37,8 @@ export default function CreateRoleForm({
       setForm({
         name: roleData.name || "",
         description: roleData.description || "",
+        id: roleData.id || 0,
+        is_active: roleData.is_active || false,
       });
     } else {
       setForm(initialForm);
@@ -141,8 +145,8 @@ export default function CreateRoleForm({
               ? "Updating..."
               : "Creating..."
             : mode === "edit"
-            ? "Update Role"
-            : "Create Role"}
+              ? "Update Role"
+              : "Create Role"}
         </Button>
       </div>
     </div>

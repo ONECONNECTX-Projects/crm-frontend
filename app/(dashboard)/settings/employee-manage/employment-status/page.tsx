@@ -12,14 +12,15 @@ import {
   deleteEmploymentStatus,
   EmploymentStatus,
   getAllEmploymentStatus,
+  updateEmploymentStatusStatus,
 } from "@/app/services/employment-statuses/employment-statuses.service";
 import { useRouter } from "next/navigation";
+import { Toggle } from "@/app/common/toggle";
 
 export default function EmploymentStatusPage() {
   const router = useRouter();
 
-  const { showSuccess } = useError();
-
+  const { showSuccess, showError } = useError();
   const [statuses, setStatuses] = useState<EmploymentStatus[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -34,6 +35,8 @@ export default function EmploymentStatusPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Employment Status", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -44,7 +47,7 @@ export default function EmploymentStatusPage() {
     setLoading(true);
     try {
       const response = await getAllEmploymentStatus();
-      setStatuses(response.AllEmploymentStatuses || []);
+      setStatuses(response.data || []);
     } catch (error) {
       console.error("Failed to fetch employment statuses:", error);
     } finally {
@@ -56,6 +59,35 @@ export default function EmploymentStatusPage() {
     fetchEmploymentStatuses();
   }, []);
 
+  const handleStatusToggle = async (
+    employmentStatus: EmploymentStatus,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setStatuses((prev) =>
+      prev.map((r) =>
+        r.id === employmentStatus.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateEmploymentStatusStatus(employmentStatus.id || 0, newStatus);
+      showSuccess(
+        `Employment Status ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setStatuses((prev) =>
+        prev.map((r) =>
+          r.id === employmentStatus.id
+            ? { ...r, is_active: employmentStatus.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Employment status");
+    }
+  };
+
   /* =========================
      Delete Employment Status
   ========================== */
@@ -65,7 +97,7 @@ export default function EmploymentStatusPage() {
     }
 
     try {
-      await deleteEmploymentStatus(status.id);
+      await deleteEmploymentStatus(status.id || 0);
       showSuccess("Employment status deleted successfully");
       fetchEmploymentStatuses();
     } catch (error) {
@@ -120,6 +152,14 @@ export default function EmploymentStatusPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
       if (col.key === "createdAt" && row.created_at) {
         return (
           <span>

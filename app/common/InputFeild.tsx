@@ -16,6 +16,7 @@ interface InputFieldProps {
   error?: string;
   icon?: React.ReactNode;
   noLeadingSpace?: boolean;
+  disabled?: boolean;
 }
 
 export default function InputField({
@@ -30,6 +31,7 @@ export default function InputField({
   error,
   icon,
   noLeadingSpace = false,
+  disabled = false,
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
@@ -79,11 +81,12 @@ export default function InputField({
             onKeyDown={handleKeyDown}
             maxLength={maxLength}
             rows={rows}
+            disabled={disabled}
             className={`w-full p-3 pl-10 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
               localError || error
                 ? "border-red-500 focus:ring-red-400"
                 : "border-gray-300 focus:ring-blue-500"
-            }`}
+            } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
           />
         ) : (
           <>
@@ -92,15 +95,16 @@ export default function InputField({
               placeholder={placeholder}
               value={value}
               onChange={validateValue}
-              onKeyDown={handleKeyDown} // <-- BLOCK SPACE BEFORE INPUT
+              onKeyDown={handleKeyDown}
               maxLength={maxLength}
+              disabled={disabled}
               className={`w-full p-3 ${
                 icon ? "pl-10" : ""
               } pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
                 localError || error
                   ? "border-red-500 focus:ring-red-400"
                   : "border-gray-300 focus:ring-blue-500"
-              }`}
+              } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
             />
 
             {isPassword && (

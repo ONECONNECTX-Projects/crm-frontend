@@ -60,7 +60,7 @@ export default function IndustrysPage() {
     }
 
     try {
-      await deleteIndustry(Industry.id);
+      await deleteIndustry(Industry.id || 0);
       showSuccess("Industry deleted successfully");
       fetchIndustry();
     } catch (error) {

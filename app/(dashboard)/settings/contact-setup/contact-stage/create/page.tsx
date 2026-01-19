@@ -105,8 +105,8 @@ export default function CreateContactStageForm({
               ? "Updating..."
               : "Creating..."
             : mode === "edit"
-            ? "Update Contact Stage"
-            : "Create Contact Stage"}
+              ? "Update Contact Stage"
+              : "Create Contact Stage"}
         </Button>
       </div>
     </div>

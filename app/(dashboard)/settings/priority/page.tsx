@@ -13,11 +13,12 @@ import {
   deletePriority,
   getAllPriority,
   Priority,
+  updatePriorityStatus,
 } from "@/app/services/priority/priority.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function PriorityPage() {
-  const { showSuccess } = useError();
-
+  const { showSuccess, showError } = useError();
   const [Priority, setPriority] = useState<Priority[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -30,6 +31,7 @@ export default function PriorityPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Name", visible: true },
+    { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Create Date", visible: true },
   ]);
 
@@ -37,7 +39,7 @@ export default function PriorityPage() {
     setLoading(true);
     try {
       const response = await getAllPriority();
-      setPriority(response.AllPriorities || []);
+      setPriority(response.data || []);
     } catch (error) {
       console.error("Failed to fetch Priority:", error);
     } finally {
@@ -49,6 +51,29 @@ export default function PriorityPage() {
     fetchPriority();
   }, []);
 
+  const handleStatusToggle = async (priority: Priority, newStatus: boolean) => {
+    // Optimistic UI update
+    setPriority((prev) =>
+      prev.map((r) =>
+        r.id === priority.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updatePriorityStatus(priority.id || 0, newStatus);
+      showSuccess(
+        `Priority ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setPriority((prev) =>
+        prev.map((r) =>
+          r.id === priority.id ? { ...r, is_active: priority.is_active } : r
+        )
+      );
+      showError("Failed to update priority status");
+    }
+  };
   /* =========================
      Delete Priority
   ========================== */
@@ -58,7 +83,7 @@ export default function PriorityPage() {
     }
 
     try {
-      await deletePriority(Priority.id);
+      await deletePriority(Priority.id || 0);
       showSuccess("Priority deleted successfully");
       fetchPriority();
     } catch (error) {
@@ -107,6 +132,14 @@ export default function PriorityPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
       if (col.key === "createdAt" && row.createdAt) {
         return (
           <span>

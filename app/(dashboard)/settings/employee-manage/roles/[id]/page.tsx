@@ -1,29 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/app/common/StatusBadge";
-
-interface Permission {
-  module: string;
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
-  export: boolean;
-}
-
-interface RoleDetails {
-  id: number;
-  name: string;
-  description: string;
-  permissionsCount: number;
-  usersCount: number;
-  status: "active" | "inactive";
-  createdAt: string;
-  permissions: Permission[];
-}
+import {
+  Role,
+  Permission,
+  getPermissionsByRoleId,
+  assignPermissionsToRole,
+} from "@/app/services/roles/roles.service";
 
 const statusColorMap = {
   active: {
@@ -38,60 +24,51 @@ const statusColorMap = {
   },
 };
 
-// Mock data for demonstration
-const mockRole: RoleDetails = {
-  id: 1,
-  name: "Sales Manager",
-  description: "Manage sales team and operations",
-  permissionsCount: 25,
-  usersCount: 5,
-  status: "active",
-  createdAt: "Jan 15, 2024",
-  permissions: [
-    { module: "Dashboard", view: true, create: false, edit: false, delete: false, export: true },
-    { module: "Contacts", view: true, create: true, edit: true, delete: true, export: true },
-    { module: "Leads", view: true, create: true, edit: true, delete: true, export: true },
-    { module: "Opportunities", view: true, create: true, edit: true, delete: true, export: true },
-    { module: "Companies", view: true, create: true, edit: true, delete: false, export: true },
-    { module: "Products", view: true, create: false, edit: false, delete: false, export: true },
-    { module: "Tasks", view: true, create: true, edit: true, delete: true, export: false },
-    { module: "Tickets", view: true, create: false, edit: false, delete: false, export: false },
-    { module: "Projects", view: true, create: false, edit: false, delete: false, export: false },
-    { module: "Reports", view: true, create: false, edit: false, delete: false, export: true },
-    { module: "Settings", view: false, create: false, edit: false, delete: false, export: false },
-    { module: "Users", view: false, create: false, edit: false, delete: false, export: false },
-  ],
-};
-
 export default function ViewRolePage() {
   const router = useRouter();
   const params = useParams();
-  const [role, setRole] = useState<RoleDetails | null>(null);
+  const searchParams = useSearchParams();
+  const [role, setRole] = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [originalPermissions, setOriginalPermissions] = useState<Permission[]>(
+    []
+  );
 
   useEffect(() => {
-    // Simulate API call
-    setLoading(true);
-    setTimeout(() => {
-      setRole(mockRole);
-      setPermissions(mockRole.permissions);
-      setLoading(false);
-    }, 500);
+    // Get role data from search params
+    const roleData = searchParams.get("data");
+    if (roleData) {
+      try {
+        const parsedRole = JSON.parse(decodeURIComponent(roleData)) as Role;
+        setRole(parsedRole);
+      } catch (error) {
+        console.error("Failed to parse role data:", error);
+      }
+    }
 
-    // In production, replace with actual API call:
-    // fetch(`/api/roles/${params.id}`)
-    //   .then((res) => res.json())
-    //   .then((data) => {
-    //     setRole(data);
-    //     setPermissions(data.permissions);
-    //   })
-    //   .finally(() => setLoading(false));
-  }, [params.id]);
+    // Fetch permissions from API
+    const fetchPermissions = async () => {
+      try {
+        const permResponse = await getPermissionsByRoleId(Number(params.id));
+        setPermissions(permResponse.data || []);
+        setOriginalPermissions(permResponse.data || []);
+      } catch (error) {
+        console.error("Failed to fetch permissions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, [params.id, searchParams]);
 
   /* ---------- HANDLE PERMISSION CHANGE ---------- */
-  const handlePermissionChange = (moduleIndex: number, permissionType: keyof Omit<Permission, "module">) => {
+  const handlePermissionChange = (
+    moduleIndex: number,
+    permissionType: "can_read" | "can_create" | "can_update" | "can_delete"
+  ) => {
     setPermissions((prev) =>
       prev.map((perm, index) =>
         index === moduleIndex
@@ -104,12 +81,22 @@ export default function ViewRolePage() {
   /* ---------- SELECT ALL FOR MODULE ---------- */
   const handleSelectAllModule = (moduleIndex: number) => {
     const currentModule = permissions[moduleIndex];
-    const allSelected = currentModule.view && currentModule.create && currentModule.edit && currentModule.delete && currentModule.export;
+    const allSelected =
+      currentModule.can_read &&
+      currentModule.can_create &&
+      currentModule.can_update &&
+      currentModule.can_delete;
 
     setPermissions((prev) =>
       prev.map((perm, index) =>
         index === moduleIndex
-          ? { ...perm, view: !allSelected, create: !allSelected, edit: !allSelected, delete: !allSelected, export: !allSelected }
+          ? {
+              ...perm,
+              can_read: !allSelected,
+              can_create: !allSelected,
+              can_update: !allSelected,
+              can_delete: !allSelected,
+            }
           : perm
       )
     );
@@ -117,39 +104,35 @@ export default function ViewRolePage() {
 
   /* ---------- SELECT ALL PERMISSIONS ---------- */
   const handleSelectAll = () => {
-    const allSelected = permissions.every(perm => perm.view && perm.create && perm.edit && perm.delete && perm.export);
+    const allSelected = permissions.every(
+      (perm) =>
+        perm.can_read && perm.can_create && perm.can_update && perm.can_delete
+    );
     setPermissions((prev) =>
       prev.map((perm) => ({
         ...perm,
-        view: !allSelected,
-        create: !allSelected,
-        edit: !allSelected,
-        delete: !allSelected,
-        export: !allSelected,
+        can_read: !allSelected,
+        can_create: !allSelected,
+        can_update: !allSelected,
+        can_delete: !allSelected,
       }))
     );
   };
 
   /* ---------- SAVE PERMISSIONS ---------- */
   const handleSavePermissions = async () => {
-    // In production, save to API:
-    // await fetch(`/api/roles/${params.id}/permissions`, {
-    //   method: 'PATCH',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ permissions }),
-    // });
-
-    if (role) {
-      setRole({ ...role, permissions });
-    }
+    // await api.patch(`roles/${params.id}/permissions`, { permissions });
+    await assignPermissionsToRole({
+      role_id: Number(params.id),
+      permissions: permissions,
+    });
+    setOriginalPermissions(permissions);
     setEditMode(false);
   };
 
   /* ---------- CANCEL EDIT ---------- */
   const handleCancelEdit = () => {
-    if (role) {
-      setPermissions(role.permissions);
-    }
+    setPermissions(originalPermissions);
     setEditMode(false);
   };
 
@@ -169,6 +152,14 @@ export default function ViewRolePage() {
     );
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -176,9 +167,11 @@ export default function ViewRolePage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-semibold text-gray-900">{role.name}</h1>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {role.name}
+              </h1>
               <StatusBadge
-                status={role.status}
+                status={role.is_active ? "active" : "inactive"}
                 colorMap={statusColorMap}
                 variant="default"
               />
@@ -193,12 +186,6 @@ export default function ViewRolePage() {
                   onClick={() => router.push("/settings/employee-manage/roles")}
                 >
                   Back to Roles
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => router.push(`/settings/employee-manage/roles/${role.id}/edit`)}
-                >
-                  Edit Role
                 </Button>
                 <Button onClick={() => setEditMode(true)}>
                   Edit Permissions
@@ -222,19 +209,19 @@ export default function ViewRolePage() {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm text-blue-600 font-medium">Permissions</p>
             <p className="text-2xl font-semibold text-blue-900 mt-1">
-              {role.permissionsCount}
+              {role.permissionsCount || permissions.length}
             </p>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <p className="text-sm text-green-600 font-medium">Users Assigned</p>
             <p className="text-2xl font-semibold text-green-900 mt-1">
-              {role.usersCount}
+              {role.usersCount || 0}
             </p>
           </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
             <p className="text-sm text-purple-600 font-medium">Created</p>
             <p className="text-2xl font-semibold text-purple-900 mt-1">
-              {role.createdAt}
+              {formatDate(role.createdAt || "")}
             </p>
           </div>
         </div>
@@ -275,9 +262,6 @@ export default function ViewRolePage() {
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delete
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Export
-                  </th>
                   {editMode && (
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       All
@@ -286,20 +270,22 @@ export default function ViewRolePage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {(editMode ? permissions : role.permissions).map((permission, index) => (
-                  <tr key={permission.module} className="hover:bg-gray-50">
+                {permissions.map((permission, index) => (
+                  <tr key={permission.module_id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      {permission.module}
+                      {permission.module_name}
                     </td>
                     <td className="px-6 py-4 text-center">
                       {editMode ? (
                         <input
                           type="checkbox"
-                          checked={permission.view}
-                          onChange={() => handlePermissionChange(index, "view")}
+                          checked={permission.can_read}
+                          onChange={() =>
+                            handlePermissionChange(index, "can_read")
+                          }
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                         />
-                      ) : permission.view ? (
+                      ) : permission.can_read ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
                           <svg
                             className="w-3 h-3 text-green-600"
@@ -333,20 +319,38 @@ export default function ViewRolePage() {
                       {editMode ? (
                         <input
                           type="checkbox"
-                          checked={permission.create}
-                          onChange={() => handlePermissionChange(index, "create")}
+                          checked={permission.can_create}
+                          onChange={() =>
+                            handlePermissionChange(index, "can_create")
+                          }
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                         />
-                      ) : permission.create ? (
+                      ) : permission.can_create ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-                          <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-green-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       ) : (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 rounded-full">
-                          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-gray-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       )}
@@ -355,20 +359,38 @@ export default function ViewRolePage() {
                       {editMode ? (
                         <input
                           type="checkbox"
-                          checked={permission.edit}
-                          onChange={() => handlePermissionChange(index, "edit")}
+                          checked={permission.can_update}
+                          onChange={() =>
+                            handlePermissionChange(index, "can_update")
+                          }
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                         />
-                      ) : permission.edit ? (
+                      ) : permission.can_update ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-                          <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-green-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       ) : (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 rounded-full">
-                          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-gray-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       )}
@@ -377,42 +399,38 @@ export default function ViewRolePage() {
                       {editMode ? (
                         <input
                           type="checkbox"
-                          checked={permission.delete}
-                          onChange={() => handlePermissionChange(index, "delete")}
+                          checked={permission.can_delete}
+                          onChange={() =>
+                            handlePermissionChange(index, "can_delete")
+                          }
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                         />
-                      ) : permission.delete ? (
+                      ) : permission.can_delete ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-                          <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-green-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       ) : (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 rounded-full">
-                          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {editMode ? (
-                        <input
-                          type="checkbox"
-                          checked={permission.export}
-                          onChange={() => handlePermissionChange(index, "export")}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                        />
-                      ) : permission.export ? (
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
-                          <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 rounded-full">
-                          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          <svg
+                            className="w-3 h-3 text-gray-400"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       )}
@@ -421,7 +439,12 @@ export default function ViewRolePage() {
                       <td className="px-6 py-4 text-center">
                         <input
                           type="checkbox"
-                          checked={permission.view && permission.create && permission.edit && permission.delete && permission.export}
+                          checked={
+                            permission.can_read &&
+                            permission.can_create &&
+                            permission.can_update &&
+                            permission.can_delete
+                          }
                           onChange={() => handleSelectAllModule(index)}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                         />

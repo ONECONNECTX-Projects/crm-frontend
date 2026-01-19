@@ -61,7 +61,7 @@ export default function ContactStagesPage() {
     }
 
     try {
-      await deleteContactStage(ContactStage.id);
+      await deleteContactStage(ContactStage.id || 0);
       showSuccess("Contact Stage deleted successfully");
       fetchContactStages();
     } catch (error) {

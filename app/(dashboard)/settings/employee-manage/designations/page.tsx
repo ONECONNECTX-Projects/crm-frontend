@@ -12,14 +12,15 @@ import {
   deleteDesignation,
   Designation,
   getAllDesignations,
+  updateDesignationStatus,
 } from "@/app/services/designation/designation.service";
 import { useRouter } from "next/navigation";
+import { Toggle } from "@/app/common/toggle";
 
 export default function DesignationsPage() {
   const router = useRouter();
 
-  const { showSuccess } = useError();
-
+  const { showSuccess, showError } = useError();
   const [designations, setDesignations] = useState<Designation[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -33,6 +34,8 @@ export default function DesignationsPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Designation Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -43,7 +46,7 @@ export default function DesignationsPage() {
     setLoading(true);
     try {
       const response = await getAllDesignations();
-      setDesignations(response.AllDesignations || []);
+      setDesignations(response.data || []);
     } catch (error) {
       console.error("Failed to fetch designations:", error);
     } finally {
@@ -64,7 +67,7 @@ export default function DesignationsPage() {
     }
 
     try {
-      await deleteDesignation(designation.id);
+      await deleteDesignation(designation.id || 0);
       showSuccess("Designation deleted successfully");
       fetchDesignations();
     } catch (error) {
@@ -86,6 +89,34 @@ export default function DesignationsPage() {
     );
   };
 
+  const handleStatusToggle = async (
+    designation: Designation,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setDesignations((prev) =>
+      prev.map((r) =>
+        r.id === designation.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateDesignationStatus(designation.id || 0, newStatus);
+      showSuccess(
+        `Designation ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setDesignations((prev) =>
+        prev.map((r) =>
+          r.id === designation.id
+            ? { ...r, is_active: designation.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Designation status");
+    }
+  };
   /* =========================
      Table Actions
   ========================== */
@@ -119,6 +150,14 @@ export default function DesignationsPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
       if (col.key === "createdAt" && row.created_at) {
         return (
           <span>

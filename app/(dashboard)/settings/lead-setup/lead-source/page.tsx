@@ -13,11 +13,12 @@ import {
   deleteLeadSource,
   getAllLeadSources,
   LeadSource,
+  updateLeadSourceStatus,
 } from "@/app/services/lead-source/lead-source.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function LeadSourcePage() {
-  const { showSuccess } = useError();
-
+  const { showSuccess, showError } = useError();
   const [leadSources, setLeadSources] = useState<LeadSource[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -32,6 +33,7 @@ export default function LeadSourcePage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Name", visible: true },
+    { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Create Date", visible: true },
   ]);
 
@@ -42,7 +44,7 @@ export default function LeadSourcePage() {
     setLoading(true);
     try {
       const response = await getAllLeadSources();
-      setLeadSources(response.AllLeadSources || []);
+      setLeadSources(response.data || []);
     } catch (error) {
       console.error("Failed to fetch lead sources:", error);
     } finally {
@@ -63,7 +65,7 @@ export default function LeadSourcePage() {
     }
 
     try {
-      await deleteLeadSource(leadSource.id);
+      await deleteLeadSource(leadSource.id || 0);
       showSuccess("Lead source deleted successfully");
       fetchLeadSources();
     } catch (error) {
@@ -75,6 +77,33 @@ export default function LeadSourcePage() {
     setOpenForm(false);
     setEditingLeadSource(null);
     fetchLeadSources();
+  };
+
+  const handleStatusToggle = async (
+    leadSource: LeadSource,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setLeadSources((prev) =>
+      prev.map((r) =>
+        r.id === leadSource.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateLeadSourceStatus(leadSource.id || 0, newStatus);
+      showSuccess(
+        `Lead source ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setLeadSources((prev) =>
+        prev.map((r) =>
+          r.id === leadSource.id ? { ...r, is_active: leadSource.is_active } : r
+        )
+      );
+      showError("Failed to update lead source status");
+    }
   };
 
   const handleColumnToggle = (key: string) => {
@@ -112,6 +141,14 @@ export default function LeadSourcePage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
       if (col.key === "createdAt" && row.createdAt) {
         return (
           <span>

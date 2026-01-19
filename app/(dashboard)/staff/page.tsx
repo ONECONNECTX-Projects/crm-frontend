@@ -162,7 +162,7 @@ export default function StaffPage() {
     {
       label: "View Details",
       onClick: (row) => {
-        router.push(`staff/${row.id}`);
+        router.push(`/staff/${row.id}`);
       },
     },
     {

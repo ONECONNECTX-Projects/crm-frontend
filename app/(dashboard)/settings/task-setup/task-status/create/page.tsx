@@ -1,70 +1,114 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 
-interface Props {
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  createTaskStatus,
+  TaskStatus,
+  updateTaskStatus,
+} from "@/app/services/task-status/task-status.service";
+
+interface CreateTaskStatusFormProps {
   mode: "create" | "edit";
-  TaskStatusId: number | null;
+  TaskStatusData?: TaskStatus | null;
   onClose: () => void;
 }
 
 export default function CreateTaskStatusForm({
   mode,
-  TaskStatusId,
+  TaskStatusData,
   onClose,
-}: Props) {
-  const [name, setName] = useState("");
+}: CreateTaskStatusFormProps) {
+  const { showSuccess, showError } = useError();
 
+  const [TaskStatusName, setTaskStatusName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
-    if (mode === "edit" && TaskStatusId) {
-      // fetch by id (mock)
-      setName("Private");
-    }
-  }, [mode, TaskStatusId]);
-
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-
-    if (mode === "edit") {
-      console.log("UPDATE Task Status", { TaskStatusId, name });
+    if (mode === "edit" && TaskStatusData) {
+      setTaskStatusName(TaskStatusData.name || "");
     } else {
-      console.log("CREATE Task Status", { name });
+      setTaskStatusName("");
+    }
+  }, [mode, TaskStatusData]);
+
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async () => {
+    if (!TaskStatusName.trim()) {
+      showError("Please enter a Task Status name");
+      return;
     }
 
-    onClose();
+    setSubmitting(true);
+    try {
+      if (mode === "edit" && TaskStatusData?.id) {
+        await updateTaskStatus(TaskStatusData.id, {
+          name: TaskStatusName,
+        });
+        showSuccess("Task Status updated successfully");
+      } else {
+        await createTaskStatus({
+          name: TaskStatusName,
+        });
+        showSuccess("Task Status created successfully");
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Failed to save Task Status:", error);
+      showError("Failed to save Task Status");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-xl font-semibold">
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">
           {mode === "edit" ? "Edit Task Status" : "Create Task Status"}
         </h2>
-        <button onClick={onClose} className="text-xl">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           ✕
         </button>
       </div>
 
-      {/* Form */}
-      <div>
-        <label className="block font-medium mb-1">
-          <span className="text-red-500">*</span> Task Status Name
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Task Status name"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Task Status Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={TaskStatusName}
+            onChange={(e) => setTaskStatusName(e.target.value)}
+            placeholder="Enter Task Status name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-      >
-        {mode === "edit" ? "Update" : "Create"}
-      </button>
+      {/* Footer */}
+      <div className="flex justify-end gap-3 px-6 py-4 border-t">
+        <Button variant="outline" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Creating..."
+            : mode === "edit"
+            ? "Update Task Status"
+            : "Create Task Status"}
+        </Button>
+      </div>
     </div>
   );
 }

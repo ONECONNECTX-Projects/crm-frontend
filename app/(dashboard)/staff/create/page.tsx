@@ -6,10 +6,22 @@ import { Button } from "@/components/ui/button";
 import InputField from "@/app/common/InputFeild";
 import SelectDropdown from "@/app/common/dropdown";
 import { getAllActiveRoles } from "@/app/services/roles/roles.service";
-import { getAllActiveDepartment } from "@/app/services/department/departments.service";
-import { getAllActiveDesignation } from "@/app/services/designation/designation.service";
-import { getAllActiveShift } from "@/app/services/shift/shifts.service";
-import { getAllActiveEmploymentStatus } from "@/app/services/employment-statuses/employment-statuses.service";
+import {
+  getAllActiveDepartment,
+  getAllDepartments,
+} from "@/app/services/department/departments.service";
+import {
+  getAllActiveDesignation,
+  getAllDesignations,
+} from "@/app/services/designation/designation.service";
+import {
+  getAllActiveShift,
+  getAllShifts,
+} from "@/app/services/shift/shifts.service";
+import {
+  getAllActiveEmploymentStatus,
+  getAllEmploymentStatus,
+} from "@/app/services/employment-statuses/employment-statuses.service";
 import {
   createStaff,
   updateStaff,

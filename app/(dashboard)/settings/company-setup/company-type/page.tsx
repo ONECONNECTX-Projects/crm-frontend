@@ -61,7 +61,7 @@ export default function CompanyTypesPage() {
     }
 
     try {
-      await deleteCompanyType(CompanyType.id);
+      await deleteCompanyType(CompanyType.id || 0);
       showSuccess("CompanyType deleted successfully");
       fetchCompanyType();
     } catch (error) {

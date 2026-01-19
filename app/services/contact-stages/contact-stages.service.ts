@@ -1,7 +1,7 @@
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface ContactStage {
-  id: number;
+  id?: number;
   name: string;
   is_active?: boolean;
   createdAt?: string;
@@ -14,14 +14,6 @@ export interface ContactStagesResponse {
   AllStages: ContactStage[];
 }
 
-export interface CreateContactStageDto {
-  name: string;
-}
-
-export interface UpdateContactStageDto {
-  name?: string;
-}
-
 // Get all ContactStages
 export async function getAllContactStages(): Promise<ContactStagesResponse> {
   const response = await api.get("contact-stages");
@@ -30,7 +22,7 @@ export async function getAllContactStages(): Promise<ContactStagesResponse> {
 
 // Create ContactStage
 export async function createContactStage(
-  data: CreateContactStageDto
+  data: ContactStage
 ): Promise<ApiResponse<ContactStage>> {
   return api.post("contact-stages", data) as Promise<ApiResponse<ContactStage>>;
 }
@@ -38,7 +30,7 @@ export async function createContactStage(
 // Update ContactStage
 export async function updateContactStage(
   id: number,
-  data: UpdateContactStageDto
+  data: ContactStage
 ): Promise<ApiResponse<ContactStage>> {
   return api.put(`contact-stages/${id}`, data) as Promise<
     ApiResponse<ContactStage>

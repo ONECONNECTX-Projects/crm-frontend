@@ -1,31 +1,20 @@
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface Designation {
-  id: number;
+  id?: number;
   name: string;
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
 }
 
-export interface DesignationsResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllDesignations: Designation[];
-}
-
-export interface CreateDesignationDto {
-  name: string;
-}
-
-export interface UpdateDesignationDto {
-  name?: string;
-}
-
 // Get all Designations
-export async function getAllDesignations(): Promise<DesignationsResponse> {
+export async function getAllDesignations(): Promise<
+  ApiResponse<Designation[]>
+> {
   const response = await api.get("Designations");
-  return response as unknown as DesignationsResponse;
+  return response as unknown as ApiResponse<Designation[]>;
 }
 
 // Get Designation by ID
@@ -38,7 +27,7 @@ export async function getDesignationById(
 
 // Create Designation
 export async function createDesignation(
-  data: CreateDesignationDto
+  data: Designation
 ): Promise<ApiResponse<Designation>> {
   return api.post("Designations", data) as Promise<ApiResponse<Designation>>;
 }
@@ -46,7 +35,7 @@ export async function createDesignation(
 // Update Designation
 export async function updateDesignation(
   id: number,
-  data: UpdateDesignationDto
+  data: Designation
 ): Promise<ApiResponse<Designation>> {
   return api.put(`Designations/${id}`, data) as Promise<
     ApiResponse<Designation>
@@ -59,3 +48,19 @@ export async function deleteDesignation(
 ): Promise<ApiResponse<void>> {
   return api.delete(`Designations/${id}`) as Promise<ApiResponse<void>>;
 }
+
+export async function getAllActiveDesignation(): Promise<
+  ApiResponse<OptionDropDownModel[]>
+> {
+  const response = await api.get("Designations/active");
+  return response as unknown as ApiResponse<OptionDropDownModel[]>;
+}
+
+export const updateDesignationStatus = (
+  designationId: number,
+  isActive: boolean
+) => {
+  return api.patch(`Designations/${designationId}/status`, {
+    is_active: isActive,
+  });
+};

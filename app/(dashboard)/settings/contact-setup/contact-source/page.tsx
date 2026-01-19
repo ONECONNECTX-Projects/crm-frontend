@@ -62,7 +62,7 @@ export default function ContactSourcesPage() {
     }
 
     try {
-      await deleteContactSource(ContactSource.id);
+      await deleteContactSource(ContactSource.id || 0);
       showSuccess("Contact Source deleted successfully");
       fetchContactSources();
     } catch (error) {

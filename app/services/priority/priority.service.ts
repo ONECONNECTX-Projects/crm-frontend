@@ -1,7 +1,8 @@
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface Priority {
-  id: number;
+  id?: number;
   name: string;
   color?: string;
   is_active?: boolean;
@@ -9,31 +10,15 @@ export interface Priority {
   updatedAt?: string;
 }
 
-export interface PriorityResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllPriorities: Priority[];
-}
-
-export interface CreatePriorityDto {
-  name: string;
-  color?: string;
-}
-
-export interface UpdatePriorityDto {
-  name?: string;
-  color?: string;
-}
-
 // Get all Priority
-export async function getAllPriority(): Promise<PriorityResponse> {
+export async function getAllPriority(): Promise<ApiResponse<Priority[]>> {
   const response = await api.get("priorities");
-  return response as unknown as PriorityResponse;
+  return response as unknown as ApiResponse<Priority[]>;
 }
 
 // Create Priority
 export async function createPriority(
-  data: CreatePriorityDto
+  data: Priority
 ): Promise<ApiResponse<Priority>> {
   return api.post("priorities", data) as Promise<ApiResponse<Priority>>;
 }
@@ -41,7 +26,7 @@ export async function createPriority(
 // Update Priority
 export async function updatePriority(
   id: number,
-  data: UpdatePriorityDto
+  data: Priority
 ): Promise<ApiResponse<Priority>> {
   return api.put(`priorities/${id}`, data) as Promise<ApiResponse<Priority>>;
 }
@@ -50,3 +35,16 @@ export async function updatePriority(
 export async function deletePriority(id: number): Promise<ApiResponse<void>> {
   return api.delete(`priorities/${id}`) as Promise<ApiResponse<void>>;
 }
+
+export async function getAllActivePriority(): Promise<
+  ApiResponse<OptionDropDownModel[]>
+> {
+  const response = await api.get("priorities/active");
+  return response as unknown as ApiResponse<OptionDropDownModel[]>;
+}
+
+export const updatePriorityStatus = (priorityId: number, isActive: boolean) => {
+  return api.patch(`priorities/${priorityId}/status`, {
+    is_active: isActive,
+  });
+};

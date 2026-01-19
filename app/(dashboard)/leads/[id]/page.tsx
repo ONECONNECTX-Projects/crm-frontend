@@ -1,80 +1,150 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import InputField from "@/app/common/InputFeild";
 import SelectDropdown from "@/app/common/dropdown";
 import { Button } from "@/components/ui/button";
+import { getAllActiveLeadStatuses } from "@/app/services/lead-status/lead-status.service";
+import { getAllActiveLeadSources } from "@/app/services/lead-source/lead-source.service";
+import { getAllActiveUsers } from "@/app/services/user/user.service";
+import { updateLead, deleteLead, Lead, Leads } from "@/app/services/lead/lead.service";
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
+import { useError } from "@/app/providers/ErrorProvider";
 
-interface Lead {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  owner: string;
-  status: string;
-  source: string;
-}
-
-const mockLeads: Lead[] = [
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+1555002222",
-    owner: "Mr. Admin",
-    status: "Working",
-    source: "Referral",
-  },
-];
-
-const leadStatusOptions = [
-  { label: "New", value: "New" },
-  { label: "Working", value: "Working" },
-  { label: "Qualified", value: "Qualified" },
-  { label: "Lost", value: "Lost" },
-];
-
-const leadSources = [
-  { label: "Web", value: "Web" },
-  { label: "Referral", value: "Referral" },
-  { label: "Cold Call", value: "Cold Call" },
-  { label: "Email Campaign", value: "Email Campaign" },
-];
-
-const leadOwners = [
-  { label: "Mr. Admin", value: "Mr. Admin" },
-  { label: "Mr. Salesman", value: "Mr. Salesman" },
-];
-
-function LeadViewContent({ lead }: { lead: Lead }) {
+export default function LeadViewPage() {
+  const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { showSuccess, showError } = useError();
+
+  const [lead, setLead] = useState<Leads | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  // Dropdown options
+  const [leadStatuses, setLeadStatuses] = useState<OptionDropDownModel[]>([]);
+  const [leadSources, setLeadSources] = useState<OptionDropDownModel[]>([]);
+  const [users, setUsers] = useState<OptionDropDownModel[]>([]);
 
   const [editableFields, setEditableFields] = useState({
     name: false,
     phone: false,
     email: false,
   });
+
   const [formData, setFormData] = useState({
-    name: lead.name,
-    email: lead.email,
-    phone: lead.phone,
-    owner: lead.owner,
-    status: lead.status,
-    source: lead.source,
+    name: "",
+    email: "",
+    phone: "",
+    lead_owner_id: "",
+    lead_status_id: "",
+    lead_source_id: "",
   });
+
+  // Parse lead data from URL
+  useEffect(() => {
+    const dataParam = searchParams.get("data");
+    if (dataParam) {
+      try {
+        const parsedLead = JSON.parse(decodeURIComponent(dataParam)) as Leads;
+        setLead(parsedLead);
+        setFormData({
+          name: parsedLead.name || "",
+          email: parsedLead.email || "",
+          phone: parsedLead.phone || "",
+          lead_owner_id: parsedLead.lead_owner_id?.toString() || "",
+          lead_status_id: parsedLead.lead_status_id?.toString() || "",
+          lead_source_id: parsedLead.lead_source_id?.toString() || "",
+        });
+      } catch (error) {
+        console.error("Failed to parse lead data:", error);
+      }
+    }
+    setLoading(false);
+  }, [searchParams]);
+
+  // Fetch dropdown data
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [statusesRes, sourcesRes, usersRes] = await Promise.all([
+          getAllActiveLeadStatuses(),
+          getAllActiveLeadSources(),
+          getAllActiveUsers(),
+        ]);
+
+        setLeadStatuses(statusesRes.data || []);
+        setLeadSources(sourcesRes.data || []);
+        setUsers(usersRes.data || []);
+      } catch (error) {
+        console.error("Failed to fetch dropdown data:", error);
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
 
   const handleEdit = (field: keyof typeof editableFields) => {
     setEditableFields({ ...editableFields, [field]: true });
   };
 
-  const handleSave = () => {
-    console.log("Saving lead data:", formData);
-    setEditableFields({ name: false, phone: false, email: false });
+  const handleSave = async () => {
+    if (!lead) return;
+
+    setSaving(true);
+    try {
+      const leadData: Lead = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        lead_owner_id: parseInt(formData.lead_owner_id) || 0,
+        lead_source_id: parseInt(formData.lead_source_id) || 0,
+        lead_status_id: parseInt(formData.lead_status_id) || 0,
+        priority_id: lead.priority_id || 0,
+        lead_value: lead.lead_value || "",
+      };
+
+      await updateLead(lead.id, leadData);
+      showSuccess("Lead updated successfully");
+      setEditableFields({ name: false, phone: false, email: false });
+    } catch (error) {
+      console.error("Failed to update lead:", error);
+      showError("Failed to update lead");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!lead) return;
+
+    if (window.confirm(`Are you sure you want to delete "${lead.name}"?`)) {
+      try {
+        await deleteLead(lead.id);
+        showSuccess("Lead deleted successfully");
+        router.push("/leads");
+      } catch (error) {
+        console.error("Failed to delete lead:", error);
+        showError("Failed to delete lead");
+      }
+    }
   };
 
   const isEditing = Object.values(editableFields).some((val) => val === true);
+
+  if (loading) {
+    return (
+      <div className="p-10 text-center text-gray-500">Loading...</div>
+    );
+  }
+
+  if (!lead) {
+    return (
+      <div className="p-10 text-center text-gray-500">Lead not found.</div>
+    );
+  }
 
   return (
     <div className="p-6 sm:p-8 bg-white rounded-xl shadow-md mx-auto">
@@ -95,9 +165,10 @@ function LeadViewContent({ lead }: { lead: Lead }) {
           {isEditing && (
             <Button
               onClick={handleSave}
+              disabled={saving}
               className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
-              Save
+              {saving ? "Saving..." : "Save"}
             </Button>
           )}
 
@@ -105,7 +176,10 @@ function LeadViewContent({ lead }: { lead: Lead }) {
             Convert
           </button>
 
-          <button className="px-5 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50">
+          <button
+            onClick={handleDelete}
+            className="px-5 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50"
+          >
             Delete
           </button>
         </div>
@@ -117,9 +191,13 @@ function LeadViewContent({ lead }: { lead: Lead }) {
         <div>
           <SelectDropdown
             label="Lead Owner"
-            value={formData.owner}
-            onChange={(v) => setFormData({ ...formData, owner: v })}
-            options={leadOwners}
+            value={formData.lead_owner_id}
+            onChange={(v) => setFormData({ ...formData, lead_owner_id: v })}
+            options={users.map((user) => ({
+              label: user.name,
+              value: user.id,
+            }))}
+            placeholder="Select Lead Owner"
           />
         </div>
 
@@ -127,9 +205,13 @@ function LeadViewContent({ lead }: { lead: Lead }) {
         <div>
           <SelectDropdown
             label="Lead Source"
-            value={formData.source}
-            onChange={(v) => setFormData({ ...formData, source: v })}
-            options={leadSources}
+            value={formData.lead_source_id}
+            onChange={(v) => setFormData({ ...formData, lead_source_id: v })}
+            options={leadSources.map((source) => ({
+              label: source.name,
+              value: source.id,
+            }))}
+            placeholder="Select Lead Source"
           />
         </div>
 
@@ -137,9 +219,13 @@ function LeadViewContent({ lead }: { lead: Lead }) {
         <div>
           <SelectDropdown
             label="Lead Status"
-            value={formData.status}
-            onChange={(v) => setFormData({ ...formData, status: v })}
-            options={leadStatusOptions}
+            value={formData.lead_status_id}
+            onChange={(v) => setFormData({ ...formData, lead_status_id: v })}
+            options={leadStatuses.map((status) => ({
+              label: status.name,
+              value: status.id,
+            }))}
+            placeholder="Select Lead Status"
           />
         </div>
 
@@ -211,19 +297,4 @@ function LeadViewContent({ lead }: { lead: Lead }) {
       </div>
     </div>
   );
-}
-
-export default function LeadViewPage() {
-  const params = useParams();
-  const id = Number(params.id);
-
-  const lead = mockLeads.find((l) => l.id === id);
-
-  if (!lead) {
-    return (
-      <div className="p-10 text-center text-gray-500">Lead not found.</div>
-    );
-  }
-
-  return <LeadViewContent key={lead.id} lead={lead} />;
 }
