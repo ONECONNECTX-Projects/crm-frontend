@@ -12,10 +12,12 @@ import {
   CompanyType,
   deleteCompanyType,
   getAllCompanyTypes,
+  updateCompanyTypeStatus,
 } from "@/app/services/company-type/company-type.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function CompanyTypesPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
 
   const [companies, setCompanyType] = useState<CompanyType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +32,8 @@ export default function CompanyTypesPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "CompanyType Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -40,7 +44,7 @@ export default function CompanyTypesPage() {
     setLoading(true);
     try {
       const response = await getAllCompanyTypes();
-      setCompanyType(response.AllCompanyTypes || []);
+      setCompanyType(response.data || []);
     } catch (error) {
       console.error("Failed to fetch Company Type:", error);
     } finally {
@@ -66,6 +70,35 @@ export default function CompanyTypesPage() {
       fetchCompanyType();
     } catch (error) {
       console.error("Failed to delete Company Type:", error);
+    }
+  };
+
+  const handleStatusToggle = async (
+    companyType: CompanyType,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setCompanyType((prev) =>
+      prev.map((r) =>
+        r.id === companyType.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateCompanyTypeStatus(companyType.id || 0, newStatus);
+      showSuccess(
+        `Company Type ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setCompanyType((prev) =>
+        prev.map((r) =>
+          r.id === companyType.id
+            ? { ...r, is_active: companyType.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Company Type status");
     }
   };
 
@@ -110,10 +143,18 @@ export default function CompanyTypesPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
-      if (col.key === "createdAt" && row.createdAt) {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.created_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

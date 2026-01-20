@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
@@ -8,95 +8,26 @@ import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import CreateCompanyForm from "./create/page";
 import { useRouter } from "next/navigation";
-
-export interface Company {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  owner: string;
-  type: string;
-  size: number | string;
-  revenue: number | string;
-  industry: string;
-}
-
-const companies: Company[] = [
-  {
-    id: 1,
-    name: "fcedf",
-    email: "-",
-    phone: "-",
-    owner: "John Doe",
-    type: "-",
-    size: "-",
-    revenue: "-",
-    industry: "-",
-  },
-  {
-    id: 2,
-    name: "GreenFields Agro",
-    email: "hello@greenfields.example",
-    phone: "5550003003",
-    owner: "Mrs. Manager",
-    type: "Government",
-    size: 80,
-    revenue: 3200000,
-    industry: "Biotechnology",
-  },
-  {
-    id: 3,
-    name: "TechNova Inc",
-    email: "contact@technova.example",
-    phone: "5550002002",
-    owner: "Mr. Customer",
-    type: "Private",
-    size: 200,
-    revenue: 15000000,
-    industry: "Automotive",
-  },
-  {
-    id: 4,
-    name: "Omega Solutions Ltd",
-    email: "info@omega-solutions.example",
-    phone: "5550001001",
-    owner: "Mr. Admin",
-    type: "Public",
-    size: 50,
-    revenue: 2500000,
-    industry: "Banking and Finance",
-  },
-  {
-    id: 5,
-    name: "Company Name",
-    email: "company@gmail.com",
-    phone: "1234567890",
-    owner: "John Doe",
-    type: "Private",
-    size: 10,
-    revenue: 10000000,
-    industry: "Agriculture",
-  },
-  {
-    id: 6,
-    name: "Company Name",
-    email: "company@gmail.com",
-    phone: "1234567890",
-    owner: "John Doe",
-    type: "Private",
-    size: 10,
-    revenue: 10000000,
-    industry: "Agriculture",
-  },
-];
+import {
+  Company,
+  deleteCompany,
+  getAllCompany,
+} from "@/app/services/company/company.service";
+import StatusBadge from "@/app/common/StatusBadge";
+import { useError } from "@/app/providers/ErrorProvider";
 
 export default function CompanyPage() {
+  const { showSuccess, showError } = useError();
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [openCreate, setOpenCreate] = useState(false);
+  const [companies, setCompanyList] = useState<Company[]>([]);
+
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
   const [columns, setColumns] = useState([
     {
@@ -106,16 +37,62 @@ export default function CompanyPage() {
     },
     { key: "email", label: "Email", visible: true },
     { key: "phone", label: "Phone number", visible: true },
-    { key: "owner", label: "Owner", visible: true },
-    { key: "type", label: "Type", visible: true },
-    { key: "size", label: "Size", visible: true },
     {
-      key: "revenue",
+      key: "owner",
+      label: "Owner",
+      visible: true,
+    },
+    {
+      key: "company_type",
+      label: "Type",
+      visible: true,
+    },
+    { key: "company_size", label: "Size", visible: true },
+    {
+      key: "annual_revenue",
       label: "Annual Revenue",
       visible: true,
     },
-    { key: "industry", label: "Industry", visible: true },
+    {
+      key: "industry",
+      label: "Industry",
+      visible: true,
+    },
   ]);
+
+  const fetchCompany = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCompany();
+      setCompanyList(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch Company:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompany();
+  }, []);
+
+  const handleDelete = async (company: Company) => {
+    if (window.confirm(`Are you sure you want to delete "${company?.name}"?`)) {
+      try {
+        await deleteCompany(company.id);
+        showSuccess("Staff deleted successfully");
+        fetchCompany();
+      } catch (error) {
+        console.error("Failed to delete staff:", error);
+        showError("Failed to delete staff");
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setOpenCreate(false);
+    fetchCompany();
+  };
 
   const actions: TableAction<Company>[] = [
     {
@@ -130,7 +107,88 @@ export default function CompanyPage() {
         setOpenCreate(true);
       },
     },
-    { label: "Delete", variant: "destructive", onClick: () => {} },
+    {
+      label: "Delete",
+      variant: "destructive",
+      onClick: (row) => handleDelete(row),
+    },
+  ];
+
+  const tableColumns: TableColumn<Company>[] = [
+    {
+      key: "id",
+      label: "Id",
+      visible: columns.find((c) => c.key === "id")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      visible: columns.find((c) => c.key === "employee_code")?.visible,
+      render: (row) => (
+        <span className="font-medium text-blue-600">{row.name}</span>
+      ),
+    },
+    {
+      key: "email",
+      label: "Email",
+      visible: columns.find((c) => c.key === "email")?.visible,
+      render: (row) => (
+        <div>
+          <div className="font-medium text-gray-900">{row.email || "-"}</div>
+        </div>
+      ),
+    },
+    {
+      key: "phone",
+      label: "Phone",
+      visible: columns.find((c) => c.key === "email")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">{row?.phone || "-"}</span>
+      ),
+    },
+    {
+      key: "owner",
+      label: "Owner",
+      visible: columns.find((c) => c.key === "owner")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">{row.owner.name || "-"}</span>
+      ),
+    },
+    {
+      key: "companyType",
+      label: "Company Type",
+      visible: columns.find((c) => c.key === "companyType")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.company_type?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "company_size",
+      label: "Company Size",
+      visible: columns.find((c) => c.key === "company_size")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.company_size || "-"}</span>
+      ),
+    },
+    {
+      key: "annual_revenue",
+      label: "Annual Revenue",
+      visible: columns.find((c) => c.key === "annual_revenue")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.annual_revenue || "-"}</span>
+      ),
+    },
+    {
+      key: "industry",
+      label: "Industry Name",
+      visible: columns.find((c) => c.key === "industry")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.industry.name || "-"}</span>
+      ),
+    },
   ];
 
   const handleColumnToggle = (key: string) => {
@@ -181,7 +239,7 @@ export default function CompanyPage() {
 
         {/* Table */}
         <DataTable
-          columns={columns}
+          columns={tableColumns}
           data={paginated}
           actions={actions}
           emptyMessage="No companies found."
@@ -204,7 +262,12 @@ export default function CompanyPage() {
           onClose={() => setOpenCreate(false)}
           width="max-w-4xl"
         >
-          <CreateCompanyForm mode={mode} onClose={() => setOpenCreate(false)} />{" "}
+          <CreateCompanyForm
+            mode={mode}
+            data={editingCompany || undefined}
+            onClose={() => setOpenCreate(false)}
+            onSuccess={handleFormSuccess}
+          />{" "}
         </SlideOver>
       </div>
     </div>

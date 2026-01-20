@@ -12,10 +12,12 @@ import {
   ContactStage,
   deleteContactStage,
   getAllContactStages,
+  updateContactStageStatus,
 } from "@/app/services/contact-stages/contact-stages.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function ContactStagesPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
 
   const [ContactStages, setContactStages] = useState<ContactStage[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +32,8 @@ export default function ContactStagesPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Contact Stage Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -40,7 +44,7 @@ export default function ContactStagesPage() {
     setLoading(true);
     try {
       const response = await getAllContactStages();
-      setContactStages(response.AllStages || []);
+      setContactStages(response.data || []);
     } catch (error) {
       console.error("Failed to fetch ContactStages:", error);
     } finally {
@@ -82,6 +86,34 @@ export default function ContactStagesPage() {
       )
     );
   };
+  const handleStatusToggle = async (
+    contactStage: ContactStage,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setContactStages((prev) =>
+      prev.map((r) =>
+        r.id === contactStage.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateContactStageStatus(contactStage.id || 0, newStatus);
+      showSuccess(
+        `Contact Stage ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setContactStages((prev) =>
+        prev.map((r) =>
+          r.id === contactStage.id
+            ? { ...r, is_active: contactStage.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Contact Stage status");
+    }
+  };
 
   /* =========================
      Table Actions
@@ -110,10 +142,18 @@ export default function ContactStagesPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
-      if (col.key === "createdAt" && row.createdAt) {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.created_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

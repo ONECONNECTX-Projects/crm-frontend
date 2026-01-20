@@ -1,23 +1,20 @@
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface ContactSource {
   id?: number;
   name: string;
   is_active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ContactSourcesResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllSources: ContactSource[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Get all ContactSources
-export async function getAllContactSources(): Promise<ContactSourcesResponse> {
+export async function getAllContactSources(): Promise<
+  ApiResponse<ContactSource[]>
+> {
   const response = await api.get("contact-sources");
-  return response as unknown as ContactSourcesResponse;
+  return response as unknown as ApiResponse<ContactSource[]>;
 }
 
 // Create ContactSource
@@ -45,3 +42,19 @@ export async function deleteContactSource(
 ): Promise<ApiResponse<void>> {
   return api.delete(`contact-sources/${id}`) as Promise<ApiResponse<void>>;
 }
+
+export async function getAllActiveContactSource(): Promise<
+  ApiResponse<OptionDropDownModel[]>
+> {
+  const response = await api.get("contact-sources/active");
+  return response as unknown as ApiResponse<OptionDropDownModel[]>;
+}
+
+export const updateContactSourceStatus = (
+  contactSourceId: number,
+  isActive: boolean
+) => {
+  return api.patch(`contact-sources/${contactSourceId}/status`, {
+    is_active: isActive,
+  });
+};

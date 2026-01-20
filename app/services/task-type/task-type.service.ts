@@ -1,3 +1,4 @@
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface TaskType {
@@ -40,8 +41,15 @@ export async function deleteTaskType(id: number): Promise<ApiResponse<void>> {
   return api.delete(`task-types/${id}`) as Promise<ApiResponse<void>>;
 }
 
-export const updateTaskTypeStatus = (roleId: number, isActive: boolean) => {
-  return api.patch(`task-types/${roleId}/status`, {
+export const updateTaskTypeStatus = (id: number, isActive: boolean) => {
+  return api.patch(`task-types/${id}/status`, {
     is_active: isActive,
   });
 };
+
+export async function getAllActiveTaskType(): Promise<
+  ApiResponse<OptionDropDownModel[]>
+> {
+  const response = await api.get("task-types/active");
+  return response as unknown as ApiResponse<OptionDropDownModel[]>;
+}

@@ -13,10 +13,12 @@ import {
   ContactSource,
   deleteContactSource,
   getAllContactSources,
+  updateContactSourceStatus,
 } from "@/app/services/contact-source/contact-source.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function ContactSourcesPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
 
   const [ContactSources, setContactSources] = useState<ContactSource[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,6 +33,8 @@ export default function ContactSourcesPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Contact Source Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -41,7 +45,7 @@ export default function ContactSourcesPage() {
     setLoading(true);
     try {
       const response = await getAllContactSources();
-      setContactSources(response.AllSources || []);
+      setContactSources(response.data || []);
     } catch (error) {
       console.error("Failed to fetch ContactSources:", error);
     } finally {
@@ -74,6 +78,35 @@ export default function ContactSourcesPage() {
     setOpenCreate(false);
     setEditingContactSource(null);
     fetchContactSources();
+  };
+
+  const handleStatusToggle = async (
+    contactSource: ContactSource,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setContactSources((prev) =>
+      prev.map((r) =>
+        r.id === contactSource.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateContactSourceStatus(contactSource.id || 0, newStatus);
+      showSuccess(
+        `Contact Source ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setContactSources((prev) =>
+        prev.map((r) =>
+          r.id === contactSource.id
+            ? { ...r, is_active: contactSource.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Contact Source status");
+    }
   };
 
   const handleColumnToggle = (key: string) => {
@@ -111,10 +144,18 @@ export default function ContactSourcesPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
-      if (col.key === "createdAt" && row.createdAt) {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.created_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

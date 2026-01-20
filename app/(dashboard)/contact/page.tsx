@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
@@ -8,153 +8,27 @@ import SlideOver from "@/app/common/slideOver";
 import CreateContactForm from "./create/page";
 import Pagination from "@/app/common/pagination";
 import { useRouter } from "next/navigation";
-
-interface Contact {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  owner: string;
-  source: string;
-  stage: string;
-  industry: string;
-  createdAt: string;
-}
-
-const contacts: Contact[] = [
-  {
-    id: 1,
-    name: "Sara Khan",
-    email: "sara.khan@greenfields.example",
-    phone: "5550003303",
-    company: "GreenFields Agro",
-    owner: "Mrs. Manager",
-    source: "Email Campaign",
-    stage: "Lead",
-    industry: "Biotechnology",
-    createdAt: "Dec 12, 2025",
-  },
-  {
-    id: 2,
-    name: "Carlos Mendez",
-    email: "carlos.mendez@technova.example",
-    phone: "5550002202",
-    company: "TechNova Inc",
-    owner: "Mr. Customer",
-    source: "Social Media",
-    stage: "Prospect",
-    industry: "Automotive",
-    createdAt: "Dec 12, 2025",
-  },
-  {
-    id: 3,
-    name: "Aisha Rahman",
-    email: "aisha.rahman@omegacorp.example",
-    phone: "5550001101",
-    company: "Omega Corp",
-    owner: "Mr. Admin",
-    source: "Website",
-    stage: "Lead",
-    industry: "Banking & Finance",
-    createdAt: "Dec 11, 2025",
-  },
-  {
-    id: 4,
-    name: "John Doe",
-    email: "john.doe@alphatech.example",
-    phone: "5550004404",
-    company: "AlphaTech",
-    owner: "John Doe",
-    source: "Referral",
-    stage: "Customer",
-    industry: "Information Technology",
-    createdAt: "Dec 10, 2025",
-  },
-  {
-    id: 5,
-    name: "Priya Sharma",
-    email: "priya.sharma@healthplus.example",
-    phone: "5550005505",
-    company: "HealthPlus",
-    owner: "Ms. Lead",
-    source: "Website",
-    stage: "Prospect",
-    industry: "Healthcare",
-    createdAt: "Dec 10, 2025",
-  },
-  {
-    id: 6,
-    name: "Mohammed Ali",
-    email: "m.ali@logix.example",
-    phone: "5550006606",
-    company: "Logix Transport",
-    owner: "Mr. Ops",
-    source: "Cold Call",
-    stage: "Lead",
-    industry: "Logistics",
-    createdAt: "Dec 9, 2025",
-  },
-  {
-    id: 7,
-    name: "Emily Watson",
-    email: "emily.watson@creativehub.example",
-    phone: "5550007707",
-    company: "Creative Hub",
-    owner: "Ms. Creative",
-    source: "Instagram",
-    stage: "Prospect",
-    industry: "Marketing",
-    createdAt: "Dec 9, 2025",
-  },
-  {
-    id: 8,
-    name: "Rohit Verma",
-    email: "rohit.verma@buildmax.example",
-    phone: "5550008808",
-    company: "BuildMax",
-    owner: "Mr. Builder",
-    source: "Trade Show",
-    stage: "Lead",
-    industry: "Construction",
-    createdAt: "Dec 8, 2025",
-  },
-  {
-    id: 9,
-    name: "Sophia Lee",
-    email: "sophia.lee@finserve.example",
-    phone: "5550009909",
-    company: "FinServe",
-    owner: "Ms. Finance",
-    source: "LinkedIn",
-    stage: "Customer",
-    industry: "Finance",
-    createdAt: "Dec 8, 2025",
-  },
-  {
-    id: 10,
-    name: "David Miller",
-    email: "david.miller@edutech.example",
-    phone: "5550010010",
-    company: "EduTech",
-    owner: "Mr. Education",
-    source: "Website",
-    stage: "Prospect",
-    industry: "Education",
-    createdAt: "Dec 7, 2025",
-  },
-];
+import {
+  getAllContacts,
+  deleteContact,
+  Contact,
+} from "@/app/services/contact/contact.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
 export default function ContactsPage() {
   const [searchValue, setSearchValue] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [contactList, setContactList] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { showSuccess, showError } = useError();
 
   const [columns, setColumns] = useState([
+    { key: "id", label: "ID", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "email", label: "Email", visible: true },
     { key: "phone", label: "Phone Number", visible: true },
@@ -163,8 +37,24 @@ export default function ContactsPage() {
     { key: "source", label: "Source", visible: true },
     { key: "stage", label: "Stage", visible: true },
     { key: "industry", label: "Industry", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
+    { key: "created_at", label: "Create Date", visible: true },
   ]);
+
+  const fetchContacts = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllContacts();
+      setContactList(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch contacts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -174,69 +64,180 @@ export default function ContactsPage() {
     );
   };
 
+  const handleDelete = async (contact: Contact) => {
+    const fullName = `${contact.first_name} ${contact.last_name}`;
+    if (window.confirm(`Are you sure you want to delete "${fullName}"?`)) {
+      try {
+        await deleteContact(contact.id);
+        showSuccess("Contact deleted successfully");
+        fetchContacts();
+      } catch (error) {
+        console.error("Failed to delete contact:", error);
+        showError("Failed to delete contact");
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setOpenCreate(false);
+    fetchContacts();
+  };
+
   const tableActions: TableAction<Contact>[] = [
     {
       label: "View Details",
       onClick: (row) => {
-        router.push(`/contact/${row.id}`);
+        const contactData = encodeURIComponent(JSON.stringify(row));
+        router.push(`/contact/${row.id}?data=${contactData}`);
       },
     },
     {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
+        setEditingContact(row);
         setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete", row),
+      onClick: (row) => handleDelete(row),
       variant: "destructive",
     },
   ];
 
-  const tableColumns: TableColumn<Contact>[] = columns.map((col) => ({
-    key: col.key as keyof Contact,
-    label: col.label,
-    visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
-  }));
+  const tableColumns: TableColumn<Contact>[] = [
+    {
+      key: "id",
+      label: "ID",
+      visible: columns.find((c) => c.key === "id")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      visible: columns.find((c) => c.key === "name")?.visible,
+      render: (row) => (
+        <div>
+          <div className="font-medium text-gray-900">
+            {row.first_name} {row.last_name}
+          </div>
+          <div className="text-xs text-gray-500">{row.job_title || "-"}</div>
+        </div>
+      ),
+    },
+    {
+      key: "email",
+      label: "Email",
+      visible: columns.find((c) => c.key === "email")?.visible,
+      render: (row) => <span className="text-gray-600">{row.email || "-"}</span>,
+    },
+    {
+      key: "phone",
+      label: "Phone Number",
+      visible: columns.find((c) => c.key === "phone")?.visible,
+      render: (row) => <span className="text-gray-600">{row.phone || "-"}</span>,
+    },
+    {
+      key: "owner",
+      label: "Owner",
+      visible: columns.find((c) => c.key === "owner")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.owner?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "company",
+      label: "Company",
+      visible: columns.find((c) => c.key === "company")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.company?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "source",
+      label: "Source",
+      visible: columns.find((c) => c.key === "source")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.source?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "stage",
+      label: "Stage",
+      visible: columns.find((c) => c.key === "stage")?.visible,
+      render: (row) => (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+          {row.stage?.name || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "industry",
+      label: "Industry",
+      visible: columns.find((c) => c.key === "industry")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.industry?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "created_at",
+      label: "Create Date",
+      visible: columns.find((c) => c.key === "created_at")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.created_at
+            ? new Date(row.created_at).toLocaleDateString()
+            : "-"}
+        </span>
+      ),
+    },
+  ];
 
-  const filteredContacts = contacts.filter((contact) =>
-    Object.values(contact).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
-  );
+  const filteredContacts = contactList.filter((contact) => {
+    const searchLower = searchValue.toLowerCase();
+    const fullName = `${contact.first_name} ${contact.last_name}`.toLowerCase();
+    return (
+      fullName.includes(searchLower) ||
+      contact.email?.toLowerCase().includes(searchLower) ||
+      contact.phone?.toLowerCase().includes(searchLower) ||
+      contact.company?.name?.toLowerCase().includes(searchLower) ||
+      contact.owner?.name?.toLowerCase().includes(searchLower)
+    );
+  });
 
   const totalItems = filteredContacts.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const safePage = Math.max(1, Math.min(currentPage, totalPages || 1));
+  const startIndex = (safePage - 1) * pageSize;
   const paginatedContacts = filteredContacts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    startIndex,
+    startIndex + pageSize
   );
+
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
-        {/* Header */}
         <PageHeader
           title="Contacts"
           createButtonText="Create Contact"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
+            setEditingContact(null);
             setOpenCreate(true);
           }}
         />
 
-        {/* Actions */}
         <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          searchPlaceholder="Search contacts..."
+          searchPlaceholder="Search contacts by name, email, phone..."
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
@@ -244,12 +245,11 @@ export default function ContactsPage() {
           onDownloadCSV={() => {}}
         />
 
-        {/* Table */}
         <DataTable
           columns={tableColumns}
           data={paginatedContacts}
           actions={tableActions}
-          emptyMessage="No contacts found."
+          emptyMessage="No contacts found. Add your first contact to get started!"
         />
       </div>
 
@@ -260,17 +260,21 @@ export default function ContactsPage() {
         onPageChange={handlePageChange}
         onPageSizeChange={(size) => {
           setPageSize(size);
-          setCurrentPage(1); // very important
+          setCurrentPage(1);
         }}
       />
 
-      {/* SlideOver with Stepper Form */}
       <SlideOver
         open={openCreate}
         onClose={() => setOpenCreate(false)}
-        width="max-w-4xl"
+        width="sm:w-[70vw] lg:w-[60vw]"
       >
-        <CreateContactForm mode={mode} onClose={() => setOpenCreate(false)} />
+        <CreateContactForm
+          mode={mode}
+          data={editingContact || undefined}
+          onClose={() => setOpenCreate(false)}
+          onSuccess={handleFormSuccess}
+        />
       </SlideOver>
     </div>
   );

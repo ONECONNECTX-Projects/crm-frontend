@@ -12,10 +12,12 @@ import {
   deleteIndustry,
   getAllIndustry,
   Industry,
+  updateIndustryStatus,
 } from "@/app/services/Industry/industry.service";
+import { Toggle } from "@/app/common/toggle";
 
 export default function IndustrysPage() {
-  const { showSuccess } = useError();
+  const { showSuccess, showError } = useError();
 
   const [industries, setIndustry] = useState<Industry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,8 @@ export default function IndustrysPage() {
 
   const [columns, setColumns] = useState([
     { key: "name", label: "Industry Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -39,7 +43,7 @@ export default function IndustrysPage() {
     setLoading(true);
     try {
       const response = await getAllIndustry();
-      setIndustry(response.AllIndustries || []);
+      setIndustry(response.data || []);
     } catch (error) {
       console.error("Failed to fetch Industry:", error);
     } finally {
@@ -65,6 +69,30 @@ export default function IndustrysPage() {
       fetchIndustry();
     } catch (error) {
       console.error("Failed to delete Industry:", error);
+    }
+  };
+
+  const handleStatusToggle = async (industry: Industry, newStatus: boolean) => {
+    // Optimistic UI update
+    setIndustry((prev) =>
+      prev.map((r) =>
+        r.id === industry.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateIndustryStatus(industry.id || 0, newStatus);
+      showSuccess(
+        `Industry ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setIndustry((prev) =>
+        prev.map((r) =>
+          r.id === industry.id ? { ...r, is_active: industry.is_active } : r
+        )
+      );
+      showError("Failed to update Industry status");
     }
   };
 
@@ -109,10 +137,18 @@ export default function IndustrysPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
-      if (col.key === "createdAt" && row.createdAt) {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.created_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

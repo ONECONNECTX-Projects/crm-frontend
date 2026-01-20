@@ -5,20 +5,14 @@ export interface Industry {
   id?: number;
   name: string;
   is_active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface IndustryResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllIndustries: Industry[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Get all Industry
-export async function getAllIndustry(): Promise<IndustryResponse> {
+export async function getAllIndustry(): Promise<ApiResponse<Industry[]>> {
   const response = await api.get("industries");
-  return response as unknown as IndustryResponse;
+  return response as unknown as ApiResponse<Industry[]>;
 }
 
 // Create Industry
