@@ -2,58 +2,59 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+
 import { useError } from "@/app/providers/ErrorProvider";
 import {
-  createTicketStatus,
-  TicketStatus,
-  updateTicketStatus,
-} from "@/app/services/ticket-status/ticket-status.service";
+  createProductCategory,
+  ProductCategory,
+  updateProductCategory,
+} from "@/app/services/product-category/product-category.service";
 
-interface CreateTicketStatusFormProps {
+interface CreateProductCategoryFormProps {
   mode: "create" | "edit";
-  TicketStatusData?: TicketStatus | null;
+  ProductCategoryData?: ProductCategory | null;
   onClose: () => void;
 }
 
-export default function CreateTicketStatusForm({
+export default function CreateProductCategoryForm({
   mode,
-  TicketStatusData,
+  ProductCategoryData,
   onClose,
-}: CreateTicketStatusFormProps) {
+}: CreateProductCategoryFormProps) {
   const { showSuccess, showError } = useError();
-  const [TicketStatusName, setTicketStatusName] = useState("");
+  const [ProductCategoryName, setProductCategoryName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
-    if (mode === "edit" && TicketStatusData) {
-      setTicketStatusName(TicketStatusData.name || "");
+    if (mode === "edit" && ProductCategoryData) {
+      setProductCategoryName(ProductCategoryData.name || "");
     } else {
-      setTicketStatusName("");
+      setProductCategoryName("");
     }
-  }, [mode, TicketStatusData]);
+  }, [mode, ProductCategoryData]);
 
   /* ---------- SUBMIT ---------- */
   const handleSubmit = async () => {
-    if (!TicketStatusName.trim()) {
-      showError("Please enter a Ticket Status name");
+    if (!ProductCategoryName.trim()) {
+      showError("Please enter a Product Category name");
       return;
     }
 
     setSubmitting(true);
     try {
-      if (mode === "edit" && TicketStatusData?.id) {
-        await updateTicketStatus(TicketStatusData.id, {
-          name: TicketStatusName,
+      if (mode === "edit" && ProductCategoryData?.id) {
+        await updateProductCategory(ProductCategoryData.id, {
+          name: ProductCategoryName,
         });
-        showSuccess("Ticket Status updated successfully");
+        showSuccess("Product Category updated successfully");
       } else {
-        await createTicketStatus({ name: TicketStatusName });
-        showSuccess("Ticket Status created successfully");
+        await createProductCategory({ name: ProductCategoryName });
+        showSuccess("Product Category created successfully");
       }
       onClose();
     } catch (error) {
-      console.error("Failed to save Ticket Status:", error);
+      console.error("Failed to save Product Category:", error);
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +65,9 @@ export default function CreateTicketStatusForm({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b">
         <h2 className="text-lg font-semibold">
-          {mode === "edit" ? "Edit Ticket Status" : "Create Ticket Status"}
+          {mode === "edit"
+            ? "Edit Product Category"
+            : "Create Product Category"}
         </h2>
         <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           ✕
@@ -75,13 +78,13 @@ export default function CreateTicketStatusForm({
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Ticket Status Name <span className="text-red-500">*</span>
+            Product Category Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            value={TicketStatusName}
-            onChange={(e) => setTicketStatusName(e.target.value)}
-            placeholder="Enter Ticket Status name"
+            value={ProductCategoryName}
+            onChange={(e) => setProductCategoryName(e.target.value)}
+            placeholder="Enter Product Category name"
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             autoFocus
           />
@@ -99,8 +102,8 @@ export default function CreateTicketStatusForm({
               ? "Updating..."
               : "Creating..."
             : mode === "edit"
-              ? "Update Ticket Status"
-              : "Create Ticket Status"}
+              ? "Update Product Category"
+              : "Create Product Category"}
         </Button>
       </div>
     </div>

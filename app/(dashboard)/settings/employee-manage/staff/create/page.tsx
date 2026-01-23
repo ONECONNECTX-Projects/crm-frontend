@@ -292,11 +292,13 @@ export default function CreateStaffForm({
       }
 
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save staff:", error);
-      showError(
-        mode === "edit" ? "Failed to update staff" : "Failed to create staff"
-      );
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        (mode === "edit" ? "Failed to update staff" : "Failed to create staff");
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -706,7 +708,7 @@ export default function CreateStaffForm({
 
         {/* Navigation and Submit */}
         <div className="flex justify-between items-center mt-8 pt-6 border-t">
-          <div className="flex gap-2">
+          <div>
             {activeTab > 0 && (
               <Button
                 type="button"
@@ -716,28 +718,36 @@ export default function CreateStaffForm({
                 Previous
               </Button>
             )}
-            {activeTab < tabs.length - 1 && (
+          </div>
+
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            {activeTab < tabs.length - 1 ? (
               <Button
                 type="button"
-                variant="outline"
-                onClick={() => setActiveTab(activeTab + 1)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveTab(activeTab + 1);
+                }}
               >
                 Next
               </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="bg-blue-600 text-white hover:bg-blue-700"
+              >
+                {submitting
+                  ? "Saving..."
+                  : mode === "edit"
+                    ? "Update Staff"
+                    : "Create Staff"}
+              </Button>
             )}
           </div>
-
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {submitting
-              ? "Saving..."
-              : mode === "edit"
-                ? "Update Staff"
-                : "Create Staff"}
-          </Button>
         </div>
       </form>
     </div>

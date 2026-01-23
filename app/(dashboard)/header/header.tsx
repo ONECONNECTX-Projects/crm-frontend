@@ -108,7 +108,7 @@ export default function Header() {
 
       {/* CONFIRM LOGOUT POPUP */}
       {confirmLogout && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[999]">
+        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex items-center justify-center z-[999]">
           <div className="bg-white rounded-lg shadow-xl p-6 w-80 animate-fadeIn">
             <h2 className="text-lg font-semibold text-gray-800">
               Confirm Logout

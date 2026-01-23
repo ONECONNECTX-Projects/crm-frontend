@@ -5,20 +5,14 @@ export interface TaskType {
   id?: number;
   name: string;
   is_active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface TaskTypesResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllType: TaskType[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 // Get all TaskTypes
-export async function getAllTaskTypes(): Promise<TaskTypesResponse> {
+export async function getAllTaskTypes(): Promise<ApiResponse<TaskType[]>> {
   const response = await api.get("task-types");
-  return response as unknown as TaskTypesResponse;
+  return response as unknown as ApiResponse<TaskType[]>;
 }
 
 // Create TaskType

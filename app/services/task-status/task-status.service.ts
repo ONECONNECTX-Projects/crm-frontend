@@ -5,20 +5,13 @@ export interface TaskStatus {
   id?: number;
   name: string;
   is_active?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
-
-export interface TaskStatusResponse {
-  isSuccess: boolean;
-  responseCode: number;
-  AllStatus: TaskStatus[];
-}
-
 // Get all TaskStatus
-export async function getAllTaskStatus(): Promise<TaskStatusResponse> {
+export async function getAllTaskStatus(): Promise<ApiResponse<TaskStatus[]>> {
   const response = await api.get("task-statuses");
-  return response as unknown as TaskStatusResponse;
+  return response as unknown as ApiResponse<TaskStatus[]>;
 }
 
 // Create TaskStatus

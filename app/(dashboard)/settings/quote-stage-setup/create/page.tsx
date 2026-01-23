@@ -1,72 +1,106 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  createQuoteStage,
+  QuoteStage,
+  updateQuoteStage,
+} from "@/app/services/quote-stage-setup/quote-stage-setup.service";
 
-interface Props {
+interface CreateQuoteStageFormProps {
   mode: "create" | "edit";
-  QuoteStageSetupId: number | null;
+  QuoteStageData?: QuoteStage | null;
   onClose: () => void;
 }
 
-export default function CreateQuoteStageSetupForm({
+export default function CreateQuoteStageForm({
   mode,
-  QuoteStageSetupId,
+  QuoteStageData,
   onClose,
-}: Props) {
-  const [name, setName] = useState("");
+}: CreateQuoteStageFormProps) {
+  const { showSuccess, showError } = useError();
+  const [QuoteStageName, setQuoteStageName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
+  /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
-    if (mode === "edit" && QuoteStageSetupId) {
-      // fetch by id (mock)
-      setName("Private");
-    }
-  }, [mode, QuoteStageSetupId]);
-
-  const handleSubmit = () => {
-    if (!name.trim()) return;
-
-    if (mode === "edit") {
-      console.log("UPDATE Quote Stage Setup", { QuoteStageSetupId, name });
+    if (mode === "edit" && QuoteStageData) {
+      setQuoteStageName(QuoteStageData.name || "");
     } else {
-      console.log("CREATE Quote Stage Setup", { name });
+      setQuoteStageName("");
+    }
+  }, [mode, QuoteStageData]);
+
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async () => {
+    if (!QuoteStageName.trim()) {
+      showError("Please enter a Quote Stage name");
+      return;
     }
 
-    onClose();
+    setSubmitting(true);
+    try {
+      if (mode === "edit" && QuoteStageData?.id) {
+        await updateQuoteStage(QuoteStageData.id, { name: QuoteStageName });
+        showSuccess("Quote Stage updated successfully");
+      } else {
+        await createQuoteStage({ name: QuoteStageName });
+        showSuccess("Quote Stage created successfully");
+      }
+      onClose();
+    } catch (error) {
+      console.error("Failed to save Quote Stage:", error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex justify-between items-center border-b pb-4">
-        <h2 className="text-xl font-semibold">
-          {mode === "edit"
-            ? "Edit Quote Stage Setup"
-            : "Create Quote Stage Setup"}
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">
+          {mode === "edit" ? "Edit Quote Stage" : "Create Quote Stage"}
         </h2>
-        <button onClick={onClose} className="text-xl">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
           ✕
         </button>
       </div>
 
-      {/* Form */}
-      <div>
-        <label className="block font-medium mb-1">
-          <span className="text-red-500">*</span> Quote Stage Setup Name
-        </label>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Quote Stage Setup name"
-          className="w-full border rounded-lg px-4 py-2"
-        />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Quote Stage Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            value={QuoteStageName}
+            onChange={(e) => setQuoteStageName(e.target.value)}
+            placeholder="Enter Quote Stage name"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+        </div>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-      >
-        {mode === "edit" ? "Update" : "Create"}
-      </button>
+      {/* Footer */}
+      <div className="flex justify-end gap-3 px-6 py-4 border-t">
+        <Button variant="outline" onClick={onClose} disabled={submitting}>
+          Cancel
+        </Button>
+        <Button onClick={handleSubmit} disabled={submitting}>
+          {submitting
+            ? mode === "edit"
+              ? "Updating..."
+              : "Creating..."
+            : mode === "edit"
+              ? "Update Quote Stage"
+              : "Create Quote Stage"}
+        </Button>
+      </div>
     </div>
   );
 }

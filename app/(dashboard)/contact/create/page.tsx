@@ -19,6 +19,7 @@ import { getAllActiveDepartment } from "@/app/services/department/departments.se
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { getAllActiveContactStage } from "@/app/services/contact-stages/contact-stages.service";
 import { getAllActiveContactSource } from "@/app/services/contact-source/contact-source.service";
+import { X } from "lucide-react";
 
 interface CreateContactFormProps {
   mode: "create" | "edit";
@@ -228,7 +229,7 @@ export default function CreateContactForm({
           {mode === "edit" ? "Edit Contact" : "Create Contact"}
         </h2>
         <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          X
+          <X className="w-5 h-5 text-gray-600" />
         </button>
       </div>
 

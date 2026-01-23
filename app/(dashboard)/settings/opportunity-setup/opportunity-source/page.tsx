@@ -1,63 +1,110 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
-import Pagination from "@/app/common/pagination";
 import CreateOpportunitySourceForm from "./create/page";
+import Pagination from "@/app/common/pagination";
+import { useError } from "@/app/providers/ErrorProvider";
+import { Toggle } from "@/app/common/toggle";
+import {
+  deleteOpportunitySource,
+  getAllOpportunitySources,
+  OpportunitySource,
+  updateOpportunitySourceStatus,
+} from "@/app/services/opportunity-source/opportunity-source.service";
 
-interface OpportunitySource {
-  id: number;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-const OpportunitySources: OpportunitySource[] = [
-  {
-    id: 1,
-    name: "Others",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  { id: 2, name: "NGO", createdAt: "Dec 24, 2025", updatedAt: "Dec 24, 2025" },
-  {
-    id: 3,
-    name: "Government",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 4,
-    name: "Public",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-  {
-    id: 5,
-    name: "Private",
-    createdAt: "Dec 24, 2025",
-    updatedAt: "Dec 24, 2025",
-  },
-];
-
-export default function OpportunitySourcePage() {
+export default function OpportunitySourcesPage() {
+  const { showSuccess, showError } = useError();
+  const [OpportunitySources, setOpportunitySources] = useState<
+    OpportunitySource[]
+  >([]);
+  const [loading, setLoading] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const [openForm, setOpenForm] = useState(false);
+  const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingOpportunitySource, setEditingOpportunitySource] =
+    useState<OpportunitySource | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
-    { key: "name", label: "Name", visible: true },
-    { key: "createdAt", label: "Create Date", visible: true },
-    { key: "updatedAt", label: "Update Date", visible: true },
+    { key: "name", label: "OpportunitySource Name", visible: true },
+    { key: "status", label: "Status", visible: true },
+    { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
-  /* COLUMN TOGGLE LOGIC (same as your code) */
+  // Fetch OpportunitySources from API
+  const fetchOpportunitySources = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllOpportunitySources();
+      setOpportunitySources(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch Opportunity Sources:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOpportunitySources();
+  }, []);
+
+  const handleStatusToggle = async (
+    OpportunitySource: OpportunitySource,
+    newStatus: boolean
+  ) => {
+    // Optimistic UI update
+    setOpportunitySources((prev) =>
+      prev.map((r) =>
+        r.id === OpportunitySource.id ? { ...r, is_active: newStatus } : r
+      )
+    );
+
+    try {
+      await updateOpportunitySourceStatus(OpportunitySource.id || 0, newStatus);
+      showSuccess(
+        `Opportunity Source ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+    } catch (error) {
+      // Rollback if API fails
+      setOpportunitySources((prev) =>
+        prev.map((r) =>
+          r.id === OpportunitySource.id
+            ? { ...r, is_active: OpportunitySource.is_active }
+            : r
+        )
+      );
+      showError("Failed to update Opportunity Source status");
+    }
+  };
+
+  // Handle delete OpportunitySource
+  const handleDelete = async (OpportunitySource: OpportunitySource) => {
+    if (
+      !confirm(`Are you sure you want to delete "${OpportunitySource.name}"?`)
+    ) {
+      return;
+    }
+
+    try {
+      await deleteOpportunitySource(OpportunitySource.id || 0);
+      showSuccess("Opportunity Source deleted successfully");
+      fetchOpportunitySources();
+    } catch (error) {
+      console.error("Failed to delete Opportunity Source:", error);
+    }
+  };
+
+  // Handle form close with refresh
+  const handleFormClose = () => {
+    setOpenCreate(false);
+    fetchOpportunitySources();
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
@@ -71,13 +118,13 @@ export default function OpportunitySourcePage() {
       label: "Edit",
       onClick: (row) => {
         setMode("edit");
-        setEditingId(row.id);
-        setOpenForm(true);
+        setEditingOpportunitySource(row);
+        setOpenCreate(true);
       },
     },
     {
       label: "Delete",
-      onClick: (row) => console.log("Delete OpportunitySource Type", row.id),
+      onClick: handleDelete,
       variant: "destructive",
     },
   ];
@@ -86,31 +133,59 @@ export default function OpportunitySourcePage() {
     key: col.key as keyof OpportunitySource,
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row) => {
+      if (col.key === "status") {
+        return (
+          <Toggle
+            checked={row.is_active || false}
+            onChange={(checked) => handleStatusToggle(row, checked)}
+          />
+        );
+      }
+      if (col.key === "createdAt" && row.created_at) {
+        return (
+          <span>
+            {new Date(row.created_at).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </span>
+        );
+      }
+      const value = row[col.key as keyof OpportunitySource];
+      return <span>{value !== undefined ? String(value) : ""}</span>;
+    },
   }));
 
-  const filteredData = OpportunitySources.filter((item) =>
-    Object.values(item).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+  const filteredOpportunitySources = OpportunitySources?.filter(
+    (OpportunitySource) =>
+      Object.values(OpportunitySource).some((val) =>
+        val?.toString().toLowerCase().includes(searchValue.toLowerCase())
+      )
   );
 
-  const paginatedData = filteredData.slice(
+  const totalItems = filteredOpportunitySources.length;
+  const paginatedOpportunitySources = filteredOpportunitySources.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
         {/* Header */}
         <PageHeader
-          title="Opportunity Source"
+          title="Opportunity Sources"
           createButtonText="Create Opportunity Source"
           onCreateClick={() => {
             setMode("create");
-            setEditingId(null);
-            setOpenForm(true);
+            setEditingOpportunitySource(null);
+            setOpenCreate(true);
           }}
         />
 
@@ -118,7 +193,7 @@ export default function OpportunitySourcePage() {
         <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
-          searchPlaceholder="Search Opportunity Source..."
+          searchPlaceholder="Search Opportunity Sources..."
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
@@ -127,36 +202,37 @@ export default function OpportunitySourcePage() {
         />
 
         {/* Table */}
-        <DataTable
-          columns={tableColumns}
-          data={paginatedData}
-          actions={tableActions}
-          emptyMessage="No Opportunity Source  found."
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <p className="text-gray-500">Loading Opportunity Sources...</p>
+          </div>
+        ) : (
+          <DataTable
+            columns={tableColumns}
+            data={paginatedOpportunitySources}
+            actions={tableActions}
+            emptyMessage="No Opportunity Sources found."
+          />
+        )}
       </div>
 
-      {/* Pagination */}
       <Pagination
         currentPage={currentPage}
-        totalItems={filteredData.length}
+        totalItems={totalItems}
         pageSize={pageSize}
-        onPageChange={setCurrentPage}
+        onPageChange={handlePageChange}
         onPageSizeChange={(size) => {
           setPageSize(size);
           setCurrentPage(1);
         }}
       />
 
-      {/* SlideOver Form */}
-      <SlideOver
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        width="max-w-lg"
-      >
+      {/* SlideOver with Form */}
+      <SlideOver open={openCreate} onClose={handleFormClose} width="max-w-lg">
         <CreateOpportunitySourceForm
           mode={mode}
-          OpportunitySourceId={editingId}
-          onClose={() => setOpenForm(false)}
+          OpportunitySourceData={editingOpportunitySource}
+          onClose={handleFormClose}
         />
       </SlideOver>
     </div>

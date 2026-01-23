@@ -44,7 +44,7 @@ export default function TaskStatusPage() {
     setLoading(true);
     try {
       const response = await getAllTaskStatus();
-      setTaskStatus(response.AllStatus || []);
+      setTaskStatus(response.data || []);
     } catch (error) {
       console.error("Failed to fetch Task Status:", error);
     } finally {
@@ -136,10 +136,10 @@ export default function TaskStatusPage() {
     label: col.label,
     visible: col.visible,
     render: (row) => {
-      if (col.key === "createdAt" && row.createdAt) {
+      if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
-            {new Date(row.createdAt).toLocaleDateString("en-US", {
+            {new Date(row.created_at).toLocaleDateString("en-US", {
               year: "numeric",
               month: "short",
               day: "numeric",

@@ -17,19 +17,6 @@ import {
 import { useError } from "@/app/providers/ErrorProvider";
 import { Toggle } from "@/app/common/toggle";
 
-const statusColorMap = {
-  active: {
-    bg: "bg-green-50",
-    text: "text-green-700",
-    border: "border-green-200",
-  },
-  inactive: {
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-  },
-};
-
 export default function DepartmentsPage() {
   const { showSuccess, showError } = useError();
   const [departments, setDepartments] = useState<Department[]>([]);

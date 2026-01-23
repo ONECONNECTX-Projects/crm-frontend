@@ -56,7 +56,7 @@ const initialAddress: CompanyAddress = {
 
 const steps = [
   { id: 1, title: "Company Information" },
-  { id: 2, title: "Address Information" },
+  { id: 2, title: "Billing Information" },
 ];
 
 export default function CreateCompanyForm({
@@ -361,7 +361,7 @@ export default function CreateCompanyForm({
             {/* Present Address */}
             <div>
               <h3 className="text-md font-semibold text-gray-800 mb-4">
-                Present Address
+                Billing Address
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 <div className="md:col-span-2">
@@ -418,14 +418,14 @@ export default function CreateCompanyForm({
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <label htmlFor="copyAddress" className="text-sm text-gray-700">
-                Same as Present Address
+                Same as Billing Address
               </label>
             </div>
 
             {/* Permanent Address */}
             <div>
               <h3 className="text-md font-semibold text-gray-800 mb-4">
-                Permanent Address
+                Shipping Address
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                 <div className="md:col-span-2">

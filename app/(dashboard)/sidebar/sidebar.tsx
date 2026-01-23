@@ -190,7 +190,7 @@ const settingsMenu: MenuItem[] = [
     children: [
       {
         name: "Product Category",
-        path: "/settings/product-setup/product-category",
+        path: "/settings/product-category-setup",
       },
     ],
   },
