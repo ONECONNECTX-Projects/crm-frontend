@@ -20,6 +20,14 @@ import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { getAllActiveContactStage } from "@/app/services/contact-stages/contact-stages.service";
 import { getAllActiveContactSource } from "@/app/services/contact-source/contact-source.service";
 import { X } from "lucide-react";
+import { Dialog } from "@radix-ui/react-dialog";
+import { DialogContent, DialogHeader } from "@/components/ui/dialog";
+import CreateContactSourceForm from "../../settings/contact-setup/contact-source/create/page";
+import CreateContactStageForm from "../../settings/contact-setup/contact-stage/create/page";
+import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
+import SelectDropdown from "@/app/common/dropdown";
+import SlideOver from "@/app/common/slideOver";
+import CreateCompanyForm from "../../company/create/page";
 
 interface CreateContactFormProps {
   mode: "create" | "edit";
@@ -35,12 +43,12 @@ const initialContactInfo: ContactInfo = {
   phone: "",
   birthday: "",
   job_title: "",
-  owner_id: 0,
-  company_id: 0,
-  department_id: 0,
-  industry_id: 0,
-  contact_source_id: 0,
-  contact_stage_id: 0,
+  owner_id: "",
+  company_id: "",
+  department_id: "",
+  industry_id: "",
+  contact_source_id: "",
+  contact_stage_id: "",
   twitter: "",
   linkedin: "",
 };
@@ -85,6 +93,13 @@ export default function CreateContactForm({
   const [sources, setSources] = useState<OptionDropDownModel[]>([]);
   const [stages, setStages] = useState<OptionDropDownModel[]>([]);
 
+  //model
+  const [openContactSourceModal, setOpenContactSourceModal] = useState(false);
+  const [openContactStageModal, setOpenContactStageModal] = useState(false);
+  const [openIndustryModal, setOpenIndustryModal] = useState(false);
+  const [openDepartmentModal, setOpenDepartmentModal] = useState(false);
+  const [openCompanySlider, setOpenCompanySlider] = useState(false);
+
   // Fetch dropdown data
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -127,12 +142,12 @@ export default function CreateContactForm({
         phone: data.phone || "",
         birthday: data.birthday || "",
         job_title: data.job_title || "",
-        owner_id: data.owner_id || 0,
-        company_id: data.company_id || 0,
-        department_id: data.department_id || 0,
-        industry_id: data.industry_id || 0,
-        contact_source_id: data.contact_source_id || 0,
-        contact_stage_id: data.contact_stage_id || 0,
+        owner_id: data.owner_id || "",
+        company_id: data.company_id || "",
+        department_id: data.department_id || "",
+        industry_id: data.industry_id || "",
+        contact_source_id: data.contact_source_id || "",
+        contact_stage_id: data.contact_stage_id || "",
         twitter: data.twitter || "",
         linkedin: data.linkedin || "",
       });
@@ -323,58 +338,81 @@ export default function CreateContactForm({
                 noLeadingSpace
                 placeholder="Enter job title"
               />
-              <SelectField
+              <SelectDropdown
                 label="Owner"
                 value={contactInfo.owner_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, owner_id: v })
                 }
-                options={owners}
+                options={owners.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
                 placeholder="Select Owner"
               />
-              <SelectField
+              <SelectDropdown
                 label="Company"
                 value={contactInfo.company_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, company_id: v })
                 }
-                options={companies}
+                options={companies.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenCompanySlider(true)}
                 placeholder="Select Company"
               />
-              <SelectField
+              <SelectDropdown
                 label="Department"
                 value={contactInfo.department_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, department_id: v })
                 }
-                options={departments}
+                options={departments.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenDepartmentModal(true)}
                 placeholder="Select Department"
               />
-              <SelectField
+              <SelectDropdown
                 label="Industry"
                 value={contactInfo.industry_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, industry_id: v })
                 }
-                options={industries}
+                options={industries.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenDepartmentModal(true)}
                 placeholder="Select Industry"
               />
-              <SelectField
+              <SelectDropdown
                 label="Contact Source"
                 value={contactInfo.contact_source_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, contact_source_id: v })
                 }
-                options={sources}
+                options={sources.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenContactSourceModal(true)}
                 placeholder="Select Source"
               />
-              <SelectField
+              <SelectDropdown
                 label="Contact Stage"
                 value={contactInfo.contact_stage_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, contact_stage_id: v })
                 }
-                options={stages}
+                options={stages.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenContactStageModal(true)}
                 placeholder="Select Stage"
               />
               <InputField
@@ -558,42 +596,112 @@ export default function CreateContactForm({
           )}
         </div>
       </div>
-    </div>
-  );
-}
+      {openContactSourceModal && (
+        <Dialog
+          open={openContactSourceModal}
+          onOpenChange={() => setOpenContactSourceModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateContactSourceForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenContactSourceModal(false);
 
-/* ---------- HELPER COMPONENTS ---------- */
+                const res = await getAllActiveContactSource();
+                setSources(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  options: OptionDropDownModel[];
-  placeholder: string;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <select
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-      >
-        <option value={0}>{placeholder}</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
+      {openContactStageModal && (
+        <Dialog
+          open={openContactStageModal}
+          onOpenChange={() => setOpenContactStageModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateContactStageForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenContactStageModal(false);
+
+                const res = await getAllActiveContactStage();
+                setStages(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openIndustryModal && (
+        <Dialog
+          open={openIndustryModal}
+          onOpenChange={() => setOpenIndustryModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateIndustryForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenIndustryModal(false);
+
+                const res = await getAllActiveIndustry();
+                setIndustries(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openDepartmentModal && (
+        <Dialog
+          open={openDepartmentModal}
+          onOpenChange={() => setOpenDepartmentModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateIndustryForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenDepartmentModal(false);
+
+                const res = await getAllActiveDepartment();
+                setDepartments(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openCompanySlider && (
+        <SlideOver
+          open={openCompanySlider}
+          onClose={() => setOpenCompanySlider(false)}
+          width="sm:w-[70vw] lg:w-[60vw]"
+        >
+          <CreateCompanyForm
+            mode={mode}
+            onClose={() => setOpenCompanySlider(false)}
+            onSuccess={async () => {
+              setOpenCompanySlider(false);
+
+              const res = await getAllActiveCompanies();
+              setCompanies(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
     </div>
   );
 }

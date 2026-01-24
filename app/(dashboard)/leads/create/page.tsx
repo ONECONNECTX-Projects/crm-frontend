@@ -17,6 +17,11 @@ import {
 } from "@/app/services/lead/lead.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
+import CreateLeadSourceForm from "../../settings/lead-setup/lead-source/create/page";
+import { Dialog } from "@radix-ui/react-dialog";
+import { DialogContent, DialogHeader } from "@/components/ui/dialog";
+import CreateLeadStatusForm from "../../settings/lead-setup/lead-status/create/page";
+import CreatePriorityForm from "../../settings/priority/create/page";
 
 interface CreateLeadFormProps {
   mode?: "create" | "edit";
@@ -35,6 +40,11 @@ export default function CreateLeadForm({
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  //model
+  const [openLeadSourceModal, setOpenLeadSourceModal] = useState(false);
+  const [openLeadStatusModal, setOpenLeadStatusModal] = useState(false);
+  const [openPriorityModal, setOpenPriorityModal] = useState(false);
 
   // Dropdown options
   const [leadStatuses, setLeadStatuses] = useState<OptionDropDownModel[]>([]);
@@ -140,7 +150,7 @@ export default function CreateLeadForm({
     } catch (error) {
       console.error("Failed to save lead:", error);
       showError(
-        mode === "edit" ? "Failed to update lead" : "Failed to create lead"
+        mode === "edit" ? "Failed to update lead" : "Failed to create lead",
       );
     } finally {
       setSubmitting(false);
@@ -200,6 +210,17 @@ export default function CreateLeadForm({
             />
           </div>
 
+          {/* LEAD VALUE */}
+          <div>
+            <InputField
+              type="text"
+              label="Lead Value"
+              value={formData.lead_value}
+              onChange={(v) => setFormData({ ...formData, lead_value: v })}
+              placeholder="Enter Lead Value"
+            />
+          </div>
+
           {/* LEAD OWNER */}
           <div>
             <SelectDropdown
@@ -214,17 +235,6 @@ export default function CreateLeadForm({
             />
           </div>
 
-          {/* LEAD VALUE */}
-          <div>
-            <InputField
-              type="text"
-              label="Lead Value"
-              value={formData.lead_value}
-              onChange={(v) => setFormData({ ...formData, lead_value: v })}
-              placeholder="Enter Lead Value"
-            />
-          </div>
-
           {/* PRIORITY */}
           <div>
             <SelectDropdown
@@ -236,6 +246,7 @@ export default function CreateLeadForm({
                 value: priority.id,
               }))}
               placeholder="Select Priority"
+              onAddClick={() => setOpenPriorityModal(true)}
             />
           </div>
 
@@ -249,6 +260,7 @@ export default function CreateLeadForm({
                 label: status.name,
                 value: status.id,
               }))}
+              onAddClick={() => setOpenLeadStatusModal(true)}
               placeholder="Select Lead Status"
             />
           </div>
@@ -263,6 +275,7 @@ export default function CreateLeadForm({
                 label: source.name,
                 value: source.id,
               }))}
+              onAddClick={() => setOpenLeadSourceModal(true)}
               placeholder="Select Lead Source"
             />
           </div>
@@ -317,6 +330,72 @@ export default function CreateLeadForm({
             Import From CSV
           </button>
         </div>
+      )}
+
+      {openLeadSourceModal && (
+        <Dialog
+          open={openLeadSourceModal}
+          onOpenChange={() => setOpenLeadSourceModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateLeadSourceForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenLeadSourceModal(false);
+
+                const res = await getAllActiveLeadSources();
+                setLeadSources(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openLeadStatusModal && (
+        <Dialog
+          open={openLeadStatusModal}
+          onOpenChange={() => setOpenLeadStatusModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateLeadStatusForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenLeadStatusModal(false);
+
+                const res = await getAllActiveLeadStatuses();
+                setLeadStatuses(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openPriorityModal && (
+        <Dialog
+          open={openPriorityModal}
+          onOpenChange={() => setOpenPriorityModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreatePriorityForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenPriorityModal(false);
+
+                const res = await getAllActivePriority();
+                setPriorities(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

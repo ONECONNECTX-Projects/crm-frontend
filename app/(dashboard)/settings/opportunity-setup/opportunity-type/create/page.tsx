@@ -13,12 +13,16 @@ interface CreateOpportunityTypeFormProps {
   mode: "create" | "edit";
   OpportunityTypeData?: OpportunityType | null;
   onClose: () => void;
+  onSuccess?: () => Promise<void> | void;
+  popUp?: boolean;
 }
 
 export default function CreateOpportunityTypeForm({
   mode,
   OpportunityTypeData,
   onClose,
+  onSuccess,
+  popUp = false,
 }: CreateOpportunityTypeFormProps) {
   const { showSuccess, showError } = useError();
   const [OpportunityTypeName, setOpportunityTypeName] = useState("");
@@ -51,7 +55,7 @@ export default function CreateOpportunityTypeForm({
         await createOpportunityType({ name: OpportunityTypeName });
         showSuccess("Opportunity Type created successfully");
       }
-      onClose();
+      popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Opportunity Type:", error);
     } finally {
@@ -62,16 +66,21 @@ export default function CreateOpportunityTypeForm({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
-          {mode === "edit"
-            ? "Edit Opportunity Type"
-            : "Create Opportunity Type"}
-        </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          ✕
-        </button>
-      </div>
+      {!popUp && (
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold">
+            {mode === "edit"
+              ? "Edit Opportunity Type"
+              : "Create Opportunity Type"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
@@ -92,9 +101,11 @@ export default function CreateOpportunityTypeForm({
 
       {/* Footer */}
       <div className="flex justify-end gap-3 px-6 py-4 border-t">
-        <Button variant="outline" onClick={onClose} disabled={submitting}>
-          Cancel
-        </Button>
+        {!popUp && (
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={handleSubmit} disabled={submitting}>
           {submitting
             ? mode === "edit"

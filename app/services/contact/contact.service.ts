@@ -12,12 +12,12 @@ export interface ContactInfo {
   phone: string;
   birthday: string;
   job_title: string;
-  owner_id: number;
-  company_id: number;
-  department_id: number;
-  industry_id: number;
-  contact_source_id: number;
-  contact_stage_id: number;
+  owner_id: string;
+  company_id: string;
+  department_id: string;
+  industry_id: string;
+  contact_source_id: string;
+  contact_stage_id: string;
   twitter: string;
   linkedin: string;
 }
@@ -51,12 +51,12 @@ export interface Contact {
   phone: string;
   birthday: string;
   job_title: string;
-  owner_id: number;
-  company_id: number;
-  department_id: number;
-  industry_id: number;
-  contact_source_id: number;
-  contact_stage_id: number;
+  owner_id: string;
+  company_id: string;
+  department_id: string;
+  industry_id: string;
+  contact_source_id: string;
+  contact_stage_id: string;
   twitter: string;
   linkedin: string;
   is_active: boolean;
@@ -89,7 +89,7 @@ export async function getAllContacts(): Promise<ApiResponse<Contact[]>> {
 
 // Get contact by ID
 export async function getContactById(
-  id: number
+  id: number,
 ): Promise<ApiResponse<Contact>> {
   const response = await api.get(`contacts/${id}`);
   return response as unknown as ApiResponse<Contact>;
@@ -97,7 +97,7 @@ export async function getContactById(
 
 // Create Contact
 export async function createContact(
-  data: ContactPayload
+  data: ContactPayload,
 ): Promise<ApiResponse<Contact>> {
   return api.post("contacts", data) as Promise<ApiResponse<Contact>>;
 }
@@ -105,7 +105,7 @@ export async function createContact(
 // Update Contact
 export async function updateContact(
   id: number,
-  data: ContactPayload
+  data: ContactPayload,
 ): Promise<ApiResponse<Contact>> {
   return api.put(`contacts/${id}`, data) as Promise<ApiResponse<Contact>>;
 }

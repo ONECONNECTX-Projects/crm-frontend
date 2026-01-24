@@ -14,12 +14,16 @@ interface CreateTicketCategoryFormProps {
   mode: "create" | "edit";
   TicketCategoryData?: TicketCategory | null;
   onClose: () => void;
+  onSuccess?: () => Promise<void> | void;
+  popUp?: boolean;
 }
 
 export default function CreateTicketCategoryForm({
   mode,
   TicketCategoryData,
   onClose,
+  onSuccess,
+  popUp = false,
 }: CreateTicketCategoryFormProps) {
   const { showSuccess, showError } = useError();
   const [TicketCategoryName, setTicketCategoryName] = useState("");
@@ -52,7 +56,7 @@ export default function CreateTicketCategoryForm({
         await createTicketCategory({ name: TicketCategoryName });
         showSuccess("Ticket Category created successfully");
       }
-      onClose();
+      popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Ticket Category:", error);
     } finally {
@@ -63,14 +67,19 @@ export default function CreateTicketCategoryForm({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
-          {mode === "edit" ? "Edit TicketCategory" : "Create TicketCategory"}
-        </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          ✕
-        </button>
-      </div>
+      {!popUp && (
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold">
+            {mode === "edit" ? "Edit TicketCategory" : "Create TicketCategory"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
@@ -91,9 +100,11 @@ export default function CreateTicketCategoryForm({
 
       {/* Footer */}
       <div className="flex justify-end gap-3 px-6 py-4 border-t">
-        <Button variant="outline" onClick={onClose} disabled={submitting}>
-          Cancel
-        </Button>
+        {!popUp && (
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={handleSubmit} disabled={submitting}>
           {submitting
             ? mode === "edit"

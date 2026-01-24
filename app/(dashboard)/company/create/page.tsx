@@ -17,7 +17,11 @@ import {
   updateCompany,
 } from "@/app/services/company/company.service";
 import { getAllActiveCompanyType } from "@/app/services/company-type/company-type.service";
-
+import SelectDropdown from "@/app/common/dropdown";
+import { Dialog } from "@radix-ui/react-dialog";
+import { DialogContent, DialogHeader } from "@/components/ui/dialog";
+import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
+import CreateCompanyTypeForm from "../../settings/company-setup/company-type/create/page";
 interface CreateCompanyFormProps {
   mode: "create" | "edit";
   data?: Company;
@@ -27,11 +31,11 @@ interface CreateCompanyFormProps {
 
 const initialCompanyInfo: CompanyInfo = {
   name: "",
-  owner_id: 0,
-  industry_id: 0,
-  company_type_id: 0,
+  owner_id: "",
+  industry_id: "",
+  company_type_id: "",
   company_size: "",
-  annual_revenue: "0",
+  annual_revenue: "",
   phone: "",
   email: "",
   website: "",
@@ -78,6 +82,9 @@ export default function CreateCompanyForm({
   const [industries, setIndustries] = useState<OptionDropDownModel[]>([]);
   const [companyTypes, setCompanyType] = useState<OptionDropDownModel[]>([]);
 
+  //Modal
+  const [openIndustryModal, setOpenIndustryModal] = useState(false);
+  const [openCompanyTypeModal, setOpenCompanyTypeModal] = useState(false);
   // Fetch dropdown data
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -102,10 +109,10 @@ export default function CreateCompanyForm({
     if (mode === "edit" && data) {
       setCompanyInfo({
         name: data.name || "",
-        owner_id: data.owner_id || 0,
-        company_type_id: data.company_type_id || 0,
+        owner_id: data.owner_id || "",
+        company_type_id: data.company_type_id || "",
         company_size: data.company_size || "",
-        industry_id: data.industry_id || 0,
+        industry_id: data.industry_id || "",
         annual_revenue: data.annual_revenue || "",
         twitter: data.twitter || "",
         linkedin: data.linkedin || "",
@@ -187,9 +194,13 @@ export default function CreateCompanyForm({
         showSuccess("Company created successfully");
       }
       onSuccess?.();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        (mode === "edit" ? "Failed to update staff" : "Failed to create staff");
       console.error("Failed to save Company:", error);
-      showError("Failed to save Company");
+      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -255,13 +266,16 @@ export default function CreateCompanyForm({
                 noLeadingSpace
                 placeholder="Enter Name"
               />
-              <SelectField
+              <SelectDropdown
                 label="Owner"
                 value={CompanyInfo.owner_id}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, owner_id: v })
                 }
-                options={owners}
+                options={owners.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
                 placeholder="Select Owner"
               />
               <InputField
@@ -290,23 +304,31 @@ export default function CreateCompanyForm({
                 value={CompanyInfo.email}
                 onChange={(v) => setCompanyInfo({ ...CompanyInfo, email: v })}
               />
-              <SelectField
+              <SelectDropdown
                 label="Industry"
                 value={CompanyInfo.industry_id}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, industry_id: v })
                 }
-                options={industries}
+                options={industries.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenIndustryModal(true)}
                 placeholder="Select Industry"
               />
 
-              <SelectField
+              <SelectDropdown
                 label="Company"
                 value={CompanyInfo.company_type_id}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, company_type_id: v })
                 }
-                options={companyTypes}
+                options={companyTypes.map((source) => ({
+                  label: source.name,
+                  value: source.id,
+                }))}
+                onAddClick={() => setOpenCompanyTypeModal(true)}
                 placeholder="Select Company Type"
               />
 
@@ -514,42 +536,50 @@ export default function CreateCompanyForm({
           )}
         </div>
       </div>
-    </div>
-  );
-}
 
-/* ---------- HELPER COMPONENTS ---------- */
+      {openIndustryModal && (
+        <Dialog
+          open={openIndustryModal}
+          onOpenChange={() => setOpenIndustryModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateIndustryForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenIndustryModal(false);
 
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  label: string;
-  value: number;
-  onChange: (value: number) => void;
-  options: OptionDropDownModel[];
-  placeholder: string;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <select
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-      >
-        <option value={0}>{placeholder}</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
+                const res = await getAllActiveIndustry();
+                setIndustries(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openCompanyTypeModal && (
+        <Dialog
+          open={openCompanyTypeModal}
+          onOpenChange={() => setOpenCompanyTypeModal(false)}
+        >
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader />
+            <CreateCompanyTypeForm
+              mode={mode}
+              onClose={onClose}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenCompanyTypeModal(false);
+
+                const res = await getAllActiveCompanyType();
+                setCompanyType(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

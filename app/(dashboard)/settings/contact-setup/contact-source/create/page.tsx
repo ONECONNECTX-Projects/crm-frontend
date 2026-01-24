@@ -14,12 +14,16 @@ interface CreateContactSourceFormProps {
   mode: "create" | "edit";
   ContactSourceData?: ContactSource | null;
   onClose: () => void;
+  onSuccess?: () => Promise<void> | void;
+  popUp?: boolean;
 }
 
 export default function CreateContactSourceForm({
   mode,
   ContactSourceData,
   onClose,
+  onSuccess,
+  popUp = false,
 }: CreateContactSourceFormProps) {
   const { showSuccess, showError } = useError();
 
@@ -56,7 +60,7 @@ export default function CreateContactSourceForm({
         showSuccess("Contact Source created successfully");
       }
 
-      onClose();
+      popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Contact Source:", error);
       showError("Failed to save Contact Source");
@@ -68,14 +72,19 @@ export default function CreateContactSourceForm({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
-          {mode === "edit" ? "Edit Contact Source" : "Create ContactSource"}
-        </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          ✕
-        </button>
-      </div>
+      {!popUp && (
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h2 className="text-lg font-semibold">
+            {mode === "edit" ? "Edit Contact Source" : "Create ContactSource"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6">
@@ -96,17 +105,19 @@ export default function CreateContactSourceForm({
 
       {/* Footer */}
       <div className="flex justify-end gap-3 px-6 py-4 border-t">
-        <Button variant="outline" onClick={onClose} disabled={submitting}>
-          Cancel
-        </Button>
+        {!popUp && (
+          <Button variant="outline" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={handleSubmit} disabled={submitting}>
           {submitting
             ? mode === "edit"
               ? "Updating..."
               : "Creating..."
             : mode === "edit"
-            ? "Update Contact Source"
-            : "Create Contact Source"}
+              ? "Update Contact Source"
+              : "Create Contact Source"}
         </Button>
       </div>
     </div>

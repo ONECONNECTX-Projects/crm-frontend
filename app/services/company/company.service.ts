@@ -1,15 +1,11 @@
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
-import { Industry } from "../Industry/industry.service";
-import { ContactSource } from "../contact-source/contact-source.service";
-import { ContactStage } from "../contact-stages/contact-stages.service";
-
 // Company info for create/update
 export interface CompanyInfo {
   name: string;
-  owner_id: number;
-  industry_id: number;
-  company_type_id: number;
+  owner_id: string;
+  industry_id: string;
+  company_type_id: string;
   company_size: string;
   annual_revenue: string;
   phone: string;
@@ -56,9 +52,9 @@ export interface Company {
   is_delete: boolean;
   createdAt: Date;
   updatedAt: Date;
-  owner_id: number;
-  industry_id: number;
-  company_type_id: number;
+  owner_id: string;
+  industry_id: string;
+  company_type_id: string;
   industry: CompanyType;
   company_type: CompanyType;
   owner: OptionDropDownModel;
@@ -82,7 +78,7 @@ export async function getAllCompany(): Promise<ApiResponse<Company[]>> {
 
 // Get Company by ID
 export async function getCompanyById(
-  id: number
+  id: number,
 ): Promise<ApiResponse<Company>> {
   const response = await api.get(`companies/${id}`);
   return response as unknown as ApiResponse<Company>;
@@ -90,7 +86,7 @@ export async function getCompanyById(
 
 // Create Company
 export async function createCompany(
-  data: CompanyPayload
+  data: CompanyPayload,
 ): Promise<ApiResponse<Company>> {
   return api.post("companies", data) as Promise<ApiResponse<Company>>;
 }
@@ -98,7 +94,7 @@ export async function createCompany(
 // Update Company
 export async function updateCompany(
   id: number,
-  data: CompanyPayload
+  data: CompanyPayload,
 ): Promise<ApiResponse<Company>> {
   return api.put(`companies/${id}`, data) as Promise<ApiResponse<Company>>;
 }

@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import React from "react";
 
 interface Option {
@@ -12,6 +13,7 @@ interface SelectDropdownProps {
   placeholder?: string;
   onChange?: (value: string) => void;
   className?: string;
+  onAddClick?: () => void;
   disabled?: boolean;
 }
 
@@ -23,11 +25,25 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
   onChange,
   className = "",
   disabled = false,
+  onAddClick,
 }) => {
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-1 font-medium text-gray-700">{label}</label>
+        <div className="flex items-center  mb-1">
+          <label className="font-medium text-gray-700">{label}</label>
+
+          {onAddClick && (
+            <button
+              type="button"
+              onClick={onAddClick}
+              className="ml-2 p-2 rounded  hover:bg-blue-100"
+              title={`Add ${label}`}
+            >
+              <Plus className="w-4 h-4 text-blue-600" />
+            </button>
+          )}
+        </div>
       )}
 
       <select
