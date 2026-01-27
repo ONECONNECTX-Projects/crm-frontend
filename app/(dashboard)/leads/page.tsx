@@ -60,8 +60,8 @@ export default function LeadsPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -165,8 +165,7 @@ export default function LeadsPage() {
     {
       label: "View Details",
       onClick: (row) => {
-        const leadData = encodeURIComponent(JSON.stringify(row));
-        router.push(`/leads/${row.id}?data=${leadData}`);
+        router.push(`/leads/${row.id}`);
       },
     },
     {
@@ -192,8 +191,8 @@ export default function LeadsPage() {
 
   const filteredLeads = leads.filter((lead) =>
     Object.values(lead).some((value) =>
-      value?.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+      value?.toString().toLowerCase().includes(searchValue.toLowerCase()),
+    ),
   );
 
   const totalItems = filteredLeads.length;

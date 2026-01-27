@@ -13,7 +13,6 @@ import {
   deleteCompany,
   getAllCompany,
 } from "@/app/services/company/company.service";
-import StatusBadge from "@/app/common/StatusBadge";
 import { useError } from "@/app/providers/ErrorProvider";
 
 export default function CompanyPage() {
@@ -194,18 +193,21 @@ export default function CompanyPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
   const filtered = companies.filter((c) =>
-    Object.values(c).join(" ").toLowerCase().includes(searchValue.toLowerCase())
+    Object.values(c)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchValue.toLowerCase()),
   );
 
   const paginated = filtered.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   return (

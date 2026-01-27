@@ -1,8 +1,12 @@
 "use client";
 
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Contact, deleteContact } from "@/app/services/contact/contact.service";
+import {
+  Contact,
+  deleteContact,
+  getContactById,
+} from "@/app/services/contact/contact.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import SlideOver from "@/app/common/slideOver";
 import CreateContactForm from "../create/page";
@@ -20,25 +24,30 @@ const tabs = [
 
 export default function ContactViewPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { showSuccess, showError } = useError();
-  const contactId = params.id;
+  const contactId = Number(params.id);
   const [activeTab, setActiveTab] = useState("Contact Information");
   const [contact, setContact] = useState<Contact | null>(null);
   const [openEdit, setOpenEdit] = useState(false);
 
+  //
+
   useEffect(() => {
-    const dataParam = searchParams.get("data");
-    if (dataParam) {
+    if (!contactId) return;
+
+    const fetchContact = async () => {
       try {
-        const parsedContact = JSON.parse(decodeURIComponent(dataParam));
-        setContact(parsedContact);
+        const res = await getContactById(contactId);
+        setContact(res.data || null); // ← API response
       } catch (error) {
-        console.error("Failed to parse contact data:", error);
+        console.error("Failed to fetch staff:", error);
+        showError("Failed to fetch staff details");
       }
-    }
-  }, [searchParams]);
+    };
+
+    fetchContact();
+  }, [contactId, showError]);
 
   const handleDelete = async () => {
     if (!contact) return;
@@ -115,7 +124,9 @@ export default function ContactViewPage() {
             </div>
             <h2 className="mt-3 font-semibold">{fullName}</h2>
             <p className="text-sm text-gray-500">{contact.job_title || "-"}</p>
-            <p className="text-sm text-blue-600">{contact.company?.name || "-"}</p>
+            <p className="text-sm text-blue-600">
+              {contact.company?.name || "-"}
+            </p>
           </div>
 
           <div className="mt-6 space-y-4 text-sm">
@@ -164,20 +175,47 @@ export default function ContactViewPage() {
 
           {/* Present Address */}
           <Section title="Present Address">
-            <Field label="Address" value={contact.address?.present_address || "-"} />
+            <Field
+              label="Address"
+              value={contact.address?.present_address || "-"}
+            />
             <Field label="City" value={contact.address?.present_city || "-"} />
-            <Field label="State" value={contact.address?.present_state || "-"} />
-            <Field label="ZIP Code" value={contact.address?.present_zip || "-"} />
-            <Field label="Country" value={contact.address?.present_country || "-"} />
+            <Field
+              label="State"
+              value={contact.address?.present_state || "-"}
+            />
+            <Field
+              label="ZIP Code"
+              value={contact.address?.present_zip || "-"}
+            />
+            <Field
+              label="Country"
+              value={contact.address?.present_country || "-"}
+            />
           </Section>
 
           {/* Permanent Address */}
           <Section title="Permanent Address">
-            <Field label="Address" value={contact.address?.permanent_address || "-"} />
-            <Field label="City" value={contact.address?.permanent_city || "-"} />
-            <Field label="State" value={contact.address?.permanent_state || "-"} />
-            <Field label="ZIP Code" value={contact.address?.permanent_zip || "-"} />
-            <Field label="Country" value={contact.address?.permanent_country || "-"} />
+            <Field
+              label="Address"
+              value={contact.address?.permanent_address || "-"}
+            />
+            <Field
+              label="City"
+              value={contact.address?.permanent_city || "-"}
+            />
+            <Field
+              label="State"
+              value={contact.address?.permanent_state || "-"}
+            />
+            <Field
+              label="ZIP Code"
+              value={contact.address?.permanent_zip || "-"}
+            />
+            <Field
+              label="Country"
+              value={contact.address?.permanent_country || "-"}
+            />
           </Section>
 
           {/* Social */}

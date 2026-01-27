@@ -129,11 +129,3 @@ export const updateContactStatus = (contactId: number, isActive: boolean) => {
     is_active: isActive,
   });
 };
-
-// Get all active companies for dropdown
-export async function getAllActiveCompanies(): Promise<
-  ApiResponse<OptionDropDownModel[]>
-> {
-  const response = await api.get("companies/active");
-  return response as unknown as ApiResponse<OptionDropDownModel[]>;
-}

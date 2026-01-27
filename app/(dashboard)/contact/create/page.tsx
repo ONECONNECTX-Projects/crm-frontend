@@ -11,7 +11,6 @@ import {
   ContactAddress,
   createContact,
   updateContact,
-  getAllActiveCompanies,
 } from "@/app/services/contact/contact.service";
 import { getAllActiveIndustry } from "@/app/services/Industry/industry.service";
 import { getAllActiveUsers } from "@/app/services/user/user.service";
@@ -28,6 +27,7 @@ import CreateIndustryForm from "../../settings/company-setup/industry/create/pag
 import SelectDropdown from "@/app/common/dropdown";
 import SlideOver from "@/app/common/slideOver";
 import CreateCompanyForm from "../../company/create/page";
+import { getAllActiveCompany } from "@/app/services/company/company.service";
 
 interface CreateContactFormProps {
   mode: "create" | "edit";
@@ -113,7 +113,7 @@ export default function CreateContactForm({
           stagesRes,
         ] = await Promise.all([
           getAllActiveUsers(),
-          getAllActiveCompanies(),
+          getAllActiveCompany(),
           getAllActiveDepartment(),
           getAllActiveIndustry(),
           getAllActiveContactSource(),
@@ -688,7 +688,7 @@ export default function CreateContactForm({
         <SlideOver
           open={openCompanySlider}
           onClose={() => setOpenCompanySlider(false)}
-          width="sm:w-[70vw] lg:w-[60vw]"
+          width="sm:w-[70vw] lg:w-[40vw]"
         >
           <CreateCompanyForm
             mode={mode}
@@ -696,7 +696,7 @@ export default function CreateContactForm({
             onSuccess={async () => {
               setOpenCompanySlider(false);
 
-              const res = await getAllActiveCompanies();
+              const res = await getAllActiveCompany();
               setCompanies(res.data || []);
             }}
           />

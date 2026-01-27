@@ -9,15 +9,23 @@ import { Button } from "@/components/ui/button";
 import { getAllActiveLeadStatuses } from "@/app/services/lead-status/lead-status.service";
 import { getAllActiveLeadSources } from "@/app/services/lead-source/lead-source.service";
 import { getAllActiveUsers } from "@/app/services/user/user.service";
-import { updateLead, deleteLead, Lead, Leads } from "@/app/services/lead/lead.service";
+import {
+  updateLead,
+  deleteLead,
+  Lead,
+  Leads,
+  getLeadById,
+} from "@/app/services/lead/lead.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
 
 export default function LeadViewPage() {
-  const params = useParams();
   const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
+
   const { showSuccess, showError } = useError();
+  const leadId = Number(params.id);
 
   const [lead, setLead] = useState<Leads | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,6 +40,9 @@ export default function LeadViewPage() {
     name: false,
     phone: false,
     email: false,
+    lead_owner_id: false,
+    lead_source_id: false,
+    lead_status_id: false,
   });
 
   const [formData, setFormData] = useState({
@@ -43,27 +54,32 @@ export default function LeadViewPage() {
     lead_source_id: "",
   });
 
-  // Parse lead data from URL
   useEffect(() => {
-    const dataParam = searchParams.get("data");
-    if (dataParam) {
+    if (!leadId) return;
+
+    const fetchLeads = async () => {
       try {
-        const parsedLead = JSON.parse(decodeURIComponent(dataParam)) as Leads;
-        setLead(parsedLead);
+        setLoading(true);
+        const res = await getLeadById(leadId);
+        setLead(res.data || null);
         setFormData({
-          name: parsedLead.name || "",
-          email: parsedLead.email || "",
-          phone: parsedLead.phone || "",
-          lead_owner_id: parsedLead.lead_owner_id?.toString() || "",
-          lead_status_id: parsedLead.lead_status_id?.toString() || "",
-          lead_source_id: parsedLead.lead_source_id?.toString() || "",
+          name: res.data?.name || "",
+          email: res.data?.email || "",
+          phone: res.data?.phone || "",
+          lead_owner_id: res.data?.lead_owner_id?.toString() || "",
+          lead_status_id: res.data?.lead_status_id?.toString() || "",
+          lead_source_id: res.data?.lead_source_id?.toString() || "",
         });
       } catch (error) {
-        console.error("Failed to parse lead data:", error);
+        console.error("Failed to fetch staff:", error);
+        showError("Failed to fetch staff details");
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, [searchParams]);
+    };
+
+    fetchLeads();
+  }, [leadId, showError]);
 
   // Fetch dropdown data
   useEffect(() => {
@@ -108,7 +124,14 @@ export default function LeadViewPage() {
 
       await updateLead(lead.id, leadData);
       showSuccess("Lead updated successfully");
-      setEditableFields({ name: false, phone: false, email: false });
+      setEditableFields({
+        name: false,
+        phone: false,
+        email: false,
+        lead_owner_id: false,
+        lead_source_id: false,
+        lead_status_id: false,
+      });
     } catch (error) {
       console.error("Failed to update lead:", error);
       showError("Failed to update lead");
@@ -133,11 +156,14 @@ export default function LeadViewPage() {
   };
 
   const isEditing = Object.values(editableFields).some((val) => val === true);
-
+  const markEdited = (field: keyof typeof editableFields) => {
+    setEditableFields((prev) => ({
+      ...prev,
+      [field]: true,
+    }));
+  };
   if (loading) {
-    return (
-      <div className="p-10 text-center text-gray-500">Loading...</div>
-    );
+    return <div className="p-10 text-center text-gray-500">Loading...</div>;
   }
 
   if (!lead) {
@@ -192,7 +218,10 @@ export default function LeadViewPage() {
           <SelectDropdown
             label="Lead Owner"
             value={formData.lead_owner_id}
-            onChange={(v) => setFormData({ ...formData, lead_owner_id: v })}
+            onChange={(v) => {
+              setFormData({ ...formData, lead_owner_id: v });
+              markEdited("lead_owner_id");
+            }}
             options={users.map((user) => ({
               label: user.name,
               value: user.id,
@@ -206,7 +235,10 @@ export default function LeadViewPage() {
           <SelectDropdown
             label="Lead Source"
             value={formData.lead_source_id}
-            onChange={(v) => setFormData({ ...formData, lead_source_id: v })}
+            onChange={(v) => {
+              setFormData({ ...formData, lead_source_id: v });
+              markEdited("lead_source_id");
+            }}
             options={leadSources.map((source) => ({
               label: source.name,
               value: source.id,
@@ -220,7 +252,10 @@ export default function LeadViewPage() {
           <SelectDropdown
             label="Lead Status"
             value={formData.lead_status_id}
-            onChange={(v) => setFormData({ ...formData, lead_status_id: v })}
+            onChange={(v) => {
+              setFormData({ ...formData, lead_status_id: v });
+              markEdited("lead_status_id");
+            }}
             options={leadStatuses.map((status) => ({
               label: status.name,
               value: status.id,

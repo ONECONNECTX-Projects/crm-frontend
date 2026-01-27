@@ -59,8 +59,8 @@ export default function ContactsPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -87,8 +87,7 @@ export default function ContactsPage() {
     {
       label: "View Details",
       onClick: (row) => {
-        const contactData = encodeURIComponent(JSON.stringify(row));
-        router.push(`/contact/${row.id}?data=${contactData}`);
+        router.push(`/contact/${row.id}`);
       },
     },
     {
@@ -132,13 +131,17 @@ export default function ContactsPage() {
       key: "email",
       label: "Email",
       visible: columns.find((c) => c.key === "email")?.visible,
-      render: (row) => <span className="text-gray-600">{row.email || "-"}</span>,
+      render: (row) => (
+        <span className="text-gray-600">{row.email || "-"}</span>
+      ),
     },
     {
       key: "phone",
       label: "Phone Number",
       visible: columns.find((c) => c.key === "phone")?.visible,
-      render: (row) => <span className="text-gray-600">{row.phone || "-"}</span>,
+      render: (row) => (
+        <span className="text-gray-600">{row.phone || "-"}</span>
+      ),
     },
     {
       key: "owner",
@@ -188,9 +191,7 @@ export default function ContactsPage() {
       visible: columns.find((c) => c.key === "created_at")?.visible,
       render: (row) => (
         <span className="text-gray-600">
-          {row.created_at
-            ? new Date(row.created_at).toLocaleDateString()
-            : "-"}
+          {row.created_at ? new Date(row.created_at).toLocaleDateString() : "-"}
         </span>
       ),
     },
@@ -214,7 +215,7 @@ export default function ContactsPage() {
   const startIndex = (safePage - 1) * pageSize;
   const paginatedContacts = filteredContacts.slice(
     startIndex,
-    startIndex + pageSize
+    startIndex + pageSize,
   );
 
   const handlePageChange = (page: number) => {

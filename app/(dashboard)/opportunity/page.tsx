@@ -1,39 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
-import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
+import DataTable, { TableAction } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
 import SlideOver from "@/app/common/slideOver";
 import CreateOpportunity from "./create/page";
-
-interface Opportunity {
-  id: number;
-  name: string;
-  owner: string;
-  amount: number;
-  company: string;
-  stage: string;
-  type: string;
-  source: string;
-  createdAt: string;
-}
-
-const opportunities: Opportunity[] = [
-  {
-    id: 1,
-    name: "Test Opportunity",
-    owner: "John Doe",
-    amount: 1000,
-    company: "Company Name",
-    stage: "Prospect",
-    type: "New Business",
-    source: "Website",
-    createdAt: "Dec 17, 2025",
-  },
-];
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  deleteOpportunity,
+  getAllOpportunity,
+  Opportunity,
+} from "@/app/services/opportunity/opportunity.service";
 
 export default function OpportunityPage() {
   const router = useRouter();
@@ -41,17 +21,100 @@ export default function OpportunityPage() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const { showError, showSuccess } = useError();
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [editingOpportunities, setEditingOpportunities] =
+    useState<Opportunity | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState<"create" | "edit">("create");
 
-  const [columns, setColumns] = useState([
+  const [columns, setColumns] = useState<
+    {
+      key: string;
+      label: string;
+      visible: boolean;
+      render?: (row: Opportunity) => React.ReactNode;
+    }[]
+  >([
     { key: "name", label: "Name", visible: true },
-    { key: "owner", label: "Owner", visible: true },
+    {
+      key: "owner",
+      label: "Owner",
+      visible: true,
+      render: (row: Opportunity) => row.owner?.name || "-",
+    },
     { key: "amount", label: "Amount", visible: true },
-    { key: "company", label: "Company", visible: true },
-    { key: "stage", label: "Stage", visible: true },
-    { key: "type", label: "Type", visible: true },
-    { key: "source", label: "Source", visible: true },
-    { key: "createdAt", label: "Create date", visible: true },
+    {
+      key: "company",
+      label: "Company",
+      visible: true,
+      render: (row: Opportunity) => row.company?.name || "-",
+    },
+    {
+      key: "stage",
+      label: "Stage",
+      visible: true,
+      render: (row: Opportunity) => row.stage?.name || "-",
+    },
+    {
+      key: "type",
+      label: "Type",
+      visible: true,
+      render: (row: Opportunity) => row.type?.name || "-",
+    },
+    {
+      key: "source",
+      label: "Source",
+      visible: true,
+      render: (row: Opportunity) => row.source?.name || "-",
+    },
+    {
+      key: "created_at",
+      label: "Create date",
+      visible: true,
+      render: (row: Opportunity) =>
+        row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+    },
   ]);
+
+  const fetchOpportunities = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllOpportunity();
+      setOpportunities(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch Opportunities:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOpportunities();
+  }, []);
+
+  const handleColumnToggle = (key: string) => {
+    setColumns((prev) =>
+      prev.map((col) =>
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
+    );
+  };
+
+  const handleDelete = async (opportunity: Opportunity) => {
+    if (
+      window.confirm(`Are you sure you want to delete "${opportunity.name}"?`)
+    ) {
+      try {
+        await deleteOpportunity(opportunity.id);
+        showSuccess("opportunity deleted successfully");
+        fetchOpportunities();
+      } catch (error) {
+        console.error("Failed to delete opportunity:", error);
+        showError("Failed to delete opportunity");
+      }
+    }
+  };
 
   const actions: TableAction<Opportunity>[] = [
     {
@@ -60,21 +123,22 @@ export default function OpportunityPage() {
     },
     {
       label: "Edit",
-      onClick: () => setOpen(true),
+      onClick: (row) => {
+        setMode("edit");
+        setEditingOpportunities(row);
+        setOpen(true);
+      },
     },
     {
       label: "Delete",
+      onClick: (row) => handleDelete(row),
       variant: "destructive",
-      onClick: (row) => console.log("delete", row),
     },
   ];
 
-  const handleColumnToggle = (key: string) => {
-    setColumns((prev) =>
-      prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
-    );
+  const handleFormSuccess = () => {
+    setOpen(false);
+    fetchOpportunities();
   };
 
   return (
@@ -83,7 +147,11 @@ export default function OpportunityPage() {
         <PageHeader
           title="Opportunity"
           createButtonText="Create Opportunity"
-          onCreateClick={() => setOpen(true)}
+          onCreateClick={() => {
+            setMode("create");
+            setEditingOpportunities(null);
+            setOpen(true);
+          }}
         />
 
         <PageActions
@@ -117,7 +185,12 @@ export default function OpportunityPage() {
       </div>
 
       <SlideOver open={open} onClose={() => setOpen(false)} width="max-w-5xl">
-        <CreateOpportunity onClose={() => setOpen(false)} />
+        <CreateOpportunity
+          mode={mode}
+          data={editingOpportunities || undefined}
+          onSuccess={handleFormSuccess}
+          onClose={() => setOpen(false)}
+        />
       </SlideOver>
     </div>
   );

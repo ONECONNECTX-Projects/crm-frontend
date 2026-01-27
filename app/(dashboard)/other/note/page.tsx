@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
@@ -8,147 +8,62 @@ import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
 import NoteForm from "./create/page";
-
-interface Note {
-  id: number;
-  title: string;
-  content: string;
-  createdBy: string;
-  createdDate: string;
-  relatedTo: string;
-  category: "general" | "meeting" | "follow-up" | "important";
-  status: "active" | "archived";
-}
-
-const notes: Note[] = [
-  {
-    id: 1,
-    title: "Client meeting notes",
-    content: "Discussed project requirements and timeline...",
-    createdBy: "John Doe",
-    createdDate: "2025-01-20",
-    relatedTo: "Acme Corporation",
-    category: "meeting",
-    status: "active",
-  },
-  {
-    id: 2,
-    title: "Follow-up action items",
-    content: "Send proposal by end of week, schedule demo...",
-    createdBy: "Jane Smith",
-    createdDate: "2025-01-19",
-    relatedTo: "Tech Solutions Inc",
-    category: "follow-up",
-    status: "active",
-  },
-  {
-    id: 3,
-    title: "Important: Contract review",
-    content: "Legal team needs to review terms before signing...",
-    createdBy: "Bob Johnson",
-    createdDate: "2025-01-18",
-    relatedTo: "Global Enterprises",
-    category: "important",
-    status: "active",
-  },
-  {
-    id: 4,
-    title: "Product feedback",
-    content: "Customer requested dark mode feature...",
-    createdBy: "Alice Williams",
-    createdDate: "2025-01-17",
-    relatedTo: "Startup Ventures",
-    category: "general",
-    status: "active",
-  },
-  {
-    id: 5,
-    title: "Q4 planning notes",
-    content: "Discussed budget allocation for next quarter...",
-    createdBy: "John Doe",
-    createdDate: "2024-12-15",
-    relatedTo: "Internal",
-    category: "meeting",
-    status: "archived",
-  },
-  {
-    id: 6,
-    title: "Customer complaint",
-    content: "Issue with recent invoice, needs immediate attention...",
-    createdBy: "Jane Smith",
-    createdDate: "2025-01-16",
-    relatedTo: "Enterprise Systems",
-    category: "important",
-    status: "active",
-  },
-];
-
-const categoryColorMap = {
-  general: {
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-  },
-  meeting: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
-  },
-  "follow-up": {
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
-    border: "border-yellow-200",
-  },
-  important: {
-    bg: "bg-red-50",
-    text: "text-red-700",
-    border: "border-red-200",
-  },
-};
-
-const statusColorMap = {
-  active: {
-    bg: "bg-green-50",
-    text: "text-green-700",
-    border: "border-green-200",
-  },
-  archived: {
-    bg: "bg-gray-50",
-    text: "text-gray-700",
-    border: "border-gray-200",
-  },
-};
+import {
+  deleteNote,
+  getAllNote,
+  Notes,
+} from "@/app/services/notes/notes.service";
+import CreateNote from "./create/page";
+import { useError } from "@/app/providers/ErrorProvider";
 
 export default function NotePage() {
-  const [openCreate, setOpenCreate] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-
+  const [selectedNote, setSelectedNote] = useState<Notes | null>(null);
+  const [notes, setNotes] = useState<Notes[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { showError, showSuccess } = useError();
   const [columns, setColumns] = useState<
-    { key: keyof Note; label: string; visible: boolean }[]
+    { key: keyof Notes; label: string; visible: boolean }[]
   >([
     { key: "title", label: "Title", visible: true },
-    { key: "content", label: "Content", visible: true },
-    { key: "createdBy", label: "Created By", visible: true },
-    { key: "createdDate", label: "Created Date", visible: true },
-    { key: "relatedTo", label: "Related To", visible: true },
-    { key: "category", label: "Category", visible: true },
-    { key: "status", label: "Status", visible: true },
+    { key: "owner", label: "	Owner", visible: true },
+    { key: "company", label: "Company", visible: true },
+    { key: "contact", label: "Contact", visible: true },
+    { key: "opportunity", label: "Opportunity", visible: true },
+
+    { key: "quote", label: "Quote", visible: true },
+    { key: "createdAt", label: "Create date", visible: true },
   ]);
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
-  const actions: TableAction<Note>[] = [
+  const fetchNotes = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllNote();
+      setNotes(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch Notes:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotes();
+  }, []);
+
+  const actions: TableAction<Notes>[] = [
     {
       label: "Edit",
       onClick: (row) => {
@@ -160,54 +75,105 @@ export default function NotePage() {
     {
       label: "Delete",
       variant: "destructive",
-      onClick: (row) => console.log("Delete note", row),
+      onClick: (row) => handleDelete(row),
+    },
+  ];
+
+  const tableColumns: TableColumn<Notes>[] = [
+    {
+      key: "id",
+      label: "Id",
+      visible: columns.find((c) => c.key === "id")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "title",
+      label: "Title",
+      visible: columns.find((c) => c.key === "title")?.visible,
+      render: (row) => (
+        <div className="font-medium text-gray-700">{row.title}</div>
+      ),
+    },
+    {
+      key: "owner",
+      label: "Owner",
+      visible: columns.find((c) => c.key === "owner")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.owner?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "company",
+      label: "Company",
+      visible: columns.find((c) => c.key === "company")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">{row.company?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      visible: columns.find((c) => c.key === "contact")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.contact?.first_name + " " + row.contact?.last_name || "-"}
+        </span>
+      ),
+    },
+    {
+      key: "opportunity",
+      label: "Opportunity",
+      visible: columns.find((c) => c.key === "opportunity")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">{row.opportunity.name || "-"}</span>
+      ),
+    },
+    {
+      key: "quote",
+      label: "Quote",
+      visible: columns.find((c) => c.key === "quote")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">{row.quote?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Create Date",
+      visible: columns.find((c) => c.key === "createdAt")?.visible,
+      render: (row) => (
+        <span className="text-gray-500 text-sm">
+          {row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-"}
+        </span>
+      ),
     },
   ];
 
   const filtered = notes.filter((note) =>
-    `${note.title} ${note.content} ${note.createdBy} ${note.relatedTo}`
+    `${note.title} ${note.company.name} ${note.contact.first_name} ${note.contact.last_name} ${note.opportunity.name}`
       .toLowerCase()
-      .includes(searchValue.toLowerCase())
+      .includes(searchValue.toLowerCase()),
   );
 
   const totalItems = filtered.length;
   const paginatedData = filtered.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
-  const tableColumns: TableColumn<Note>[] = columns
-    .filter((col) => col.visible)
-    .map((col) => ({
-      key: col.key,
-      label: col.label,
-      visible: col.visible,
-      render: (row) => {
-        if (col.key === "category") {
-          return (
-            <StatusBadge
-              status={row.category}
-              colorMap={categoryColorMap}
-              variant="default"
-            />
-          );
-        }
-        if (col.key === "status") {
-          return (
-            <StatusBadge
-              status={row.status}
-              colorMap={statusColorMap}
-              variant="default"
-            />
-          );
-        }
-        return (
-          <span className="truncate block max-w-[200px]">
-            {String(row[col.key])}
-          </span>
-        );
-      },
-    }));
+  const handleDelete = async (notes: Notes) => {
+    if (window.confirm(`Are you sure you want to delete "${notes.title}"?`)) {
+      try {
+        await deleteNote(notes.id);
+        showSuccess("Notes deleted successfully");
+        fetchNotes();
+      } catch (error) {
+        console.error("Failed to delete Notes:", error);
+        showError("Failed to delete Notes");
+      }
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl p-6 space-y-6">
@@ -251,22 +217,12 @@ export default function NotePage() {
 
       <SlideOver open={openForm} onClose={() => setOpenForm(false)}>
         <div className="p-6">
-          <NoteForm
+          <CreateNote
             mode={mode}
-            initialData={
-              selectedNote
-                ? {
-                    title: selectedNote.title,
-                    description: selectedNote.content,
-                  }
-                : undefined
-            }
-            onSubmit={(data) => {
-              if (mode === "create") {
-                console.log("Create note", data);
-              } else {
-                console.log("Update note", selectedNote?.id, data);
-              }
+            data={selectedNote || undefined} // Pass the whole object
+            onClose={() => setOpenForm(false)}
+            onSuccess={() => {
+              fetchNotes(); // Refresh your table list
               setOpenForm(false);
             }}
           />

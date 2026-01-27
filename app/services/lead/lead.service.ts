@@ -53,7 +53,7 @@ export async function createLead(data: Lead): Promise<ApiResponse<Lead>> {
 // Update Lead
 export async function updateLead(
   id: number,
-  data: Lead
+  data: Lead,
 ): Promise<ApiResponse<Lead>> {
   return api.put(`leads/${id}`, data) as Promise<ApiResponse<Lead>>;
 }
@@ -75,3 +75,9 @@ export const updateLeadStatus = (LeadId: number, isActive: boolean) => {
     is_active: isActive,
   });
 };
+
+// Get leads by ID
+export async function getLeadById(id: number): Promise<ApiResponse<Leads>> {
+  const response = await api.get(`leads/${id}`);
+  return response as unknown as ApiResponse<Leads>;
+}
