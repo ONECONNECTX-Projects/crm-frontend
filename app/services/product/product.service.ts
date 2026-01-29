@@ -20,12 +20,7 @@ export interface Product {
   is_delete: boolean;
   createdAt: Date;
   updatedAt: Date;
-  category: Category;
-}
-
-export interface Category {
-  id: number;
-  name: string;
+  category: OptionDropDownModel;
 }
 
 // Get all Products

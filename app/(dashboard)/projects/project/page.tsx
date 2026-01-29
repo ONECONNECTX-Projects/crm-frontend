@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import PageHeader from "@/app/common/PageHeader";
@@ -9,34 +9,13 @@ import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import CreateProjectForm from "./create/page";
-
-/* ================= Types ================= */
-
-interface Project {
-  id: number;
-  name: string;
-  contact: string;
-  value: number;
-  priority: string;
-  status: string;
-  startDate: string;
-  deadline: string;
-}
-
-/* ================= Mock Data ================= */
-
-const projects: Project[] = [
-  {
-    id: 1,
-    name: "TEST",
-    contact: "CARLOS MENDEZ",
-    value: 34,
-    priority: "Highest",
-    status: "in-progress",
-    startDate: "Dec 10, 2025",
-    deadline: "-",
-  },
-];
+import {
+  deleteProject,
+  getAllProject,
+  Project,
+} from "@/app/services/project/project.service";
+import { useError } from "@/app/providers/ErrorProvider";
+import StatusBadge from "@/app/common/StatusBadge";
 
 /* ================= Page ================= */
 
@@ -49,6 +28,13 @@ export default function ProjectsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const { showSuccess, showError } = useError();
+
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [mode, setMode] = useState<"create" | "edit">("create");
+
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(false);
   const [columns, setColumns] = useState([
     { key: "id", label: "ID", visible: true },
     { key: "name", label: "Name", visible: true },
@@ -60,13 +46,29 @@ export default function ProjectsPage() {
     { key: "deadline", label: "Deadline", visible: true },
   ]);
 
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllProject();
+      setProjects(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch Projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
   /* ================= Column Toggle ================= */
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -75,41 +77,136 @@ export default function ProjectsPage() {
   const actions: TableAction<Project>[] = [
     {
       label: "Edit",
-      onClick: () => setOpenCreate(true),
+      onClick: (row) => {
+        setEditingProject(row);
+        setOpenCreate(true);
+      },
     },
     {
       label: "Delete",
       variant: "destructive",
-      onClick: (row) => console.log("delete project", row),
+      onClick: (row) => handleDelete(row),
     },
   ];
 
   /* ================= Columns ================= */
 
-  const tableColumns: TableColumn<Project>[] = columns.map((col) => ({
-    key: col.key as keyof Project,
-    label: col.label,
-    visible: col.visible,
-    render: (row) => (
-      <span className="truncate block max-w-[200px]">
-        {(row as any)[col.key]}
-      </span>
-    ),
-  }));
+  const tableColumns: TableColumn<Project>[] = [
+    {
+      key: "id",
+      label: "ID",
+      visible: columns.find((c) => c.key === "id")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      visible: columns.find((c) => c.key === "name")?.visible,
+      render: (row) => (
+        <div className="font-medium text-gray-900 truncate max-w-[220px]">
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      visible: columns.find((c) => c.key === "contact")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.contact?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "value",
+      label: "Value",
+      visible: columns.find((c) => c.key === "value")?.visible,
+      render: (row) => (
+        <span className="font-semibold text-green-600">
+          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      visible: columns.find((c) => c.key === "priority")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.priority?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Project Status",
+      visible: columns.find((c) => c.key === "status")?.visible,
+      render: (row) => (
+        <StatusBadge status={row.status?.name?.toLowerCase() || "new"} />
+      ),
+    },
+    {
+      key: "start_date",
+      label: "Start Date",
+      visible: columns.find((c) => c.key === "start_date")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.start_date ? new Date(row.start_date).toLocaleDateString() : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "deadline",
+      label: "Deadline",
+      visible: columns.find((c) => c.key === "deadline")?.visible,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.deadline ? new Date(row.deadline).toLocaleDateString() : "-"}
+        </span>
+      ),
+    },
+  ];
 
+  const handleDelete = async (Project: Project) => {
+    if (window.confirm(`Are you sure you want to delete "${Project.name}"?`)) {
+      try {
+        await deleteProject(Project.id);
+        showSuccess("Project deleted successfully");
+        fetchProjects();
+      } catch (error) {
+        console.error("Failed to delete Project:", error);
+        showError("Failed to delete Project");
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    setOpenCreate(false);
+    setEditingProject(null);
+    fetchProjects();
+  };
+
+  const handleCloseForm = () => {
+    setOpenCreate(false);
+    setEditingProject(null);
+  };
+
+  const handleCreateClick = () => {
+    setEditingProject(null);
+    setOpenCreate(true);
+  };
   /* ================= Filter + Pagination ================= */
 
   const filteredProjects = projects.filter((project) =>
     Object.values(project).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+      val.toString().toLowerCase().includes(searchValue.toLowerCase()),
+    ),
   );
 
   const totalItems = filteredProjects.length;
 
   const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   return (
@@ -119,7 +216,7 @@ export default function ProjectsPage() {
         <PageHeader
           title="Projects"
           createButtonText="Create Project"
-          onCreateClick={() => setOpenCreate(true)}
+          onCreateClick={handleCreateClick}
         />
 
         {/* Actions */}
@@ -156,12 +253,12 @@ export default function ProjectsPage() {
       </div>
 
       {/* SlideOver */}
-      <SlideOver
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-        width="max-w-4xl"
-      >
-        <CreateProjectForm onClose={() => setOpenCreate(false)} />
+      <SlideOver open={openCreate} onClose={handleCloseForm} width="max-w-4xl">
+        <CreateProjectForm
+          onClose={handleCloseForm}
+          onSuccess={handleFormSuccess}
+          editingProject={editingProject}
+        />
       </SlideOver>
     </div>
   );

@@ -1,9 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import ReplyModal from "../model/page";
+import {
+  getTaskById,
+  updateTask,
+  TaskDetail,
+  TaskPayload,
+} from "@/app/services/task/task.service";
+import { getAllActiveUsers } from "@/app/services/user/user.service";
+import { getAllActiveTaskType } from "@/app/services/task-type/task-type.service";
+import { getAllActiveTaskStatus } from "@/app/services/task-status/task-status.service";
+import { getAllActivePriority } from "@/app/services/priority/priority.service";
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 
 /* ---------------- Types ---------------- */
 interface Reply {
@@ -13,31 +24,36 @@ interface Reply {
   attachments?: string[];
 }
 
-interface Task {
-  id: number;
-  name: string;
-  priority: string;
-  status: string;
-  type: string;
-  assignee: string;
-  createdAt: string;
-}
-
 /* ---------------- Page ---------------- */
 export default function TaskViewPage() {
   const params = useParams();
-  const taskId = params.id;
+  const router = useRouter();
+  const taskId = params.id as string;
+
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   /* Task State */
-  const [task, setTask] = useState<Task>({
-    id: Number(taskId),
-    name: "Follow up with client",
-    priority: "High",
-    status: "Pending",
-    type: "Call",
-    assignee: "John Doe",
-    createdAt: "Dec 17, 2025",
+  const [task, setTask] = useState<TaskDetail | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    assignee_id: 0,
+    task_priority_id: 0,
+    task_status_id: 0,
+    task_type_id: 0,
+    company_id: 0,
+    contact_id: 0,
+    opportunity_id: 0,
+    quote_id: 0,
+    due_date: new Date(),
+    description: "",
   });
+
+  /* Dropdown Options */
+  const [users, setUsers] = useState<OptionDropDownModel[]>([]);
+  const [taskTypes, setTaskTypes] = useState<OptionDropDownModel[]>([]);
+  const [taskStatuses, setTaskStatuses] = useState<OptionDropDownModel[]>([]);
+  const [priorities, setPriorities] = useState<OptionDropDownModel[]>([]);
 
   /* Replies */
   const [showReplyModal, setShowReplyModal] = useState(false);
@@ -50,38 +66,124 @@ export default function TaskViewPage() {
     },
   ]);
 
-  const handleTaskChange = (key: keyof Task, value: string) => {
-    setTask((prev) => ({ ...prev, [key]: value }));
+  // Fetch task details and dropdown data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch task details and dropdown options in parallel
+        const [taskRes, usersRes, typesRes, statusesRes, prioritiesRes] =
+          await Promise.all([
+            getTaskById(Number(taskId)),
+            getAllActiveUsers(),
+            getAllActiveTaskType(),
+            getAllActiveTaskStatus(),
+            getAllActivePriority(),
+          ]);
+
+        if (taskRes.data) {
+          setTask(taskRes.data);
+          setFormData({
+            name: taskRes.data.name || "",
+            assignee_id: taskRes.data.assignee_id || 0,
+            task_priority_id: taskRes.data.task_priority_id || 0,
+            task_status_id: taskRes.data.task_status_id || 0,
+            task_type_id: taskRes.data.task_type_id || 0,
+            company_id: taskRes.data.company_id || 0,
+            contact_id: taskRes.data.contact_id || 0,
+            opportunity_id: taskRes.data.opportunity_id || 0,
+            quote_id: taskRes.data.quote_id || 0,
+            due_date: taskRes.data.due_date
+              ? new Date(taskRes.data.due_date)
+              : new Date(),
+            description: taskRes.data.description || "",
+          });
+        }
+
+        setUsers(usersRes.data || []);
+        setTaskTypes(typesRes.data || []);
+        setTaskStatuses(statusesRes.data || []);
+        setPriorities(prioritiesRes.data || []);
+      } catch (error) {
+        console.error("Error fetching task data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (taskId) {
+      fetchData();
+    }
+  }, [taskId]);
+
+  const handleFormChange = (
+    field: keyof typeof formData,
+    value: string | number | Date,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleAddReply = (reply: Reply) => {
     setReplies((prev) => [...prev, reply]);
   };
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleSaveTask = async () => {
     try {
       setIsSaving(true);
 
-      // 🔗 API call later
-      console.log("Saving task:", task);
+      const payload: TaskPayload = {
+        name: formData.name,
+        assignee_id: formData.assignee_id,
+        company_id: formData.company_id,
+        contact_id: formData.contact_id,
+        opportunity_id: formData.opportunity_id,
+        Task_id: formData.quote_id,
+        task_type_id: formData.task_type_id,
+        task_priority_id: formData.task_priority_id,
+        task_status_id: formData.task_status_id,
+        due_date: formData.due_date,
+        description: formData.description,
+      };
 
-      // await fetch(`/api/tasks/${task.id}`, {
-      //   method: "PATCH",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(task),
-      // });
+      const response = await updateTask(Number(taskId), payload);
 
-      setTimeout(() => {
-        setIsSaving(false);
-        alert("Task updated successfully ✅");
-      }, 800);
+      if (response.isSuccess) {
+        alert("Task updated successfully");
+      } else {
+        alert("Failed to update task");
+      }
     } catch (error) {
+      console.error("Error updating task:", error);
+      alert("Failed to update task");
+    } finally {
       setIsSaving(false);
-      alert("Failed to save task ❌");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!task) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex justify-center items-center">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">Task not found</p>
+          <button
+            onClick={() => router.push("/tasks")}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md"
+          >
+            Back to Tasks
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -109,39 +211,50 @@ export default function TaskViewPage() {
 
             <EditableInput
               label="Name"
-              value={task.name}
-              onChange={(v) => handleTaskChange("name", v)}
+              value={formData.name}
+              onChange={(v) => handleFormChange("name", v)}
             />
 
             <EditableSelect
               label="Priority"
-              value={task.priority}
-              options={["Low", "Medium", "High"]}
-              onChange={(v) => handleTaskChange("priority", v)}
+              value={formData.task_priority_id}
+              options={priorities}
+              onChange={(v) => handleFormChange("task_priority_id", Number(v))}
             />
 
             <EditableSelect
               label="Status"
-              value={task.status}
-              options={["Pending", "In Progress", "Completed", "Scheduled"]}
-              onChange={(v) => handleTaskChange("status", v)}
+              value={formData.task_status_id}
+              options={taskStatuses}
+              onChange={(v) => handleFormChange("task_status_id", Number(v))}
             />
 
             <EditableSelect
               label="Type"
-              value={task.type}
-              options={["Call", "Email", "Meeting", "Task", "Review"]}
-              onChange={(v) => handleTaskChange("type", v)}
+              value={formData.task_type_id}
+              options={taskTypes}
+              onChange={(v) => handleFormChange("task_type_id", Number(v))}
             />
 
             <EditableSelect
               label="Assignee"
-              value={task.assignee}
-              options={["John Doe", "Jane Smith", "Alex Brown", "Demo User"]}
-              onChange={(v) => handleTaskChange("assignee", v)}
+              value={formData.assignee_id}
+              options={users}
+              onChange={(v) => handleFormChange("assignee_id", Number(v))}
             />
 
-            <ReadOnly label="Created Date" value={task.createdAt} />
+            <ReadOnly
+              label="Created Date"
+              value={
+                task.createdAt
+                  ? new Date(task.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "N/A"
+              }
+            />
           </div>
         </div>
 
@@ -170,7 +283,7 @@ export default function TaskViewPage() {
 
       {showReplyModal && (
         <ReplyModal
-          taskId={taskId as string}
+          taskId={taskId}
           onClose={() => setShowReplyModal(false)}
           onSubmit={handleAddReply}
         />
@@ -212,8 +325,8 @@ function EditableSelect({
   onChange,
 }: {
   label: string;
-  value: string;
-  options: string[];
+  value: number;
+  options: OptionDropDownModel[];
   onChange: (v: string) => void;
 }) {
   return (
@@ -223,13 +336,14 @@ function EditableSelect({
         <Pencil size={14} className="text-gray-400" />
       </label>
       <select
-        value={value}
+        value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         className="w-full mt-1 border rounded-md px-3 py-2 bg-white"
       >
+        <option value="">Select {label}</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
+          <option key={opt.id} value={opt.id}>
+            {opt.name}
           </option>
         ))}
       </select>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
@@ -8,84 +8,53 @@ import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import TeamView from "./View/page";
 import CreateTeamForm from "./Create/page";
-
-interface Team {
-  id: number;
-  project: string;
-  teamName: string;
-  status: boolean;
-  members: { name: string }[];
-}
-
-const teams: Team[] = [
-  {
-    id: 1,
-    project: "test",
-    teamName: "csc",
-    status: true,
-    members: [],
-  },
-  {
-    id: 2,
-    project: "SC SZ",
-    teamName: "x",
-    status: true,
-    members: [{ name: "Mrs. Delivery" }],
-  },
-  {
-    id: 3,
-    project: "Demo",
-    teamName: "Alpha",
-    status: false,
-    members: [],
-  },
-  {
-    id: 4,
-    project: "test",
-    teamName: "csc",
-    status: true,
-    members: [],
-  },
-  {
-    id: 5,
-    project: "SC SZ",
-    teamName: "x",
-    status: true,
-    members: [{ name: "Mrs. Delivery" }],
-  },
-  {
-    id: 6,
-    project: "test",
-    teamName: "csc",
-    status: true,
-    members: [],
-  },
-  {
-    id: 7,
-    project: "SC SZ",
-    teamName: "x",
-    status: true,
-    members: [{ name: "Mrs. Delivery" }],
-  },
-];
+import {
+  getAllProjectTeam,
+  deleteProjectTeam,
+  ProjectTeam,
+} from "@/app/services/project-teams/project-teams.service";
+import { useError } from "@/app/providers/ErrorProvider";
+import StatusBadge from "@/app/common/StatusBadge";
 
 export default function TeamsPage() {
+  const { showSuccess, showError } = useError();
+
   const [openView, setOpenView] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<ProjectTeam | null>(null);
   const [searchValue, setSearchValue] = useState("");
+
+  const [teams, setTeams] = useState<ProjectTeam[]>([]);
+  const [loading, setLoading] = useState(false);
 
   /* Pagination */
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const [columns, setColumns] = useState<
-    { key: keyof Team; label: string; visible: boolean }[]
-  >([
+  const [columns, setColumns] = useState([
     { key: "id", label: "ID", visible: true },
-    { key: "teamName", label: "Team Name", visible: true },
+    { key: "name", label: "Team Name", visible: true },
+    { key: "project", label: "Project", visible: true },
+    { key: "members", label: "Members", visible: true },
     { key: "status", label: "Status", visible: true },
   ]);
+
+  /* Fetch Teams */
+  const fetchTeams = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllProjectTeam();
+      setTeams(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch teams:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
 
   /* Column Toggle */
   const handleColumnToggle = (key: string) => {
@@ -96,8 +65,22 @@ export default function TeamsPage() {
     );
   };
 
+  /* Handle Delete */
+  const handleDelete = async (team: ProjectTeam) => {
+    if (window.confirm(`Are you sure you want to delete "${team.name}"?`)) {
+      try {
+        await deleteProjectTeam(team.id);
+        showSuccess("Team deleted successfully");
+        fetchTeams();
+      } catch (error) {
+        console.error("Failed to delete team:", error);
+        showError("Failed to delete team");
+      }
+    }
+  };
+
   /* Table Actions */
-  const actions: TableAction<Team>[] = [
+  const actions: TableAction<ProjectTeam>[] = [
     {
       label: "View",
       onClick: (row) => {
@@ -108,13 +91,13 @@ export default function TeamsPage() {
     {
       label: "Delete",
       variant: "destructive",
-      onClick: (row) => console.log("Delete team", row),
+      onClick: (row) => handleDelete(row),
     },
   ];
 
   /* Search Filter */
   const filtered = teams.filter((t) =>
-    `${t.id} ${t.teamName} ${t.project}`
+    `${t.id} ${t.name} ${t.project?.name || ""}`
       .toLowerCase()
       .includes(searchValue.toLowerCase())
   );
@@ -127,16 +110,83 @@ export default function TeamsPage() {
   );
 
   /* DataTable Columns */
-  const tableColumns: TableColumn<Team>[] = columns.map((col) => ({
-    key: col.key,
-    label: col.label,
-    visible: col.visible,
-    render: (row) => (
-      <span className="truncate block max-w-[200px]">
-        {(row as any)[col.key]}
-      </span>
-    ),
-  }));
+  const tableColumns: TableColumn<ProjectTeam>[] = [
+    {
+      key: "id",
+      label: "ID",
+      visible: columns.find((c) => c.key === "id")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Team Name",
+      visible: columns.find((c) => c.key === "name")?.visible,
+      render: (row) => (
+        <span className="font-medium text-gray-900">{row.name}</span>
+      ),
+    },
+    {
+      key: "project",
+      label: "Project",
+      visible: columns.find((c) => c.key === "project")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.project?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "members",
+      label: "Members",
+      visible: columns.find((c) => c.key === "members")?.visible,
+      render: (row) => (
+        <div className="flex flex-wrap gap-1">
+          {row.members && row.members.length > 0 ? (
+            <>
+              {row.members.slice(0, 2).map((m, i) => (
+                <span
+                  key={i}
+                  className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs"
+                >
+                  {m.name}
+                </span>
+              ))}
+              {row.members.length > 2 && (
+                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">
+                  +{row.members.length - 2} more
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="text-gray-400 text-sm">No members</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      visible: columns.find((c) => c.key === "status")?.visible,
+      render: (row) => (
+        <StatusBadge status={row.is_active ? "active" : "inactive"} />
+      ),
+    },
+  ];
+
+  /* Form Handlers */
+  const handleFormSuccess = () => {
+    setOpenCreate(false);
+    fetchTeams();
+  };
+
+  const handleCloseCreate = () => {
+    setOpenCreate(false);
+  };
+
+  const handleCloseView = () => {
+    setOpenView(false);
+    setSelectedTeam(null);
+  };
 
   return (
     <div className="bg-white rounded-xl p-6 space-y-6">
@@ -154,6 +204,7 @@ export default function TeamsPage() {
           setSearchValue(val);
           setCurrentPage(1);
         }}
+        searchPlaceholder="Search teams..."
         columns={columns}
         onColumnToggle={handleColumnToggle}
       />
@@ -179,13 +230,15 @@ export default function TeamsPage() {
       />
 
       {/* Create Team */}
-      <SlideOver open={openCreate} onClose={() => setOpenCreate(false)}>
-        <CreateTeamForm onClose={() => setOpenCreate(false)} />
+      <SlideOver open={openCreate} onClose={handleCloseCreate}>
+        <CreateTeamForm onClose={handleCloseCreate} onSuccess={handleFormSuccess} />
       </SlideOver>
 
       {/* View Team */}
-      <SlideOver open={openView} onClose={() => setOpenView(false)}>
-        {selectedTeam && <TeamView team={selectedTeam} />}
+      <SlideOver open={openView} onClose={handleCloseView}>
+        {selectedTeam && (
+          <TeamView team={selectedTeam} onClose={handleCloseView} />
+        )}
       </SlideOver>
     </div>
   );

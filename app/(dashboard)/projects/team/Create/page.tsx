@@ -1,24 +1,101 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Plus } from "lucide-react";
+import {
+  createProjectTeam,
+  ProjectTeamPayload,
+} from "@/app/services/project-teams/project-teams.service";
+import { getAllActiveProjects } from "@/app/services/project/project.service";
+import { getAllStaff, Staff } from "@/app/services/staff/staff.service";
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
+import { useError } from "@/app/providers/ErrorProvider";
 
 interface Props {
   onClose: () => void;
+  onSuccess: () => void;
 }
 
-export default function CreateTeamForm({ onClose }: Props) {
-  const [project, setProject] = useState("");
+export default function CreateTeamForm({ onClose, onSuccess }: Props) {
+  const { showSuccess, showError } = useError();
+
+  const [projectId, setProjectId] = useState("");
   const [teamName, setTeamName] = useState("");
-  const [members, setMembers] = useState<string[]>([]);
+  const [memberIds, setMemberIds] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const projectOptions = ["test", "SC SZ", "Demo Project"];
-  const memberOptions = ["Mr. Salesman", "Mrs. Manager", "Mrs. Delivery"];
+  const [projects, setProjects] = useState<OptionDropDownModel[]>([]);
+  const [members, setMembers] = useState<{ id: number; name: string }[]>([]);
 
-  const toggleMember = (name: string) => {
-    setMembers((prev) =>
-      prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name]
+  // Fetch dropdown data
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const [projectsRes, staffRes] = await Promise.all([
+          getAllActiveProjects(),
+          getAllStaff(),
+        ]);
+
+        setProjects(projectsRes.data || []);
+        const staffList = staffRes.data || [];
+        setMembers(
+          staffList.map((s: Staff) => ({
+            id: s.user_id,
+            name: s.user?.name || "",
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to fetch dropdown data:", error);
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
+
+  const toggleMember = (id: number) => {
+    setMemberIds((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
     );
+  };
+
+  const removeMember = (id: number) => {
+    setMemberIds((prev) => prev.filter((m) => m !== id));
+  };
+
+  const getSelectedMemberNames = () => {
+    return memberIds
+      .map((id) => members.find((m) => m.id === id)?.name)
+      .filter(Boolean);
+  };
+
+  const handleSubmit = async () => {
+    if (!projectId) {
+      showError("Please select a project");
+      return;
+    }
+    if (!teamName.trim()) {
+      showError("Please enter a team name");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const payload: ProjectTeamPayload = {
+        project_id: parseInt(projectId),
+        name: teamName,
+        member_ids: memberIds,
+      };
+
+      await createProjectTeam(payload);
+      showSuccess("Team created successfully");
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error("Failed to create team:", error);
+      showError("Failed to create team");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,14 +120,14 @@ export default function CreateTeamForm({ onClose }: Props) {
           </label>
 
           <select
-            value={project}
-            onChange={(e) => setProject(e.target.value)}
+            value={projectId}
+            onChange={(e) => setProjectId(e.target.value)}
             className="mt-1 w-full border rounded-md px-3 py-2 bg-white"
           >
             <option value="">Select Project</option>
-            {projectOptions.map((p) => (
-              <option key={p} value={p}>
-                {p}
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
               </option>
             ))}
           </select>
@@ -58,7 +135,9 @@ export default function CreateTeamForm({ onClose }: Props) {
 
         {/* Team Name */}
         <div>
-          <label className="text-sm font-medium">Team Name</label>
+          <label className="text-sm font-medium">
+            <span className="text-red-500">*</span> Team Name
+          </label>
           <input
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
@@ -67,45 +146,66 @@ export default function CreateTeamForm({ onClose }: Props) {
           />
         </div>
 
-        {/* Team Members */}
+        {/* Team Members - Multi Select */}
         <div>
           <label className="text-sm font-medium">Team Members</label>
 
-          <div className="mt-1 border rounded-md px-3 py-2 space-y-2">
-            <div className="flex flex-wrap gap-2">
-              {members.map((m) => (
-                <span key={m} className="bg-gray-100 px-2 py-1 rounded text-sm">
-                  {m}
-                </span>
-              ))}
-            </div>
+          <div className="border rounded-md px-2 py-1 flex flex-wrap items-center gap-2 min-h-[42px]">
+            {/* Selected Members */}
+            {memberIds.map((id) => {
+              const member = members.find((m) => m.id === id);
+              if (!member) return null;
 
+              return (
+                <span
+                  key={id}
+                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1"
+                >
+                  {member.name}
+                  <button
+                    type="button"
+                    onClick={() => removeMember(id)}
+                    className="hover:text-blue-900"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              );
+            })}
+
+            {/* Dropdown only */}
             <select
               onChange={(e) => {
-                toggleMember(e.target.value);
+                const id = Number(e.target.value);
+                if (id && !memberIds.includes(id)) {
+                  toggleMember(id);
+                }
                 e.target.value = "";
               }}
-              className="w-full bg-white outline-none"
+              className="flex-1 min-w-[40px] bg-transparent outline-none"
             >
-              <option value="">Select Team Member/s</option>
-              {memberOptions.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
+              <option value="">
+                {memberIds.length == 0 ? "Select Members" : ""}
+              </option>
+
+              {members
+                .filter((m) => !memberIds.includes(m.id))
+                .map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
             </select>
           </div>
         </div>
 
         {/* Button */}
         <button
-          onClick={() => {
-            console.log({ project, teamName, members });
-            onClose();
-          }}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-medium mt-6"
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-3 rounded-md font-medium mt-6 disabled:opacity-50"
         >
-          Create Team
+          {loading ? "Creating..." : "Create Team"}
         </button>
       </div>
     </div>

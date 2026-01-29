@@ -50,7 +50,7 @@ const menuItems: MenuItem[] = [
     icon: FiShoppingCart,
     children: [
       { name: "Invoices", path: "/sales/invoice" },
-      { name: "Qoutes", path: "/sales/qoutes" },
+      { name: "Quotes", path: "/sales/qoutes" },
     ],
   },
   { name: "Opportunity", icon: HiOutlineLightBulb, path: "/opportunity" },
@@ -192,6 +192,10 @@ const settingsMenu: MenuItem[] = [
         name: "Product Category",
         path: "/settings/product-category-setup",
       },
+      {
+        name: "Product Status",
+        path: "/settings/product-status",
+      },
     ],
   },
   {
@@ -224,11 +228,18 @@ export default function Sidebar({ collapsed }: any) {
     >
       {/* STATIC HEADER */}
       <div
-        className={`p-6 border-b font-bold sticky top-0 bg-white z-20 transition-all duration-300 
+        className={`border-b font-bold sticky top-0 bg-white z-20 transition-all duration-300
           ${collapsed ? "text-center text-xl px-0" : "text-2xl px-6"}
         `}
       >
-        {!collapsed && <span className="text-black">Quest</span>}
+        <div className="flex items-center">
+          <img
+            src="/favicon.svg"
+            alt="QFC Logo"
+            className={`${collapsed ? "w-10 h-10" : "w-15 h-15"}`}
+          />
+          {/* {!collapsed && <span className="text-black">Quest</span>} */}
+        </div>
       </div>
 
       {/* SCROLLABLE AREA */}
