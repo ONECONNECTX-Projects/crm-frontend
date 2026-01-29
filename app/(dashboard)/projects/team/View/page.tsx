@@ -33,7 +33,7 @@ export default function TeamView({ team, onClose }: TeamViewProps) {
         </div>
 
         {/* Status Card */}
-        <div className="border rounded-lg p-4">
+        {/* <div className="border rounded-lg p-4">
           <p className="text-xs text-gray-500 uppercase">Status</p>
           <span
             className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
@@ -44,7 +44,7 @@ export default function TeamView({ team, onClose }: TeamViewProps) {
           >
             {team.is_active ? "Active" : "Inactive"}
           </span>
-        </div>
+        </div> */}
 
         {/* Team Members */}
         <div className="border rounded-lg p-4">
@@ -64,14 +64,14 @@ export default function TeamView({ team, onClose }: TeamViewProps) {
         </div>
 
         {/* Created Date */}
-        <div className="border rounded-lg p-4">
+        {/* <div className="border rounded-lg p-4">
           <p className="text-xs text-gray-500 uppercase">Created At</p>
           <p className="text-sm">
             {team.createdAt
               ? new Date(team.createdAt).toLocaleDateString()
               : "-"}
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
