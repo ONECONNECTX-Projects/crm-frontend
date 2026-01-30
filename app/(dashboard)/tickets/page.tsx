@@ -1,119 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
-import TicketForm, { TicketFormData, TicketFormMode } from "./create/page";
+import TicketForm from "./create/page";
 import { useRouter } from "next/navigation";
+import { getAllTicket, Ticket } from "@/app/services/tickets/tickets.service";
+import { useError } from "@/app/providers/ErrorProvider";
 
-interface Ticket {
-  id: number;
-  ticketNumber: string;
-  subject: string;
-  customer: string;
-  priority: "low" | "medium" | "high" | "urgent";
-  status: "open" | "in_progress" | "resolved" | "closed";
-  createdDate: string;
-}
-
-const tickets: Ticket[] = [
-  {
-    id: 1,
-    ticketNumber: "TKT-2025-001",
-    subject: "Login Issue",
-    customer: "Acme Corporation",
-    priority: "high",
-    status: "open",
-    createdDate: "2025-01-15",
-  },
-  {
-    id: 2,
-    ticketNumber: "TKT-2025-002",
-    subject: "Payment Gateway Error",
-    customer: "Tech Solutions Inc",
-    priority: "urgent",
-    status: "in_progress",
-    createdDate: "2025-01-16",
-  },
-  {
-    id: 3,
-    ticketNumber: "TKT-2025-003",
-    subject: "Feature Request - Dark Mode",
-    customer: "Global Enterprises",
-    priority: "low",
-    status: "open",
-    createdDate: "2025-01-17",
-  },
-  {
-    id: 4,
-    ticketNumber: "TKT-2025-004",
-    subject: "Data Export Not Working",
-    customer: "Startup Ventures",
-    priority: "medium",
-    status: "resolved",
-    createdDate: "2025-01-14",
-  },
-  {
-    id: 5,
-    ticketNumber: "TKT-2025-005",
-    subject: "Password Reset Email Not Received",
-    customer: "Enterprise Systems",
-    priority: "high",
-    status: "in_progress",
-    createdDate: "2025-01-18",
-  },
-  {
-    id: 6,
-    ticketNumber: "TKT-2025-006",
-    subject: "API Integration Question",
-    customer: "Digital Marketing Co",
-    priority: "medium",
-    status: "closed",
-    createdDate: "2025-01-12",
-  },
-  {
-    id: 7,
-    ticketNumber: "TKT-2025-007",
-    subject: "Invoice Download Error",
-    customer: "Innovation Labs",
-    priority: "high",
-    status: "open",
-    createdDate: "2025-01-19",
-  },
-  {
-    id: 8,
-    ticketNumber: "TKT-2025-008",
-    subject: "User Permissions Not Updating",
-    customer: "Future Technologies",
-    priority: "urgent",
-    status: "in_progress",
-    createdDate: "2025-01-20",
-  },
-  {
-    id: 9,
-    ticketNumber: "TKT-2025-009",
-    subject: "Dashboard Loading Slowly",
-    customer: "Acme Corporation",
-    priority: "medium",
-    status: "open",
-    createdDate: "2025-01-21",
-  },
-  {
-    id: 10,
-    ticketNumber: "TKT-2025-010",
-    subject: "Mobile App Crash on Startup",
-    customer: "Tech Solutions Inc",
-    priority: "urgent",
-    status: "in_progress",
-    createdDate: "2025-01-22",
-  },
-];
-
-const priorityColorMap = {
+const priorityColorMap: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
   low: {
     bg: "bg-brand-50",
     text: "text-brand-500",
@@ -136,7 +38,10 @@ const priorityColorMap = {
   },
 };
 
-const statusColorMap = {
+const statusColorMap: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
   open: {
     bg: "bg-brand-50",
     text: "text-brand-500",
@@ -161,23 +66,45 @@ const statusColorMap = {
 
 export default function TicketPage() {
   const [openForm, setOpenForm] = useState(false);
-  const [formMode, setFormMode] = useState<TicketFormMode>("create");
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { showError } = useError();
 
   const [columns, setColumns] = useState<
-    { key: keyof Ticket; label: string; visible: boolean }[]
+    { key: string; label: string; visible: boolean }[]
   >([
-    { key: "ticketNumber", label: "Ticket Number", visible: true },
+    { key: "id", label: "Ticket ID", visible: true },
     { key: "subject", label: "Subject", visible: true },
     { key: "customer", label: "Customer", visible: true },
+    { key: "category", label: "Category", visible: true },
     { key: "priority", label: "Priority", visible: true },
     { key: "status", label: "Status", visible: true },
-    { key: "createdDate", label: "Created Date", visible: true },
   ]);
+
+  const fetchTickets = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllTicket();
+      if (response.isSuccess && response.data) {
+        setTickets(response.data);
+      } else {
+        showError(response.message || "Failed to fetch tickets");
+      }
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      showError("Failed to fetch tickets");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
 
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
@@ -187,30 +114,15 @@ export default function TicketPage() {
     );
   };
 
-  const handleEditClick = (ticket: Ticket) => {
-    setFormMode("edit");
-    setEditingTicket(ticket);
-    setOpenForm(true);
-  };
-
   const actions: TableAction<Ticket>[] = [
     {
       label: "View",
       onClick: (row) => router.push(`/tickets/${row.id}`),
     },
-    {
-      label: "Edit",
-      onClick: (row) => handleEditClick(row),
-    },
-    {
-      label: "Delete",
-      variant: "destructive",
-      onClick: (row) => console.log("Delete ticket", row),
-    },
   ];
 
   const filtered = tickets.filter((ticket) =>
-    `${ticket.ticketNumber} ${ticket.subject} ${ticket.customer} ${ticket.status}`
+    `${ticket.id} ${ticket.subject} ${ticket.customer?.name || ""} ${ticket.status?.name || ""}`
       .toLowerCase()
       .includes(searchValue.toLowerCase())
   );
@@ -222,8 +134,6 @@ export default function TicketPage() {
   );
 
   const handleCreateClick = () => {
-    setFormMode("create");
-    setEditingTicket(null);
     setOpenForm(true);
   };
 
@@ -233,28 +143,58 @@ export default function TicketPage() {
       key: col.key,
       label: col.label,
       visible: col.visible,
-      render: (row) => {
+      render: (row: Ticket) => {
         if (col.key === "status") {
+          const statusName = row.status?.name?.toLowerCase() || "";
           return (
             <StatusBadge
-              status={row.status}
+              status={row.status?.name || "N/A"}
               colorMap={statusColorMap}
               variant="default"
             />
           );
         }
         if (col.key === "priority") {
+          const priorityName = row.priority?.name?.toLowerCase() || "";
           return (
             <StatusBadge
-              status={row.priority}
+              status={row.priority?.name || "N/A"}
               colorMap={priorityColorMap}
               variant="default"
             />
           );
         }
+        if (col.key === "customer") {
+          return (
+            <span className="truncate block max-w-[200px]">
+              {row.customer?.name || "N/A"}
+            </span>
+          );
+        }
+        if (col.key === "category") {
+          return (
+            <span className="truncate block max-w-[200px]">
+              {row.category?.name || "N/A"}
+            </span>
+          );
+        }
+        if (col.key === "id") {
+          return (
+            <span className="truncate block max-w-[200px]">
+              TKT-{String(row.id).padStart(4, "0")}
+            </span>
+          );
+        }
+        if (col.key === "subject") {
+          return (
+            <span className="truncate block max-w-[200px]">
+              {row.subject || ""}
+            </span>
+          );
+        }
         return (
           <span className="truncate block max-w-[200px]">
-            {String(row[col.key])}
+            {String(row[col.key as keyof Ticket] ?? "")}
           </span>
         );
       },
@@ -282,7 +222,7 @@ export default function TicketPage() {
         columns={tableColumns}
         data={paginatedData}
         actions={actions}
-        emptyMessage="No tickets found."
+        emptyMessage={loading ? "Loading tickets..." : "No tickets found."}
       />
 
       <Pagination
@@ -299,26 +239,10 @@ export default function TicketPage() {
       <SlideOver open={openForm} onClose={() => setOpenForm(false)}>
         <div className="p-6">
           <TicketForm
-            mode={formMode}
-            initialData={
-              formMode === "edit" && editingTicket
-                ? {
-                    email: "", // if available
-                    customer: editingTicket.customer,
-                    priority: editingTicket.priority,
-                    subject: editingTicket.subject,
-                    description: "", // if available
-                  }
-                : undefined
-            }
             onCancel={() => setOpenForm(false)}
-            onSubmit={(data: TicketFormData) => {
-              if (formMode === "create") {
-                console.log("CREATE TICKET", data);
-              } else {
-                console.log("UPDATE TICKET ID:", editingTicket?.id, data);
-              }
+            onSuccess={() => {
               setOpenForm(false);
+              fetchTickets();
             }}
           />
         </div>
