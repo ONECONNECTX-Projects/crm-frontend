@@ -51,7 +51,7 @@ export default function EmailForm({
         <input
           disabled={isView}
           placeholder="Receiver Email"
-          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-600 focus:outline-none"
+          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
       </div>
 
@@ -63,7 +63,7 @@ export default function EmailForm({
         <input
           disabled={isView}
           placeholder="Subject"
-          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-600 focus:outline-none"
+          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
       </div>
 
@@ -115,7 +115,7 @@ export default function EmailForm({
         <textarea
           disabled={isView}
           rows={6}
-          className="w-full border border-t-0 rounded-b-md px-3 py-2 text-sm focus:ring-1 focus:ring-blue-600 focus:outline-none"
+          className="w-full border border-t-0 rounded-b-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
       </div>
 
@@ -138,7 +138,7 @@ export default function EmailForm({
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
             {label}
             {!isView && (
-              <Plus size={14} className="text-blue-600 cursor-pointer" />
+              <Plus size={14} className="text-brand-500 cursor-pointer" />
             )}
           </label>
           <select
@@ -157,7 +157,7 @@ export default function EmailForm({
         </label>
 
         {!isView && (
-          <label className="flex items-center gap-2 cursor-pointer text-blue-600 text-sm font-medium">
+          <label className="flex items-center gap-2 cursor-pointer text-brand-500 text-sm font-medium">
             <Paperclip size={16} />
             Attach files or images
             <input
@@ -193,7 +193,7 @@ export default function EmailForm({
       {/* Actions */}
       {!isView && (
         <div className="flex gap-4 mt-8">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-sm">
+          <button className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-md text-sm">
             {mode === "create" ? "Create" : "Update"}
           </button>
 

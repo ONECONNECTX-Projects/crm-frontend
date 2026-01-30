@@ -104,7 +104,7 @@ export default function OpportunityViewPage() {
             className={`px-3 py-1 rounded text-sm font-medium
               ${
                 activeStage === stage
-                  ? "bg-blue-600 text-white"
+                  ? "bg-brand-500 text-white"
                   : "bg-gray-200 text-gray-700"
               }`}
           >
@@ -230,7 +230,7 @@ export default function OpportunityViewPage() {
                 className={`flex items-center gap-2 pb-3 text-sm font-medium
                   ${
                     activeTab === key
-                      ? "border-b-2 border-blue-600 text-blue-600"
+                      ? "border-b-2 border-brand-500 text-brand-500"
                       : "text-gray-600"
                   }`}
               >
@@ -259,7 +259,7 @@ function TasksTab() {
     <div className="bg-gray-50 rounded-lg p-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold flex items-center gap-2">
-          Tasks <Plus size={16} className="text-blue-600" />
+          Tasks <Plus size={16} className="text-brand-500" />
         </h3>
       </div>
 

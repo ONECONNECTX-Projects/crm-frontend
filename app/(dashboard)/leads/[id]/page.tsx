@@ -198,7 +198,7 @@ export default function LeadViewPage() {
             </Button>
           )}
 
-          <button className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          <button className="px-5 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600">
             Convert
           </button>
 

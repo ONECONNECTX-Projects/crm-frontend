@@ -26,7 +26,7 @@ export default function PageHeader({
       {showCreateButton && (
         <Button
           onClick={onCreateClick}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600"
         >
           <Plus className="w-4 h-4" />
           {createButtonText}

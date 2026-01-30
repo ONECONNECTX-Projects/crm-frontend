@@ -37,10 +37,10 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
             <button
               type="button"
               onClick={onAddClick}
-              className="ml-2 p-2 rounded  hover:bg-blue-100"
+              className="ml-2 p-2 rounded  hover:bg-brand-50"
               title={`Add ${label}`}
             >
-              <Plus className="w-4 h-4 text-blue-600" />
+              <Plus className="w-4 h-4 text-brand-500" />
             </button>
           )}
         </div>
@@ -50,7 +50,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+        className={`w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
           disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
         } ${className}`}
       >

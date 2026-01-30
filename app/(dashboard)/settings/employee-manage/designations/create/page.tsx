@@ -97,15 +97,15 @@ export default function CreateDesignationForm({
             value={designationName}
             onChange={(e) => setDesignationName(e.target.value)}
             placeholder="Enter designation name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             autoFocus
           />
         </div>
 
         {mode === "create" && (
           <div className="border-t pt-6 space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-brand-50 border border-brand-200 rounded-md p-4">
+              <p className="text-sm text-brand-600">
                 <strong>Bulk Upload:</strong> Upload multiple designations using
                 a CSV file.
               </p>
@@ -121,7 +121,7 @@ export default function CreateDesignationForm({
                 onChange={(e) =>
                   setFile(e.target.files ? e.target.files[0] : null)
                 }
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
               {file && (
                 <p className="mt-2 text-sm text-gray-600">

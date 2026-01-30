@@ -206,9 +206,9 @@ export default function ViewRolePage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-600 font-medium">Permissions</p>
-            <p className="text-2xl font-semibold text-blue-900 mt-1">
+          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
+            <p className="text-sm text-brand-500 font-medium">Permissions</p>
+            <p className="text-2xl font-semibold text-brand-600 mt-1">
               {role.permissionsCount || permissions.length}
             </p>
           </div>
@@ -236,7 +236,7 @@ export default function ViewRolePage() {
               <button
                 type="button"
                 onClick={handleSelectAll}
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-brand-500 hover:text-brand-500 font-medium"
               >
                 Select All
               </button>
@@ -283,7 +283,7 @@ export default function ViewRolePage() {
                           onChange={() =>
                             handlePermissionChange(index, "can_read")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                          className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-gray-300 rounded cursor-pointer"
                         />
                       ) : permission.can_read ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
@@ -323,7 +323,7 @@ export default function ViewRolePage() {
                           onChange={() =>
                             handlePermissionChange(index, "can_create")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                          className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-gray-300 rounded cursor-pointer"
                         />
                       ) : permission.can_create ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
@@ -363,7 +363,7 @@ export default function ViewRolePage() {
                           onChange={() =>
                             handlePermissionChange(index, "can_update")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                          className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-gray-300 rounded cursor-pointer"
                         />
                       ) : permission.can_update ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
@@ -403,7 +403,7 @@ export default function ViewRolePage() {
                           onChange={() =>
                             handlePermissionChange(index, "can_delete")
                           }
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                          className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-gray-300 rounded cursor-pointer"
                         />
                       ) : permission.can_delete ? (
                         <span className="inline-flex items-center justify-center w-5 h-5 bg-green-100 rounded-full">
@@ -446,7 +446,7 @@ export default function ViewRolePage() {
                             permission.can_delete
                           }
                           onChange={() => handleSelectAllModule(index)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                          className="h-4 w-4 text-brand-500 focus:ring-brand-500 border-gray-300 rounded cursor-pointer"
                         />
                       </td>
                     )}

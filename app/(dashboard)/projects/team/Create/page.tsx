@@ -114,7 +114,7 @@ export default function CreateTeamForm({ onClose, onSuccess }: Props) {
         <div>
           <label className="text-sm font-medium flex items-center gap-2">
             <span className="text-red-500">*</span> Project Name
-            <span className="bg-blue-600 text-white rounded p-1">
+            <span className="bg-brand-500 text-white rounded p-1">
               <Plus size={12} />
             </span>
           </label>
@@ -159,13 +159,13 @@ export default function CreateTeamForm({ onClose, onSuccess }: Props) {
               return (
                 <span
                   key={id}
-                  className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1"
+                  className="bg-brand-100 text-brand-600 px-2 py-1 rounded text-sm flex items-center gap-1"
                 >
                   {member.name}
                   <button
                     type="button"
                     onClick={() => removeMember(id)}
-                    className="hover:text-blue-900"
+                    className="hover:text-brand-700"
                   >
                     <X size={14} />
                   </button>
@@ -203,7 +203,7 @@ export default function CreateTeamForm({ onClose, onSuccess }: Props) {
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-md font-medium mt-6 disabled:opacity-50"
+          className="w-full bg-brand-500 text-white py-3 rounded-md font-medium mt-6 disabled:opacity-50"
         >
           {loading ? "Creating..." : "Create Team"}
         </button>

@@ -145,7 +145,7 @@ export default function CompanySettingsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-blue-600 cursor-pointer">
+              <label className="text-sm font-medium text-brand-500 cursor-pointer">
                 Upload Company Logo
                 <input
                   type="file"
@@ -172,7 +172,7 @@ export default function CompanySettingsPage() {
 
         {/* Save Button */}
         <div className="flex justify-center pt-4">
-          <button className="bg-blue-600 text-white px-8 py-2 rounded-md text-sm hover:bg-blue-700">
+          <button className="bg-brand-500 text-white px-8 py-2 rounded-md text-sm hover:bg-brand-600">
             Save Changes
           </button>
         </div>

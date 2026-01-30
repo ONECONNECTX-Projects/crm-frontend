@@ -117,9 +117,7 @@ export default function NotePage() {
       label: "Contact",
       visible: columns.find((c) => c.key === "contact")?.visible,
       render: (row) => (
-        <span className="text-gray-600">
-          {row.contact?.first_name + " " + row.contact?.last_name || "-"}
-        </span>
+        <span className="text-gray-600">{row.contact?.name || "-"}</span>
       ),
     },
     {
@@ -151,7 +149,7 @@ export default function NotePage() {
   ];
 
   const filtered = notes.filter((note) =>
-    `${note.title} ${note.company.name} ${note.contact.first_name} ${note.contact.last_name} ${note.opportunity.name}`
+    `${note.title} ${note.company.name} ${note.contact.name}  ${note.opportunity.name}`
       .toLowerCase()
       .includes(searchValue.toLowerCase()),
   );

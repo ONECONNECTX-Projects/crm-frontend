@@ -92,7 +92,7 @@ export default function ContactViewPage() {
         </button>
         <button
           onClick={() => setOpenEdit(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600"
         >
           Edit Contact
         </button>
@@ -106,7 +106,7 @@ export default function ContactViewPage() {
             onClick={() => setActiveTab(tab)}
             className={`pb-2 ${
               activeTab === tab
-                ? "border-b-2 border-blue-600 text-blue-600 font-medium"
+                ? "border-b-2 border-brand-500 text-brand-500 font-medium"
                 : "text-gray-500 hover:text-gray-700"
             }`}
           >
@@ -119,12 +119,12 @@ export default function ContactViewPage() {
         {/* Left Profile */}
         <div className="w-1/4 bg-white rounded-xl p-5 shadow-sm">
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+            <div className="w-16 h-16 rounded-full bg-brand-500 text-white flex items-center justify-center text-xl font-semibold">
               {contact.first_name?.[0]?.toUpperCase() || "?"}
             </div>
             <h2 className="mt-3 font-semibold">{fullName}</h2>
             <p className="text-sm text-gray-500">{contact.job_title || "-"}</p>
-            <p className="text-sm text-blue-600">
+            <p className="text-sm text-brand-500">
               {contact.company?.name || "-"}
             </p>
           </div>

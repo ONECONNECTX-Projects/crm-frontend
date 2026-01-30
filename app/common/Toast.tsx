@@ -34,7 +34,7 @@ export default function Toast({
       case "warning":
         return <FiAlertCircle className="text-yellow-500" size={20} />;
       default:
-        return <FiAlertCircle className="text-blue-500" size={20} />;
+        return <FiAlertCircle className="text-brand-500" size={20} />;
     }
   };
 
@@ -47,7 +47,7 @@ export default function Toast({
       case "warning":
         return "bg-yellow-50 border-yellow-200";
       default:
-        return "bg-blue-50 border-blue-200";
+        return "bg-brand-50 border-brand-200";
     }
   };
 

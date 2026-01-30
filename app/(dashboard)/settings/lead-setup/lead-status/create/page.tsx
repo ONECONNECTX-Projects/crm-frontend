@@ -93,7 +93,7 @@ export default function CreateLeadStatusForm({
             value={LeadStatusName}
             onChange={(e) => setLeadStatusName(e.target.value)}
             placeholder="Enter Lead Status name"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
             autoFocus
           />
         </div>
@@ -116,7 +116,7 @@ export default function CreateLeadStatusForm({
               value={color}
               onChange={(e) => setColor(e.target.value)}
               className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm
-                focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
         </div>

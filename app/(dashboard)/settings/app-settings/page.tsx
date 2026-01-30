@@ -27,7 +27,7 @@ export default function AppSettingsPage() {
 
       {/* Tabs */}
       <div className="border-b mb-6">
-        <button className="text-sm text-blue-600 font-medium border-b-2 border-blue-600 pb-2">
+        <button className="text-sm text-brand-500 font-medium border-b-2 border-brand-500 pb-2">
           Email Config
         </button>
       </div>
@@ -92,7 +92,7 @@ export default function AppSettingsPage() {
 
           {/* Save Button */}
           <div>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-md text-sm hover:bg-blue-700">
+            <button className="bg-brand-500 text-white px-6 py-2 rounded-md text-sm hover:bg-brand-600">
               Save
             </button>
           </div>

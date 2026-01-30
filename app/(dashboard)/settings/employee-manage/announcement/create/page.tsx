@@ -52,7 +52,7 @@ export default function AnnouncementForm({
           name="priority"
           value={formData.priority}
           onChange={onChange}
-          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -66,7 +66,7 @@ export default function AnnouncementForm({
           name="status"
           value={formData.status}
           onChange={onChange}
-          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-brand-500"
         >
           <option value="draft">Draft</option>
           <option value="active">Active</option>
@@ -77,7 +77,7 @@ export default function AnnouncementForm({
       <div className="flex gap-4 pt-4">
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg"
+          className="px-6 py-2 bg-brand-500 text-white rounded-lg"
         >
           {isEditMode ? "Update Announcement" : "Add Announcement"}
         </button>

@@ -320,7 +320,7 @@ const CreateQuote = ({ editId, onClose, onSuccess }: CreateQuoteProps) => {
         <div>
           <label className="block text-sm font-medium mb-1">
             Company{" "}
-            <span className="bg-blue-600 text-white px-1 rounded text-xs">
+            <span className="bg-brand-500 text-white px-1 rounded text-xs">
               +
             </span>
           </label>
@@ -357,7 +357,7 @@ const CreateQuote = ({ editId, onClose, onSuccess }: CreateQuoteProps) => {
         <div>
           <label className="block text-sm font-medium mb-1">
             <span className="text-red-500">*</span> Contact{" "}
-            <span className="bg-blue-600 text-white px-1 rounded text-xs">
+            <span className="bg-brand-500 text-white px-1 rounded text-xs">
               +
             </span>
           </label>
@@ -516,7 +516,7 @@ const CreateQuote = ({ editId, onClose, onSuccess }: CreateQuoteProps) => {
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full mt-6 bg-blue-600 text-white font-semibold py-3 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+        className="w-full mt-6 bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition disabled:opacity-50"
       >
         {loading
           ? "Saving..."

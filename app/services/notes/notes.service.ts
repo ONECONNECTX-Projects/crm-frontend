@@ -27,11 +27,7 @@ export interface Notes {
   updatedAt: Date;
   owner: OptionDropDownModel;
   company: OptionDropDownModel;
-  contact: {
-    id: number;
-    first_name: string;
-    last_name: string;
-  };
+  contact: OptionDropDownModel;
   opportunity: OptionDropDownModel;
   quote: OptionDropDownModel;
 }

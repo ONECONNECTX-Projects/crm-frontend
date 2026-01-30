@@ -110,9 +110,9 @@ const statusColorMap = {
     border: "border-red-200",
   },
   scheduled: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
 };
 

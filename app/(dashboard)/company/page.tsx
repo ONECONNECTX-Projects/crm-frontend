@@ -127,7 +127,7 @@ export default function CompanyPage() {
       label: "Name",
       visible: columns.find((c) => c.key === "employee_code")?.visible,
       render: (row) => (
-        <span className="font-medium text-blue-600">{row.name}</span>
+        <span className="font-medium text-brand-500">{row.name}</span>
       ),
     },
     {

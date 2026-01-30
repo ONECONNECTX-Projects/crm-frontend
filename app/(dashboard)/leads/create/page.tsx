@@ -286,7 +286,7 @@ export default function CreateLeadForm({
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full mt-6 bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full mt-6 bg-brand-500 text-white py-2 rounded-md font-medium hover:bg-brand-600 transition disabled:opacity-50"
         >
           {submitting
             ? "Saving..."
@@ -323,8 +323,8 @@ export default function CreateLeadForm({
             disabled={!csvFile}
             className={`w-full mt-4 py-2 rounded-md font-medium ${
               csvFile
-                ? "bg-blue-600 text-white"
-                : "bg-blue-200 text-gray-500 cursor-not-allowed"
+                ? "bg-brand-500 text-white"
+                : "bg-brand-200 text-gray-500 cursor-not-allowed"
             }`}
           >
             Import From CSV

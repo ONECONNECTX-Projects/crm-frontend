@@ -19,20 +19,14 @@ export interface Task {
   is_delete: boolean;
   createdAt: Date;
   updatedAt: Date;
-  OpportunityPayload: OpportunityPayload;
-  company: OpportunityPayload;
-  contact: Contact;
-  opportunity: OpportunityPayload;
-  Task: OpportunityPayload;
-  type: OpportunityPayload;
-  status: OpportunityPayload;
-  priority: OpportunityPayload;
-}
-
-export interface Contact {
-  id: number;
-  first_name: string;
-  last_name: string;
+  OpportunityPayload: OptionDropDownModel;
+  company: OptionDropDownModel;
+  contact: OptionDropDownModel;
+  opportunity: OptionDropDownModel;
+  Task: OptionDropDownModel;
+  type: OptionDropDownModel;
+  status: OptionDropDownModel;
+  priority: OptionDropDownModel;
 }
 
 export interface TaskPayload {
@@ -47,6 +41,11 @@ export interface TaskPayload {
   task_status_id: number;
   due_date: Date;
   description: string;
+}
+
+export interface TaskCommentPayload {
+  comment: string;
+  attachment: File;
 }
 
 export interface TaskDetail {
@@ -66,130 +65,33 @@ export interface TaskDetail {
   is_delete: boolean;
   createdAt: Date;
   updatedAt: Date;
-  assignee: Assignee;
-  company: Company;
-  contact: Contact;
-  opportunity: Opportunity;
-  quote: Quote;
-  type: Status;
-  status: Status;
-  priority: Priority;
+  assignee: OptionDropDownModel;
+  company: OptionDropDownModel;
+  contact: OptionDropDownModel;
+  opportunity: OptionDropDownModel;
+  quote: OptionDropDownModel;
+  type: OptionDropDownModel;
+  status: OptionDropDownModel;
+  priority: OptionDropDownModel;
+  comments: Comment[];
 }
 
-export interface Assignee {
+export interface Comment {
   id: number;
-  name: string;
-  email: string;
-  mobile: string;
-  password: string;
-  role_id: number;
-  is_system_admin: boolean;
-  is_active: boolean;
+  comment: string;
   is_delete: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  task_id: number;
+  user_id: number;
+  user: OptionDropDownModel;
+  attachments: Attachment[];
 }
 
-export interface Company {
+export interface Attachment {
   id: number;
-  name: string;
-  company_size: number;
-  annual_revenue: string;
-  phone: string;
-  email: string;
-  website: string;
-  linkedin: string;
-  twitter: string;
-  instagram: string;
-  facebook: string;
-  is_active: boolean;
-  is_delete: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  owner_id: number;
-  industry_id: number;
-  company_type_id: number;
-}
-
-export interface Contact {
-  id: number;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  birthday: Date;
-  job_title: string;
-  owner_id: number;
-  company_id: number;
-  department_id: number;
-  industry_id: number;
-  contact_source_id: null;
-  contact_stage_id: null;
-  twitter: string;
-  linkedin: string;
-  is_active: boolean;
-  is_delete: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface Opportunity {
-  id: number;
-  name: string;
-  amount: string;
-  owner_id: number;
-  company_id: number;
-  contact_id: number;
-  opportunity_source_id: number;
-  opportunity_stage_id: number;
-  opportunity_type_id: number;
-  next_step: string;
-  competitors: string;
-  description: string;
-  start_date: Date;
-  close_date: Date;
-  is_active: boolean;
-  is_delete: boolean;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface Priority {
-  id: number;
-  name: string;
-  color: string;
-  is_active: boolean;
-  is_delete: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface Quote {
-  id: number;
-  name: string;
-  total_amount: string;
-  is_active: boolean;
-  is_delete: boolean;
-  quote_date: Date;
-  expiry_date: null;
-  terms: string;
-  description: string;
-  createdAt: Date;
-  updatedAt: Date;
-  owner_id: number;
-  company_id: number;
-  contact_id: number;
-  opportunity_id: number;
-  quote_stage_id: number;
-}
-
-export interface Status {
-  id: number;
-  name: string;
-  is_active: boolean;
-  is_delete: boolean;
-  created_at: Date;
-  updated_at: Date;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  task_comment_id: number;
 }
 
 export async function getAllTask(): Promise<ApiResponse<Task[]>> {
@@ -245,4 +147,25 @@ export async function getTaskById(
 ): Promise<ApiResponse<TaskDetail>> {
   const response = await api.get(`tasks/${id}`);
   return response as unknown as ApiResponse<TaskDetail>;
+}
+
+export async function createTaskComment(
+  id: number,
+  data: TaskCommentPayload,
+): Promise<ApiResponse<Attachment>> {
+  const formData = new FormData();
+
+  formData.append("comment", data.comment);
+  formData.append("attachment", data.attachment);
+  return api.post(`task-comments/${id}/comment`, formData) as Promise<
+    ApiResponse<Attachment>
+  >;
+}
+
+export async function deleteTaskComment(
+  id: number,
+): Promise<ApiResponse<void>> {
+  return api.delete(`task-comments/comment/${id}`) as Promise<
+    ApiResponse<void>
+  >;
 }

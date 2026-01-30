@@ -200,7 +200,7 @@ export default function CreateOpportunity({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     currentStep >= step.id
-                      ? "bg-blue-600 text-white"
+                      ? "bg-brand-500 text-white"
                       : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -208,7 +208,7 @@ export default function CreateOpportunity({
                 </div>
                 <span
                   className={`ml-2 text-sm font-medium ${
-                    currentStep >= step.id ? "text-blue-600" : "text-gray-500"
+                    currentStep >= step.id ? "text-brand-500" : "text-gray-500"
                   }`}
                 >
                   {step.title}
@@ -216,7 +216,7 @@ export default function CreateOpportunity({
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-24 h-0.5 mx-4 ${currentStep > step.id ? "bg-blue-600" : "bg-gray-200"}`}
+                  className={`w-24 h-0.5 mx-4 ${currentStep > step.id ? "bg-brand-500" : "bg-gray-200"}`}
                 />
               )}
             </div>

@@ -98,7 +98,7 @@ export default function StaffPage() {
       label: "Employee Code",
       visible: columns.find((c) => c.key === "employee_code")?.visible,
       render: (row) => (
-        <span className="font-medium text-blue-600">{row.employee_code}</span>
+        <span className="font-medium text-brand-500">{row.employee_code}</span>
       ),
     },
     {

@@ -409,7 +409,7 @@ function TabButton({
       className={`pb-3 text-sm font-medium border-b-2 transition
         ${
           active
-            ? "border-blue-600 text-blue-600"
+            ? "border-brand-500 text-brand-500"
             : "border-transparent text-gray-500 hover:text-gray-700"
         }`}
     >
@@ -441,7 +441,7 @@ function Field({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500"
       />
     </div>
   );

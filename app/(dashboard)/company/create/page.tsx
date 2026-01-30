@@ -227,7 +227,7 @@ export default function CreateCompanyForm({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                     currentStep >= step.id
-                      ? "bg-blue-600 text-white"
+                      ? "bg-brand-500 text-white"
                       : "bg-gray-200 text-gray-600"
                   }`}
                 >
@@ -235,7 +235,7 @@ export default function CreateCompanyForm({
                 </div>
                 <span
                   className={`ml-2 text-sm font-medium ${
-                    currentStep >= step.id ? "text-blue-600" : "text-gray-500"
+                    currentStep >= step.id ? "text-brand-500" : "text-gray-500"
                   }`}
                 >
                   {step.title}
@@ -244,7 +244,7 @@ export default function CreateCompanyForm({
               {index < steps.length - 1 && (
                 <div
                   className={`w-24 h-0.5 mx-4 ${
-                    currentStep > step.id ? "bg-blue-600" : "bg-gray-200"
+                    currentStep > step.id ? "bg-brand-500" : "bg-gray-200"
                   }`}
                 />
               )}
@@ -437,7 +437,7 @@ export default function CreateCompanyForm({
                 id="copyAddress"
                 checked={copyAddress}
                 onChange={(e) => handleCopyAddress(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500"
               />
               <label htmlFor="copyAddress" className="text-sm text-gray-700">
                 Same as Billing Address

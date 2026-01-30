@@ -84,7 +84,7 @@ export default function TicketForm({
           placeholder="youremail@something.com"
           value={form.email}
           onChange={(e) => update("email", e.target.value)}
-          className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="mt-1 w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
       </div>
 
@@ -162,7 +162,7 @@ export default function TicketForm({
         <label className="text-sm font-medium">Attachments</label>
 
         <div
-          className="mt-2 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition"
+          className="mt-2 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-brand-400 transition"
           onClick={() => fileInputRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
@@ -170,10 +170,10 @@ export default function TicketForm({
             addFiles(e.dataTransfer.files);
           }}
         >
-          <Upload className="mx-auto mb-2 text-blue-500" />
+          <Upload className="mx-auto mb-2 text-brand-500" />
           <p className="text-sm">
             Drag and drop files or{" "}
-            <span className="text-blue-600 font-medium">click to select</span>
+            <span className="text-brand-500 font-medium">click to select</span>
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Supported file types: PNG, JPG, JPEG, PDF
@@ -223,7 +223,7 @@ export default function TicketForm({
         <button
           type="button"
           onClick={() => onSubmit(form)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+          className="px-4 py-2 bg-brand-500 text-white rounded-md text-sm hover:bg-brand-600"
         >
           {mode === "create" ? "Create Ticket" : "Update Ticket"}
         </button>

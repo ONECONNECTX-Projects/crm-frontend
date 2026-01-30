@@ -46,9 +46,9 @@ const statusColorMap: Record<
     border: "border-gray-200",
   },
   "In Progress": {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
   Scheduled: {
     bg: "bg-purple-50",
@@ -77,9 +77,9 @@ const priorityColorMap: Record<
     border: "border-gray-200",
   },
   Medium: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
   High: {
     bg: "bg-orange-50",
@@ -312,7 +312,7 @@ export default function TasksPage() {
   const getStatusBgClass = (color: string) => {
     const colorMap: Record<string, string> = {
       gray: "bg-gray-100",
-      blue: "bg-blue-100",
+      blue: "bg-brand-100",
       yellow: "bg-yellow-100",
       purple: "bg-purple-100",
       green: "bg-green-100",
@@ -323,7 +323,7 @@ export default function TasksPage() {
   const getStatusBadgeClass = (color: string) => {
     const colorMap: Record<string, string> = {
       gray: "bg-gray-200 text-gray-700",
-      blue: "bg-blue-200 text-blue-700",
+      blue: "bg-brand-200 text-brand-500",
       yellow: "bg-yellow-200 text-yellow-700",
       purple: "bg-purple-200 text-purple-700",
       green: "bg-green-200 text-green-700",
@@ -334,7 +334,7 @@ export default function TasksPage() {
   const getStatusBorderClass = (color: string) => {
     const colorMap: Record<string, string> = {
       gray: "border-gray-200",
-      blue: "border-blue-200",
+      blue: "border-brand-200",
       yellow: "border-yellow-200",
       purple: "border-purple-200",
       green: "border-green-200",
@@ -373,7 +373,7 @@ export default function TasksPage() {
 
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
           </div>
         ) : viewMode === "list" ? (
           <>

@@ -170,7 +170,7 @@ export default function CreateTask({ onClose, taskId }: CreateTaskProps) {
   if (fetchingTask) {
     return (
       <div className="p-6 flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
       </div>
     );
   }
@@ -311,7 +311,7 @@ export default function CreateTask({ onClose, taskId }: CreateTaskProps) {
             className={`px-16 py-2.5 rounded-md text-sm font-medium text-white ${
               loading
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
+                : "bg-brand-500 hover:bg-brand-600"
             }`}
           >
             {loading
@@ -402,7 +402,7 @@ function Select({
       <label className="flex items-center gap-2 text-sm font-medium">
         {label}
         {plus && (
-          <span className="bg-blue-600 text-white rounded p-[2px]">
+          <span className="bg-brand-500 text-white rounded p-[2px]">
             <Plus size={12} />
           </span>
         )}

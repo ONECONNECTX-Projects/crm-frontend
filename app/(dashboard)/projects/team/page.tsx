@@ -146,7 +146,7 @@ export default function TeamsPage() {
               {row.members.slice(0, 2).map((m, i) => (
                 <span
                   key={i}
-                  className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs"
+                  className="bg-brand-100 text-brand-600 px-2 py-0.5 rounded text-xs"
                 >
                   {m.name}
                 </span>

@@ -230,7 +230,7 @@ export default function CreateProjectForm({
       <button
         onClick={handleSubmit}
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-2 rounded-md disabled:opacity-50"
+        className="w-full bg-brand-500 text-white py-2 rounded-md disabled:opacity-50"
       >
         {loading
           ? isEditMode

@@ -146,7 +146,7 @@ export default function CreateProductForm({
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
               required
             />
           </div>
@@ -158,7 +158,7 @@ export default function CreateProductForm({
               name="rate"
               value={formData.rate}
               onChange={handleChange}
-              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function CreateProductForm({
               name="unit"
               value={formData.unit}
               onChange={handleChange}
-              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -186,7 +186,7 @@ export default function CreateProductForm({
               }))}
               label="Select category"
               onAddClick={() => setOpenProductCategoryModal(true)}
-              className="w-full rounded-md border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
             ></SelectDropdown>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function CreateProductForm({
             rows={4}
             value={formData.description}
             onChange={handleChange}
-            className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-500"
           />
         </div>
 
@@ -208,7 +208,7 @@ export default function CreateProductForm({
           <Button
             type="submit"
             disabled={submitting}
-            className="w-full mt-6 bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full mt-6 bg-brand-500 text-white py-2 rounded-md font-medium hover:bg-brand-600 transition disabled:opacity-50"
           >
             {submitting
               ? "Saving..."

@@ -69,11 +69,11 @@ const ticketStatus = [
 const COLORS = [
   "#ef4444",
   "#ec4899",
-  "#f59e0b",
-  "#3b82f6",
+  "#CC6118",
+  "#01558C",
   "#8b5cf6",
   "#22c55e",
-]; // red, pink, yellow, blue, purple, green
+]; // red, pink, accent-orange, brand-blue, purple, green
 
 const recentQuotes = [
   "Cloud Migration",
@@ -105,7 +105,7 @@ export default function Dashboard() {
             title: "Total Leads",
             count: 4,
             subtitle: "Active Leads",
-            color: "from-blue-500 to-blue-700",
+            color: "from-brand-400 to-brand-600",
             icon: <User className="w-7 h-7 text-white" />,
           },
           {
@@ -119,7 +119,7 @@ export default function Dashboard() {
             title: "Total Company",
             count: 4,
             subtitle: "Registered Companies",
-            color: "from-orange-500 to-orange-700",
+            color: "from-accent-brand-400 to-accent-brand-600",
             icon: <Building2 className="w-7 h-7 text-white" />,
           },
           {
@@ -166,7 +166,7 @@ export default function Dashboard() {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="value" fill="#01558C" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -222,7 +222,7 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-600">
               Recent Quotes
             </h3>
-            <button className="text-blue-500">View All →</button>
+            <button className="text-brand-500">View All →</button>
           </div>
 
           <div className="mt-4 space-y-4">
@@ -246,7 +246,7 @@ export default function Dashboard() {
             <h3 className="text-lg font-semibold text-gray-600">
               Recent Contacts
             </h3>
-            <button className="text-blue-500">View All →</button>
+            <button className="text-brand-500">View All →</button>
           </div>
 
           <div className="mt-4 space-y-4">

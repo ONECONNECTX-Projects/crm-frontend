@@ -132,9 +132,10 @@ export async function apiClient<T = unknown>(
       throw error;
     }
 
-    // Prepare headers
+    // Prepare headers - don't set Content-Type for FormData (browser will set it with boundary)
+    const isFormData = fetchOptions.body instanceof FormData;
     const headers: Record<string, string> = {
-      "Content-Type": "application/json",
+      ...(isFormData ? {} : { "Content-Type": "application/json" }),
       ...(fetchOptions.headers as Record<string, string>),
     };
 
@@ -232,21 +233,21 @@ export const api = {
     apiClient(endpoint, {
       ...options,
       method: "POST",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   put: (endpoint: string, data?: unknown, options?: ApiClientOptions) =>
     apiClient(endpoint, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   patch: (endpoint: string, data?: unknown, options?: ApiClientOptions) =>
     apiClient(endpoint, {
       ...options,
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   delete: (endpoint: string, options?: ApiClientOptions) =>

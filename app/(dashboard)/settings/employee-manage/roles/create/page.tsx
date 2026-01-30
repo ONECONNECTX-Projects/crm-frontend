@@ -103,7 +103,7 @@ export default function CreateRoleForm({
               value={form.name}
               onChange={handleChange}
               placeholder="e.g., Sales Manager"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
               autoFocus
             />
           </div>
@@ -118,13 +118,13 @@ export default function CreateRoleForm({
               onChange={handleChange}
               placeholder="Brief description of this role"
               rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
             />
           </div>
 
           {mode === "create" && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
+              <p className="text-sm text-brand-600">
                 <span className="font-medium">Note:</span> After creating the
                 role, you can manage permissions by clicking View Permissions
                 from the roles list.

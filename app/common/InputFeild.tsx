@@ -85,7 +85,7 @@ export default function InputField({
             className={`w-full p-3 pl-10 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
               localError || error
                 ? "border-red-500 focus:ring-red-400"
-                : "border-gray-300 focus:ring-blue-500"
+                : "border-gray-300 focus:ring-brand-500"
             } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
           />
         ) : (
@@ -103,7 +103,7 @@ export default function InputField({
               } pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
                 localError || error
                   ? "border-red-500 focus:ring-red-400"
-                  : "border-gray-300 focus:ring-blue-500"
+                  : "border-gray-300 focus:ring-brand-500"
               } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
             />
 

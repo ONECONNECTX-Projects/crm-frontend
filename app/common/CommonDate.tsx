@@ -52,7 +52,7 @@ export default function DateInput({
         className={`w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 cursor-pointer ${
           error
             ? "border-red-500 focus:ring-red-400"
-            : "border-gray-300 focus:ring-blue-500"
+            : "border-gray-300 focus:ring-brand-500"
         }`}
       />
 

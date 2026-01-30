@@ -8,14 +8,14 @@ interface StatusBadgeProps {
 
 const leadStatusColors: Record<string, { bg: string; text: string; border: string }> = {
   new: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
   working: {
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
-    border: "border-yellow-200",
+    bg: "bg-accent-brand-50",
+    text: "text-accent-brand-500",
+    border: "border-accent-brand-200",
   },
   qualified: {
     bg: "bg-green-50",
@@ -28,9 +28,9 @@ const leadStatusColors: Record<string, { bg: string; text: string; border: strin
     border: "border-red-200",
   },
   converted: {
-    bg: "bg-purple-50",
-    text: "text-purple-700",
-    border: "border-purple-200",
+    bg: "bg-brand-100",
+    text: "text-brand-600",
+    border: "border-brand-300",
   },
 };
 
@@ -46,14 +46,14 @@ const defaultStatusColors: Record<string, { bg: string; text: string; border: st
     border: "border-gray-200",
   },
   pending: {
-    bg: "bg-yellow-50",
-    text: "text-yellow-700",
-    border: "border-yellow-200",
+    bg: "bg-accent-brand-50",
+    text: "text-accent-brand-500",
+    border: "border-accent-brand-200",
   },
   completed: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
 };
 

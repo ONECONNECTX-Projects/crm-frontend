@@ -172,7 +172,7 @@ export default function ContactsPage() {
       label: "Stage",
       visible: columns.find((c) => c.key === "stage")?.visible,
       render: (row) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-100 text-brand-600">
           {row.stage?.name || "-"}
         </span>
       ),

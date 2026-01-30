@@ -109,7 +109,7 @@ export default function TicketViewPage() {
 
           <button
             onClick={() => setShowStatusModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded text-sm"
+            className="bg-brand-500 text-white px-4 py-2 rounded text-sm"
           >
             Update Status
           </button>
@@ -150,7 +150,7 @@ export default function TicketViewPage() {
         <div className="text-center">
           <button
             onClick={() => setShowReplyModal(true)}
-            className="bg-blue-600 text-white px-6 py-2 rounded"
+            className="bg-brand-500 text-white px-6 py-2 rounded"
           >
             Reply
           </button>
@@ -206,10 +206,10 @@ function ReplyModal({
         className="border-2 border-dashed rounded-lg p-6 mt-4 text-center cursor-pointer"
         onClick={() => document.getElementById("replyFile")?.click()}
       >
-        <Upload className="mx-auto text-blue-500 mb-2" />
+        <Upload className="mx-auto text-brand-500 mb-2" />
         <p className="text-sm">
           Drag and drop files or{" "}
-          <span className="text-blue-600">click to select</span>
+          <span className="text-brand-500">click to select</span>
         </p>
         <p className="text-xs text-gray-400">PNG, JPG, JPEG, PDF</p>
         <input
@@ -227,7 +227,7 @@ function ReplyModal({
         </button>
         <button
           onClick={() => onSubmit(message)}
-          className="bg-blue-600 text-white px-6 py-2 rounded"
+          className="bg-brand-500 text-white px-6 py-2 rounded"
         >
           Submit
         </button>
@@ -287,7 +287,7 @@ function UpdateStatusModal({
         </button>
         <button
           onClick={() => onSave(value)}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-brand-500 text-white px-4 py-2 rounded"
         >
           OK
         </button>

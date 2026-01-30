@@ -221,7 +221,7 @@ export default function CreateNote({
               Description
             </label>
             <textarea
-              className="w-full mt-1 border rounded-md p-3 min-h-[120px] text-sm focus:ring-1 focus:ring-blue-600 outline-none"
+              className="w-full mt-1 border rounded-md p-3 min-h-[120px] text-sm focus:ring-1 focus:ring-brand-500 outline-none"
               placeholder="Enter note details..."
               value={formData.description}
               onChange={(e) =>
@@ -240,7 +240,7 @@ export default function CreateNote({
         <Button
           onClick={handleSubmit}
           disabled={submitting}
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-brand-500 hover:bg-brand-600"
         >
           {submitting
             ? "Saving..."

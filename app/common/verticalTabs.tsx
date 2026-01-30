@@ -37,7 +37,7 @@ export default function VerticalTabs({
             onClick={() => onChange(tab.key)}
             className={`w-full text-left px-3 py-2.5 text-sm font-medium rounded-md transition-all ${
               activeTab === tab.key
-                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600 pl-2.5"
+                ? "bg-brand-50 text-brand-500 border-l-4 border-brand-500 pl-2.5"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent pl-2.5"
             }`}
           >

@@ -77,7 +77,7 @@ const menuItems: MenuItem[] = [
     icon: LuCodesandbox,
     children: [
       { name: "Note", path: "/other/note" },
-      // { name: "Attachment", path: "/other/attachment" },
+      { name: "Attachment", path: "/other/attachment" },
       { name: "Email", path: "/other/email" },
     ],
   },
@@ -232,11 +232,11 @@ export default function Sidebar({ collapsed }: any) {
           ${collapsed ? "text-center text-xl px-0" : "text-2xl px-6"}
         `}
       >
-        <div className="flex items-center">
+        <div className="flex items-center ">
           <img
             src="/favicon.svg"
             alt="QFC Logo"
-            className={`${collapsed ? "w-10 h-10" : "w-15 h-15"}`}
+            className={`${collapsed ? "w-10 h-10" : "w-20 h-20"}`}
           />
           {/* {!collapsed && <span className="text-black">Quest</span>} */}
         </div>
@@ -250,7 +250,7 @@ export default function Sidebar({ collapsed }: any) {
             {menuItems.map((item) => (
               <div key={item.name}>
                 <div
-                  className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 cursor-pointer"
+                  className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-50 text-gray-700 cursor-pointer"
                   onClick={() => {
                     if (item.name === "Settings") {
                       setShowSettingsPanel(true);
@@ -298,8 +298,8 @@ export default function Sidebar({ collapsed }: any) {
                         <div
                           className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                             pathname === child.path
-                              ? "text-blue-700 font-semibold"
-                              : "text-gray-500 hover:text-blue-600"
+                              ? "text-brand-500 font-semibold"
+                              : "text-gray-500 hover:text-brand-500"
                           }`}
                         >
                           {child.name}
@@ -332,7 +332,7 @@ export default function Sidebar({ collapsed }: any) {
                 <div key={item.name}>
                   {/* Parent Item */}
                   <div
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-blue-50 text-gray-700 cursor-pointer"
+                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-50 text-gray-700 cursor-pointer"
                     onClick={() => item.children && toggleMenu(item.name)}
                   >
                     {item.children ? (
@@ -368,8 +368,8 @@ export default function Sidebar({ collapsed }: any) {
                           <div
                             className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                               pathname === child.path
-                                ? "text-blue-700 font-semibold"
-                                : "text-gray-500 hover:text-blue-600"
+                                ? "text-brand-500 font-semibold"
+                                : "text-gray-500 hover:text-brand-500"
                             }`}
                           >
                             {child.name}

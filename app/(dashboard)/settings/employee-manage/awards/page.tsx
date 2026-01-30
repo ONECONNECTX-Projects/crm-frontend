@@ -212,7 +212,7 @@ export default function AwardsPage() {
               rows={4}
             />
 
-            <button className="px-6 py-2 bg-blue-600 text-white rounded-lg">
+            <button className="px-6 py-2 bg-brand-500 text-white rounded-lg">
               {editingAward ? "Update Award" : "Add Award"}
             </button>
           </form>

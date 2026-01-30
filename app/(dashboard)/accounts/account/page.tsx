@@ -112,9 +112,9 @@ const statusColorMap = {
 
 const typeColorMap = {
   savings: {
-    bg: "bg-blue-50",
-    text: "text-blue-700",
-    border: "border-blue-200",
+    bg: "bg-brand-50",
+    text: "text-brand-500",
+    border: "border-brand-200",
   },
   checking: {
     bg: "bg-purple-50",

@@ -170,7 +170,7 @@ export default function MediaPage() {
           {/* Breadcrumb */}
           <div className="px-4 py-3 text-lg bg-[#d1d5db] flex items-center gap-3">
             <span
-              className="cursor-pointer text-blue-600 font-medium"
+              className="cursor-pointer text-brand-500 font-medium"
               onClick={() => setCurrentPath("root")}
             >
               public
@@ -180,7 +180,7 @@ export default function MediaPage() {
                 <span key={folder.id} className="flex items-center gap-2">
                   /
                   <span
-                    className="cursor-pointer text-blue-600 font-medium"
+                    className="cursor-pointer text-brand-500 font-medium"
                     onClick={() => setCurrentPath(folder.id)}
                   >
                     {folder.name}
@@ -206,7 +206,7 @@ export default function MediaPage() {
             >
               <div
                 className={`flex items-center gap-3 ${
-                  item.type === "folder" ? "cursor-pointer text-blue-700" : ""
+                  item.type === "folder" ? "cursor-pointer text-brand-500" : ""
                 }`}
                 onDoubleClick={() =>
                   item.type === "folder" && setCurrentPath(item.id)
