@@ -197,10 +197,10 @@ export default function LeadViewPage() {
               {saving ? "Saving..." : "Save"}
             </Button>
           )}
-
+          {/* 
           <button className="px-5 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600">
             Convert
-          </button>
+          </button> */}
 
           <button
             onClick={handleDelete}

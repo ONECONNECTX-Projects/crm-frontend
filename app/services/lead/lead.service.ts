@@ -28,15 +28,23 @@ export interface Leads {
   is_delete: boolean;
   created_at: Date;
   updated_at: Date;
-  owner: Owner;
-  source: Owner;
+  owner: OptionDropDownModel;
+  source: OptionDropDownModel;
+  contact: { id: number };
   status: LeadStatus;
   priority: Priority;
 }
 
-export interface Owner {
-  id: number;
-  name: string;
+export interface ConvertLeadModel {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  birthday: Date;
+  owner_id: number;
+  company_id: number;
+  job_title: string;
+  department_id: number;
 }
 
 // Get all Leads
@@ -79,5 +87,13 @@ export const updateLeadStatus = (LeadId: number, isActive: boolean) => {
 // Get leads by ID
 export async function getLeadById(id: number): Promise<ApiResponse<Leads>> {
   const response = await api.get(`leads/${id}`);
+  return response as unknown as ApiResponse<Leads>;
+}
+
+export async function convertLeadToContact(
+  id: number,
+  data: ConvertLeadModel,
+): Promise<ApiResponse<Leads>> {
+  const response = await api.post(`leads/${id}/convert`, data);
   return response as unknown as ApiResponse<Leads>;
 }

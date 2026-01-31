@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import SlideOver from "@/app/common/slideOver";
 import CreateLeadForm from "./create/page";
 import Pagination from "@/app/common/pagination";
+import ConvertLeadModal from "./ConvertLeadModal";
 import {
   getAllLead,
   deleteLead,
@@ -28,6 +29,10 @@ export default function LeadsPage() {
   const [pageSize, setPageSize] = useState(10);
   const [leads, setLeads] = useState<Leads[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Convert modal state
+  const [openConvertModal, setOpenConvertModal] = useState(false);
+  const [convertingLead, setConvertingLead] = useState<Leads | null>(null);
 
   const [columns, setColumns] = useState([
     { key: "id", label: "Id", visible: true },
@@ -156,7 +161,9 @@ export default function LeadsPage() {
       label: "Convert Status",
       visible: columns.find((c) => c.key === "convert")?.visible,
       render: (row) => (
-        <span className="text-gray-500 text-sm italic">Not Converted</span>
+        <span className="text-gray-500 text-sm italic">
+          {row?.contact?.id > 0 ? "Converted" : "Not Converted"}
+        </span>
       ),
     },
   ];
@@ -179,7 +186,8 @@ export default function LeadsPage() {
     {
       label: "Convert",
       onClick: (row) => {
-        router.push(`/leads/${row.id}/convert`);
+        setConvertingLead(row);
+        setOpenConvertModal(true);
       },
     },
     {
@@ -258,6 +266,18 @@ export default function LeadsPage() {
           onSuccess={handleFormSuccess}
         />
       </SlideOver>
+
+      <ConvertLeadModal
+        open={openConvertModal}
+        onClose={() => {
+          setOpenConvertModal(false);
+          setConvertingLead(null);
+        }}
+        lead={convertingLead}
+        onSuccess={() => {
+          fetchLeads();
+        }}
+      />
     </>
   );
 }
