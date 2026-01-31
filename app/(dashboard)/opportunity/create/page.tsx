@@ -36,6 +36,8 @@ interface CreateOpportunityProps {
   data?: Opportunity;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultContactId?: number;
+  defaultCompanyId?: number;
 }
 
 const steps = [
@@ -48,6 +50,8 @@ export default function CreateOpportunity({
   data,
   onClose,
   onSuccess,
+  defaultContactId,
+  defaultCompanyId,
 }: CreateOpportunityProps) {
   const { showSuccess, showError } = useError();
   const [currentStep, setCurrentStep] = useState(1);
@@ -80,8 +84,8 @@ export default function CreateOpportunity({
     name: "",
     amount: "",
     owner_id: "",
-    company_id: "",
-    contact_id: "",
+    company_id: defaultCompanyId ? String(defaultCompanyId) : "",
+    contact_id: defaultContactId ? String(defaultContactId) : "",
     opportunity_source_id: "",
     opportunity_stage_id: "",
     opportunity_type_id: "",

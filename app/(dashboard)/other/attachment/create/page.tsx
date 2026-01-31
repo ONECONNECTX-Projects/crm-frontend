@@ -18,20 +18,26 @@ import SelectDropdown from "@/app/common/dropdown";
 interface CreateAttachmentFormProps {
   onClose: () => void;
   onSuccess?: () => void;
+  defaultContactId?: number;
+  defaultCompanyId?: number;
+  defaultOpportunityId?: number;
 }
 
 export default function CreateAttachmentForm({
   onClose,
   onSuccess,
+  defaultContactId,
+  defaultCompanyId,
+  defaultOpportunityId,
 }: CreateAttachmentFormProps) {
   const { showSuccess, showError } = useError();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form state
   const [ownerId, setOwnerId] = useState("");
-  const [companyId, setCompanyId] = useState("");
-  const [contactId, setContactId] = useState("");
-  const [opportunityId, setOpportunityId] = useState("");
+  const [companyId, setCompanyId] = useState(defaultCompanyId ? String(defaultCompanyId) : "");
+  const [contactId, setContactId] = useState(defaultContactId ? String(defaultContactId) : "");
+  const [opportunityId, setOpportunityId] = useState(defaultOpportunityId ? String(defaultOpportunityId) : "");
   const [quoteId, setQuoteId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);

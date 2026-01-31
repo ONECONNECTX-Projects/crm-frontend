@@ -1,5 +1,11 @@
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
+import { Opportunity } from "../opportunity/opportunity.service";
+import { Task } from "../task/task.service";
+import { Notes } from "../notes/notes.service";
+import { Attachment } from "../attachment/attachement.service";
+import { Quote } from "../quote/quote.service";
+import { Contact } from "../contact/contact.service";
 // Company info for create/update
 export interface CompanyInfo {
   name: string;
@@ -118,3 +124,53 @@ export const updateCompanyStatus = (CompanyId: number, isActive: boolean) => {
     is_active: isActive,
   });
 };
+
+//Get Pages By Id
+
+//Opportunity
+export async function getOpportunityByCompanyId(
+  id: number,
+): Promise<ApiResponse<Opportunity[]>> {
+  const response = await api.get(`companies/getOpportunityByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Opportunity[]>;
+}
+
+//Task
+export async function getTaskByCompanyId(
+  id: number,
+): Promise<ApiResponse<Task[]>> {
+  const response = await api.get(`companies/getTaskByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Task[]>;
+}
+
+//Notes
+export async function getNoteByCompanyId(
+  id: number,
+): Promise<ApiResponse<Notes[]>> {
+  const response = await api.get(`companies/getNoteByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Notes[]>;
+}
+
+//Quote
+export async function getQuoteByCompanyId(
+  id: number,
+): Promise<ApiResponse<Quote[]>> {
+  const response = await api.get(`companies/getQuoteByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Quote[]>;
+}
+
+//Attachment
+export async function getAttachmentByCompanyId(
+  id: number,
+): Promise<ApiResponse<Attachment[]>> {
+  const response = await api.get(`companies/getAttachmentByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Attachment[]>;
+}
+
+//Contact
+export async function getContactByCompanyId(
+  id: number,
+): Promise<ApiResponse<Contact[]>> {
+  const response = await api.get(`companies/getContactByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Contact[]>;
+}

@@ -1,5 +1,4 @@
 import { api, ApiResponse } from "@/app/utils/apiClient";
-import { OpportunityPayload } from "../opportunity/opportunity.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 
 export interface Task {

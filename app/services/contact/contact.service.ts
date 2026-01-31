@@ -3,6 +3,12 @@ import { api, ApiResponse } from "@/app/utils/apiClient";
 import { ContactSource } from "../contact-source/contact-source.service";
 import { ContactStage } from "../contact-stages/contact-stages.service";
 import { Industry } from "../Industry/industry.service";
+import { Opportunity } from "../opportunity/opportunity.service";
+import { Task } from "../task/task.service";
+import { Notes } from "../notes/notes.service";
+import { Quote } from "../quote/quote.service";
+import { Attachment } from "../attachment/attachement.service";
+import { Ticket } from "../tickets/tickets.service";
 
 // Contact info for create/update
 export interface ContactInfo {
@@ -129,3 +135,53 @@ export const updateContactStatus = (contactId: number, isActive: boolean) => {
     is_active: isActive,
   });
 };
+
+//Get Pages By Id
+
+//Opportunity
+export async function getOpportunityByContactId(
+  id: number,
+): Promise<ApiResponse<Opportunity[]>> {
+  const response = await api.get(`contacts/getOpportunityByContactId/${id}`);
+  return response as unknown as ApiResponse<Opportunity[]>;
+}
+
+//Task
+export async function getTaskByContactId(
+  id: number,
+): Promise<ApiResponse<Task[]>> {
+  const response = await api.get(`contacts/getTaskByContactId/${id}`);
+  return response as unknown as ApiResponse<Task[]>;
+}
+
+//Notes
+export async function getNotesByContactId(
+  id: number,
+): Promise<ApiResponse<Notes[]>> {
+  const response = await api.get(`contacts/getNoteByContactId/${id}`);
+  return response as unknown as ApiResponse<Notes[]>;
+}
+
+//Quote
+export async function getQuoteByContactId(
+  id: number,
+): Promise<ApiResponse<Quote[]>> {
+  const response = await api.get(`contacts/getQuoteByContactId/${id}`);
+  return response as unknown as ApiResponse<Quote[]>;
+}
+
+//Attachment
+export async function getAttachmentByContactId(
+  id: number,
+): Promise<ApiResponse<Attachment[]>> {
+  const response = await api.get(`contacts/getAttachmentByContactId/${id}`);
+  return response as unknown as ApiResponse<Attachment[]>;
+}
+
+//Ticket
+export async function getTicketByContactId(
+  id: number,
+): Promise<ApiResponse<Ticket[]>> {
+  const response = await api.get(`contacts/getTicketByContactId/${id}`);
+  return response as unknown as ApiResponse<Ticket[]>;
+}

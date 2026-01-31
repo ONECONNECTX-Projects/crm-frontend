@@ -32,9 +32,12 @@ interface CreateQuoteProps {
   editId?: number | null;
   onClose?: () => void;
   onSuccess?: () => void;
+  defaultContactId?: number;
+  defaultCompanyId?: number;
+  defaultOpportunityId?: number;
 }
 
-const CreateQuote = ({ editId, onClose, onSuccess }: CreateQuoteProps) => {
+const CreateQuote = ({ editId, onClose, onSuccess, defaultContactId, defaultCompanyId, defaultOpportunityId }: CreateQuoteProps) => {
   const { showSuccess, showError } = useError();
   const isEditMode = !!editId;
 
@@ -43,9 +46,9 @@ const CreateQuote = ({ editId, onClose, onSuccess }: CreateQuoteProps) => {
     quote_date: "",
     expiration_date: "",
     owner_id: 0,
-    company_id: 0,
-    contact_id: 0,
-    opportunity_id: 0,
+    company_id: defaultCompanyId || 0,
+    contact_id: defaultContactId || 0,
+    opportunity_id: defaultOpportunityId || 0,
     quote_stage_id: 0,
     terms: "",
     description: "",

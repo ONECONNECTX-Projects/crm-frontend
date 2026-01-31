@@ -34,6 +34,7 @@ interface CreateContactFormProps {
   data?: Contact;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultCompanyId?: number;
 }
 
 const initialContactInfo: ContactInfo = {
@@ -76,11 +77,14 @@ export default function CreateContactForm({
   data,
   onClose,
   onSuccess,
+  defaultCompanyId,
 }: CreateContactFormProps) {
   const { showSuccess, showError } = useError();
   const [currentStep, setCurrentStep] = useState(1);
-  const [contactInfo, setContactInfo] =
-    useState<ContactInfo>(initialContactInfo);
+  const [contactInfo, setContactInfo] = useState<ContactInfo>({
+    ...initialContactInfo,
+    company_id: defaultCompanyId ? String(defaultCompanyId) : "",
+  });
   const [address, setAddress] = useState<ContactAddress>(initialAddress);
   const [submitting, setSubmitting] = useState(false);
   const [copyAddress, setCopyAddress] = useState(false);

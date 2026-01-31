@@ -32,6 +32,9 @@ interface CreateNoteProps {
   data?: Notes; // The row data passed from the table
   onClose: () => void;
   onSuccess?: () => void;
+  defaultContactId?: number;
+  defaultCompanyId?: number;
+  defaultOpportunityId?: number;
 }
 
 export default function CreateNote({
@@ -39,6 +42,9 @@ export default function CreateNote({
   data,
   onClose,
   onSuccess,
+  defaultContactId,
+  defaultCompanyId,
+  defaultOpportunityId,
 }: CreateNoteProps) {
   const { showSuccess, showError } = useError();
   const [submitting, setSubmitting] = useState(false);
@@ -58,9 +64,9 @@ export default function CreateNote({
   const [formData, setFormData] = useState<NotesPayload>({
     title: "",
     owner_id: "",
-    company_id: "",
-    contact_id: "",
-    opportunity_id: "",
+    company_id: defaultCompanyId ? String(defaultCompanyId) : "",
+    contact_id: defaultContactId ? String(defaultContactId) : "",
+    opportunity_id: defaultOpportunityId ? String(defaultOpportunityId) : "",
     quote_id: "",
     description: "",
   });

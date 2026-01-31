@@ -1,5 +1,9 @@
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { api, ApiResponse } from "@/app/utils/apiClient";
+import { Task } from "../task/task.service";
+import { Notes } from "../notes/notes.service";
+import { Attachment } from "../attachment/attachement.service";
+import { Quote } from "../quote/quote.service";
 
 export interface OpportunityPayload {
   name: string;
@@ -61,6 +65,14 @@ export async function getAllOpportunity(): Promise<ApiResponse<Opportunity[]>> {
   return response as unknown as ApiResponse<Opportunity[]>;
 }
 
+// Get Opportunity by ID
+export async function getOpportunityById(
+  id: number,
+): Promise<ApiResponse<Opportunity>> {
+  const response = await api.get(`opportunities/${id}`);
+  return response as unknown as ApiResponse<Opportunity>;
+}
+
 // Create Opportunity
 export async function createOpportunity(
   data: OpportunityPayload,
@@ -102,3 +114,39 @@ export const updateOpportunityStatus = (
     is_active: isActive,
   });
 };
+
+//Get Pages By Id
+
+//Task
+export async function getTaskByOpportunityId(
+  id: number,
+): Promise<ApiResponse<Task[]>> {
+  const response = await api.get(`opportunities/getTaskByOpportunityId/${id}`);
+  return response as unknown as ApiResponse<Task[]>;
+}
+
+//Notes
+export async function getNoteByOpportunityId(
+  id: number,
+): Promise<ApiResponse<Notes[]>> {
+  const response = await api.get(`opportunities/getNoteByOpportunityId/${id}`);
+  return response as unknown as ApiResponse<Notes[]>;
+}
+
+//Quote
+export async function getQuoteByOpportunityId(
+  id: number,
+): Promise<ApiResponse<Quote[]>> {
+  const response = await api.get(`opportunities/getQuoteByOpportunityId/${id}`);
+  return response as unknown as ApiResponse<Quote[]>;
+}
+
+//Attachment
+export async function getAttachmentByOpportunityId(
+  id: number,
+): Promise<ApiResponse<Attachment[]>> {
+  const response = await api.get(
+    `opportunities/getAttachmentByOpportunityId/${id}`,
+  );
+  return response as unknown as ApiResponse<Attachment[]>;
+}

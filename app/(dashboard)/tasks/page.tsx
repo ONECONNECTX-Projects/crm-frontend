@@ -97,6 +97,7 @@ export default function TasksPage() {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
+  const [editTaskId, setEditTaskId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -132,9 +133,7 @@ export default function TasksPage() {
             status: task.status?.name || "N/A",
             statusId: task.task_status_id,
             type: task.type?.name || "N/A",
-            assignee: task.contact
-              ? `${task.contact.first_name} ${task.contact.last_name}`
-              : "N/A",
+            assignee: task.contact ? `${task.contact.name} ` : "N/A",
             createdAt: task.createdAt
               ? new Date(task.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -189,10 +188,17 @@ export default function TasksPage() {
     }
   };
 
-  // Handle task creation success
+  // Handle task creation/update success
   const handleTaskCreated = () => {
     setOpen(false);
+    setEditTaskId(null);
     fetchTasks();
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    setOpen(false);
+    setEditTaskId(null);
   };
 
   const actions: TableAction<TaskListItem>[] = [
@@ -202,7 +208,10 @@ export default function TasksPage() {
     },
     {
       label: "Edit",
-      onClick: (row) => router.push(`/tasks/${row.id}`),
+      onClick: (row) => {
+        setEditTaskId(row.id);
+        setOpen(true);
+      },
     },
     {
       label: "Delete",
@@ -480,8 +489,8 @@ export default function TasksPage() {
         )}
       </div>
 
-      <SlideOver open={open} onClose={() => setOpen(false)} width="max-w-5xl">
-        <CreateTask onClose={handleTaskCreated} />
+      <SlideOver open={open} onClose={handleCloseModal} width="max-w-5xl">
+        <CreateTask onClose={handleTaskCreated} taskId={editTaskId} />
       </SlideOver>
     </div>
   );

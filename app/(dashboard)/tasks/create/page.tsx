@@ -21,18 +21,21 @@ import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 interface CreateTaskProps {
   onClose: () => void;
   taskId?: number | null;
+  defaultContactId?: number;
+  defaultCompanyId?: number;
+  defaultOpportunityId?: number;
 }
 
-export default function CreateTask({ onClose, taskId }: CreateTaskProps) {
+export default function CreateTask({ onClose, taskId, defaultContactId, defaultCompanyId, defaultOpportunityId }: CreateTaskProps) {
   const isEditMode = !!taskId;
   const [loading, setLoading] = useState(false);
   const [fetchingTask, setFetchingTask] = useState(false);
   const [formData, setFormData] = useState<TaskPayload>({
     name: "",
     assignee_id: 0,
-    company_id: 0,
-    contact_id: 0,
-    opportunity_id: 0,
+    company_id: defaultCompanyId || 0,
+    contact_id: defaultContactId || 0,
+    opportunity_id: defaultOpportunityId || 0,
     Task_id: 0,
     task_type_id: 0,
     task_priority_id: 0,

@@ -24,6 +24,7 @@ interface TicketFormData {
 interface TicketFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  defaultContactId?: number;
 }
 
 const defaultForm: TicketFormData = {
@@ -39,8 +40,11 @@ const defaultForm: TicketFormData = {
 
 const ACCEPTED_TYPES = [".png", ".jpg", ".jpeg", ".pdf"];
 
-export default function TicketForm({ onSuccess, onCancel }: TicketFormProps) {
-  const [form, setForm] = useState<TicketFormData>(defaultForm);
+export default function TicketForm({ onSuccess, onCancel, defaultContactId }: TicketFormProps) {
+  const [form, setForm] = useState<TicketFormData>({
+    ...defaultForm,
+    contact_id: defaultContactId ? String(defaultContactId) : "",
+  });
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showError, showSuccess } = useError();
