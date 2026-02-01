@@ -138,7 +138,7 @@ export default function ViewRolePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
         <p className="text-sm text-gray-500">Loading...</p>
       </div>
     );
@@ -146,7 +146,7 @@ export default function ViewRolePage() {
 
   if (!role) {
     return (
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
         <p className="text-sm text-gray-500">Role not found</p>
       </div>
     );
@@ -161,13 +161,13 @@ export default function ViewRolePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
-      <div className="space-y-6">
+    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-2xl font-semibold text-gray-900">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+              <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 {role.name}
               </h1>
               <StatusBadge
@@ -176,27 +176,28 @@ export default function ViewRolePage() {
                 variant="default"
               />
             </div>
-            <p className="text-sm text-gray-600">{role.description}</p>
+            <p className="text-xs sm:text-sm text-gray-600">{role.description}</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {!editMode ? (
               <>
                 <Button
                   variant="outline"
                   onClick={() => router.push("/settings/employee-manage/roles")}
+                  className="w-full sm:w-auto text-sm"
                 >
                   Back to Roles
                 </Button>
-                <Button onClick={() => setEditMode(true)}>
+                <Button onClick={() => setEditMode(true)} className="w-full sm:w-auto text-sm">
                   Edit Permissions
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={handleCancelEdit}>
+                <Button variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto text-sm">
                   Cancel
                 </Button>
-                <Button onClick={handleSavePermissions}>
+                <Button onClick={handleSavePermissions} className="w-full sm:w-auto text-sm">
                   Save Permissions
                 </Button>
               </>
@@ -205,65 +206,65 @@ export default function ViewRolePage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-brand-50 border border-brand-200 rounded-lg p-4">
-            <p className="text-sm text-brand-500 font-medium">Permissions</p>
-            <p className="text-2xl font-semibold text-brand-600 mt-1">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-brand-50 border border-brand-200 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-brand-500 font-medium">Permissions</p>
+            <p className="text-xl sm:text-2xl font-semibold text-brand-600 mt-1">
               {role.permissionsCount || permissions.length}
             </p>
           </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-sm text-green-600 font-medium">Users Assigned</p>
-            <p className="text-2xl font-semibold text-green-900 mt-1">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-green-600 font-medium">Users Assigned</p>
+            <p className="text-xl sm:text-2xl font-semibold text-green-900 mt-1">
               {role.usersCount || 0}
             </p>
           </div>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <p className="text-sm text-purple-600 font-medium">Created</p>
-            <p className="text-2xl font-semibold text-purple-900 mt-1">
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+            <p className="text-xs sm:text-sm text-purple-600 font-medium">Created</p>
+            <p className="text-xl sm:text-2xl font-semibold text-purple-900 mt-1">
               {formatDate(role.createdAt || "")}
             </p>
           </div>
         </div>
 
         {/* Permissions Table */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900">
               Role Permissions
             </h2>
             {editMode && (
               <button
                 type="button"
                 onClick={handleSelectAll}
-                className="text-sm text-brand-500 hover:text-brand-500 font-medium"
+                className="text-xs sm:text-sm text-brand-500 hover:text-brand-500 font-medium"
               >
                 Select All
               </button>
             )}
           </div>
 
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Module
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     View
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Create
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Edit
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-2 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delete
                   </th>
                   {editMode && (
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 sm:px-6 py-2 sm:py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                       All
                     </th>
                   )}
@@ -272,10 +273,10 @@ export default function ViewRolePage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {permissions.map((permission, index) => (
                   <tr key={permission.module_id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
                       {permission.module_name}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                       {editMode ? (
                         <input
                           type="checkbox"
@@ -315,7 +316,7 @@ export default function ViewRolePage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                       {editMode ? (
                         <input
                           type="checkbox"
@@ -355,7 +356,7 @@ export default function ViewRolePage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                       {editMode ? (
                         <input
                           type="checkbox"
@@ -395,7 +396,7 @@ export default function ViewRolePage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                       {editMode ? (
                         <input
                           type="checkbox"
@@ -436,7 +437,7 @@ export default function ViewRolePage() {
                       )}
                     </td>
                     {editMode && (
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                         <input
                           type="checkbox"
                           checked={

@@ -186,23 +186,23 @@ export default function CreateOpportunity({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-semibold">
           {mode === "edit" ? "Edit Opportunity" : "Create Opportunity"}
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
           <X size={20} />
         </button>
       </div>
 
       {/* Stepper */}
-      <div className="px-6 py-4 border-b">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b">
         <div className="flex items-center justify-center">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${
                     currentStep >= step.id
                       ? "bg-brand-500 text-white"
                       : "bg-gray-200 text-gray-600"
@@ -211,16 +211,17 @@ export default function CreateOpportunity({
                   {step.id}
                 </div>
                 <span
-                  className={`ml-2 text-sm font-medium ${
+                  className={`ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium ${
                     currentStep >= step.id ? "text-brand-500" : "text-gray-500"
                   }`}
                 >
-                  {step.title}
+                  <span className="hidden sm:inline">{step.title}</span>
+                  <span className="sm:hidden">{step.id === 1 ? "Info" : "Details"}</span>
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-24 h-0.5 mx-4 ${currentStep > step.id ? "bg-brand-500" : "bg-gray-200"}`}
+                  className={`w-8 sm:w-24 h-0.5 mx-2 sm:mx-4 ${currentStep > step.id ? "bg-brand-500" : "bg-gray-200"}`}
                 />
               )}
             </div>
@@ -229,9 +230,9 @@ export default function CreateOpportunity({
       </div>
 
       {/* Form Body */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         {currentStep === 1 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
             <InputField
               label="Name *"
               value={formData.name}
@@ -278,8 +279,8 @@ export default function CreateOpportunity({
         )}
 
         {currentStep === 2 && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
               <SelectDropdown
                 label="Company"
                 value={formData.company_id}
@@ -343,11 +344,11 @@ export default function CreateOpportunity({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-xs sm:text-sm font-medium text-gray-700">
                 Description
               </label>
               <textarea
-                className="w-full mt-1 border rounded-md p-3 min-h-[100px]"
+                className="w-full mt-1 border rounded-md p-2.5 sm:p-3 min-h-[80px] sm:min-h-[100px] text-sm"
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -359,22 +360,22 @@ export default function CreateOpportunity({
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between px-6 py-4 border-t bg-gray-50">
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50">
         <Button
           variant="outline"
           onClick={handlePrevious}
-          className={currentStep === 1 ? "invisible" : ""}
+          className={`w-full sm:w-auto ${currentStep === 1 ? "invisible" : ""}`}
         >
           Previous
         </Button>
-        <div className="flex gap-3">
-          <Button variant="ghost" onClick={onClose}>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="ghost" onClick={onClose} className="w-full sm:w-auto order-2 sm:order-1">
             Cancel
           </Button>
           {currentStep < steps.length ? (
-            <Button onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext} className="w-full sm:w-auto order-1 sm:order-2">Next</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full sm:w-auto order-1 sm:order-2">
               {submitting
                 ? "Saving..."
                 : mode === "edit"

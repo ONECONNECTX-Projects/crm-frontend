@@ -33,7 +33,7 @@ export default function SlideOver({ open, onClose, children, width = "sm:w-[50vw
 
           {/* Slide-over panel */}
           <motion.div
-            className={`fixed right-0 top-0 h-full w-full ${width} bg-white shadow-xl z-50 p-6 overflow-y-auto`}
+            className={`fixed right-0 top-0 h-full w-full ${width} bg-white shadow-xl z-50 p-3 sm:p-4 md:p-6 overflow-y-auto`}
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}

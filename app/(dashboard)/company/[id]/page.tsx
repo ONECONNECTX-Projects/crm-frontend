@@ -405,38 +405,38 @@ export default function CompanyViewPage() {
 
   if (!company) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
         <p className="text-gray-500">Loading company...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-white p-3 sm:p-4 md:p-6">
       {/* Header with Back Button */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
         <button
           onClick={() => router.push("/company")}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 text-sm sm:text-base"
         >
           <span>&larr;</span>
           <span>Back to Companies</span>
         </button>
         <button
           onClick={() => setOpenEdit(true)}
-          className="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600"
+          className="px-3 sm:px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 text-sm w-full sm:w-auto"
         >
           Edit Company
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-6 border-b mb-6 text-sm">
+      <div className="flex gap-2 sm:gap-6 border-b mb-4 sm:mb-6 text-xs sm:text-sm overflow-x-auto pb-px -mx-3 px-3 sm:mx-0 sm:px-0">
         {tabs.map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`pb-2 ${
+            className={`pb-2 whitespace-nowrap ${
               activeTab === tab
                 ? "border-b-2 border-brand-500 text-brand-500 font-medium"
                 : "text-gray-500 hover:text-gray-700"
@@ -447,30 +447,30 @@ export default function CompanyViewPage() {
         ))}
       </div>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         {/* Left Profile */}
-        <div className="w-1/4 bg-white rounded-xl p-5 shadow-sm h-fit">
+        <div className="w-full lg:w-1/4 bg-white rounded-xl p-4 sm:p-5 shadow-sm h-fit">
           <div className="flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-brand-500 text-white flex items-center justify-center text-xl font-semibold">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-500 text-white flex items-center justify-center text-lg sm:text-xl font-semibold">
               {company.name?.[0]?.toUpperCase() || "?"}
             </div>
-            <h2 className="mt-3 font-semibold">{company.name}</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="mt-3 font-semibold text-sm sm:text-base">{company.name}</h2>
+            <p className="text-xs sm:text-sm text-gray-500">
               {company.company_type?.name || "-"}
             </p>
-            <p className="text-sm text-brand-500">
+            <p className="text-xs sm:text-sm text-brand-500">
               {company.industry?.name || "-"}
             </p>
           </div>
 
-          <div className="mt-6 space-y-4 text-sm">
+          <div className="mt-4 sm:mt-6 space-y-3 sm:space-y-4 text-xs sm:text-sm">
             <div>
               <p className="text-gray-400">Company Owner</p>
-              <p>{company.owner?.name || "-"}</p>
+              <p className="truncate">{company.owner?.name || "-"}</p>
             </div>
             <div>
               <p className="text-gray-400">Email</p>
-              <p>{company.email || "-"}</p>
+              <p className="truncate">{company.email || "-"}</p>
             </div>
             <div>
               <p className="text-gray-400">Phone</p>
@@ -478,13 +478,13 @@ export default function CompanyViewPage() {
             </div>
             <div>
               <p className="text-gray-400">Website</p>
-              <p>{company.website || "-"}</p>
+              <p className="truncate">{company.website || "-"}</p>
             </div>
           </div>
 
           <button
             onClick={handleDelete}
-            className="mt-6 w-full border border-red-500 text-red-500 rounded-md py-1.5 text-sm hover:bg-red-50"
+            className="mt-4 sm:mt-6 w-full border border-red-500 text-red-500 rounded-md py-1.5 text-xs sm:text-sm hover:bg-red-50"
           >
             Delete Company
           </button>
@@ -573,13 +573,13 @@ export default function CompanyViewPage() {
               </Section>
             </>
           ) : (
-            <div className="bg-white rounded-xl p-5 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">{activeTab}</h3>
+            <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <h3 className="font-medium text-sm sm:text-base">{activeTab}</h3>
                 {createButtonConfig && (
                   <button
                     onClick={createButtonConfig.onClick}
-                    className="flex items-center gap-2 px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 text-sm"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 text-xs sm:text-sm w-full sm:w-auto"
                   >
                     <Plus size={16} />
                     {createButtonConfig.label}
@@ -717,9 +717,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl p-5 shadow-sm">
-      <h3 className="font-medium mb-4">{title}</h3>
-      <div className="grid grid-cols-2 gap-4 text-sm">{children}</div>
+    <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm">
+      <h3 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">{title}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">{children}</div>
     </div>
   );
 }
@@ -727,8 +727,8 @@ function Section({
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-gray-400">{label}</p>
-      <p className="text-gray-800">{value}</p>
+      <p className="text-gray-400 text-xs sm:text-sm">{label}</p>
+      <p className="text-gray-800 break-words">{value}</p>
     </div>
   );
 }

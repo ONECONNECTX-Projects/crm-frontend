@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import InputField from "@/app/common/InputFeild";
 import { useError } from "@/app/providers/ErrorProvider";
@@ -19,8 +19,7 @@ import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { getAllActiveContactStage } from "@/app/services/contact-stages/contact-stages.service";
 import { getAllActiveContactSource } from "@/app/services/contact-source/contact-source.service";
 import { X } from "lucide-react";
-import { Dialog } from "@radix-ui/react-dialog";
-import { DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import CreateContactSourceForm from "../../settings/contact-setup/contact-source/create/page";
 import CreateContactStageForm from "../../settings/contact-setup/contact-stage/create/page";
 import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
@@ -81,6 +80,7 @@ export default function CreateContactForm({
 }: CreateContactFormProps) {
   const { showSuccess, showError } = useError();
   const [currentStep, setCurrentStep] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
     ...initialContactInfo,
     company_id: defaultCompanyId ? String(defaultCompanyId) : "",
@@ -89,7 +89,7 @@ export default function CreateContactForm({
   const [submitting, setSubmitting] = useState(false);
   const [copyAddress, setCopyAddress] = useState(false);
 
-  // Dropdown options
+  // Dropdown States
   const [owners, setOwners] = useState<OptionDropDownModel[]>([]);
   const [companies, setCompanies] = useState<OptionDropDownModel[]>([]);
   const [departments, setDepartments] = useState<OptionDropDownModel[]>([]);
@@ -97,25 +97,17 @@ export default function CreateContactForm({
   const [sources, setSources] = useState<OptionDropDownModel[]>([]);
   const [stages, setStages] = useState<OptionDropDownModel[]>([]);
 
-  //model
+  // Modal States
   const [openContactSourceModal, setOpenContactSourceModal] = useState(false);
   const [openContactStageModal, setOpenContactStageModal] = useState(false);
   const [openIndustryModal, setOpenIndustryModal] = useState(false);
   const [openDepartmentModal, setOpenDepartmentModal] = useState(false);
   const [openCompanySlider, setOpenCompanySlider] = useState(false);
 
-  // Fetch dropdown data
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const [
-          ownersRes,
-          companiesRes,
-          departmentsRes,
-          industriesRes,
-          sourcesRes,
-          stagesRes,
-        ] = await Promise.all([
+        const [o, c, d, i, src, stg] = await Promise.all([
           getAllActiveUsers(),
           getAllActiveCompany(),
           getAllActiveDepartment(),
@@ -123,12 +115,12 @@ export default function CreateContactForm({
           getAllActiveContactSource(),
           getAllActiveContactStage(),
         ]);
-        setOwners(ownersRes.data || []);
-        setCompanies(companiesRes.data || []);
-        setDepartments(departmentsRes.data || []);
-        setIndustries(industriesRes.data || []);
-        setSources(sourcesRes.data || []);
-        setStages(stagesRes.data || []);
+        setOwners(o.data || []);
+        setCompanies(c.data || []);
+        setDepartments(d.data || []);
+        setIndustries(i.data || []);
+        setSources(src.data || []);
+        setStages(stg.data || []);
       } catch (error) {
         console.error("Failed to fetch dropdown data:", error);
       }
@@ -136,46 +128,13 @@ export default function CreateContactForm({
     fetchDropdowns();
   }, []);
 
-  // Load data on edit
   useEffect(() => {
     if (mode === "edit" && data) {
-      setContactInfo({
-        first_name: data.first_name || "",
-        last_name: data.last_name || "",
-        email: data.email || "",
-        phone: data.phone || "",
-        birthday: data.birthday || "",
-        job_title: data.job_title || "",
-        owner_id: data.owner_id || "",
-        company_id: data.company_id || "",
-        department_id: data.department_id || "",
-        industry_id: data.industry_id || "",
-        contact_source_id: data.contact_source_id || "",
-        contact_stage_id: data.contact_stage_id || "",
-        twitter: data.twitter || "",
-        linkedin: data.linkedin || "",
-      });
-      if (data.address) {
-        setAddress({
-          present_address: data.address.present_address || "",
-          present_city: data.address.present_city || "",
-          present_state: data.address.present_state || "",
-          present_zip: data.address.present_zip || "",
-          present_country: data.address.present_country || "",
-          permanent_address: data.address.permanent_address || "",
-          permanent_city: data.address.permanent_city || "",
-          permanent_state: data.address.permanent_state || "",
-          permanent_zip: data.address.permanent_zip || "",
-          permanent_country: data.address.permanent_country || "",
-        });
-      }
-    } else {
-      setContactInfo(initialContactInfo);
-      setAddress(initialAddress);
+      setContactInfo({ ...data });
+      if (data.address) setAddress({ ...data.address });
     }
   }, [mode, data]);
 
-  // Copy present address to permanent address
   const handleCopyAddress = (checked: boolean) => {
     setCopyAddress(checked);
     if (checked) {
@@ -190,39 +149,58 @@ export default function CreateContactForm({
     }
   };
 
-  const validateStep1 = () => {
-    if (!contactInfo.first_name.trim()) {
-      showError("Please enter first name");
-      return false;
+  // Centralized Validation Logic (Returns error object)
+  const getValidationErrors = useCallback(() => {
+    const errors: { [key: string]: string } = {};
+    if (currentStep === 1) {
+      if (!contactInfo.first_name.trim())
+        errors.first_name = "First name is required";
+      if (!contactInfo.last_name.trim())
+        errors.last_name = "Last name is required";
+      if (!contactInfo.email.trim()) {
+        errors.email = "Email is required";
+      } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
+        errors.email = "Invalid email address";
+      }
+      if (contactInfo.phone && contactInfo.phone.trim().length !== 10) {
+        errors.phone = "Phone must be exactly 10 digits";
+      }
     }
-    if (!contactInfo.last_name.trim()) {
-      showError("Please enter last name");
-      return false;
-    }
-    if (!contactInfo.email.trim()) {
-      showError("Please enter email address");
-      return false;
-    }
-    return true;
-  };
+    return errors;
+  }, [currentStep, contactInfo]);
 
   const handleNext = () => {
-    if (currentStep === 1 && !validateStep1()) return;
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+    const errors = getValidationErrors();
+    if (Object.keys(errors).length === 0) {
+      setFieldErrors({});
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+    } else {
+      setFieldErrors(errors);
+      showError("Please fill all required fields correctly");
+    }
   };
 
   const handlePrevious = () => {
+    setFieldErrors({});
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleSubmit = async () => {
+    if (submitting) return;
+
+    const errors = getValidationErrors();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      showError("Please fix validation errors before submitting");
+      return; // Exit immediately to prevent double toast
+    }
+
     setSubmitting(true);
     try {
       const payload: ContactPayload = {
         contact: contactInfo,
         address: address,
       };
-
       if (mode === "edit" && data?.id) {
         await updateContact(data.id, payload);
         showSuccess("Contact updated successfully");
@@ -232,9 +210,8 @@ export default function CreateContactForm({
       }
       onSuccess?.();
       onClose();
-    } catch (error) {
-      console.error("Failed to save contact:", error);
-      showError("Failed to save contact");
+    } catch (error: any) {
+      showError(error?.response?.data?.messages);
     } finally {
       setSubmitting(false);
     }
@@ -243,43 +220,39 @@ export default function CreateContactForm({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-semibold">
           {mode === "edit" ? "Edit Contact" : "Create Contact"}
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-          <X className="w-5 h-5 text-gray-600" />
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-1 rounded-full transition-colors"
+        >
+          <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Stepper */}
-      <div className="px-6 py-4 border-b">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-gray-50/30">
         <div className="flex items-center justify-center">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step.id
-                      ? "bg-brand-500 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${currentStep >= step.id ? "bg-brand-500 text-white shadow-md shadow-brand-100" : "bg-gray-200 text-gray-500"}`}
                 >
                   {step.id}
                 </div>
                 <span
-                  className={`ml-2 text-sm font-medium ${
-                    currentStep >= step.id ? "text-brand-500" : "text-gray-500"
-                  }`}
+                  className={`ml-1.5 sm:ml-2 text-xs sm:text-sm font-semibold ${currentStep >= step.id ? "text-brand-500" : "text-gray-400"}`}
                 >
-                  {step.title}
+                  <span className="hidden xs:inline">{step.title}</span>
+                  <span className="xs:hidden">{step.id === 1 ? "Info" : "Address"}</span>
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-24 h-0.5 mx-4 ${
-                    currentStep > step.id ? "bg-brand-500" : "bg-gray-200"
-                  }`}
+                  className={`w-8 sm:w-20 h-0.5 mx-2 sm:mx-4 transition-all ${currentStep > step.id ? "bg-brand-500" : "bg-gray-200"}`}
                 />
               )}
             </div>
@@ -288,42 +261,61 @@ export default function CreateContactForm({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {/* Step 1: Contact Information */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         {currentStep === 1 && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
               <InputField
-                label="First Name *"
+                label="First Name"
+                required
+                error={fieldErrors.first_name}
                 value={contactInfo.first_name}
-                onChange={(v) =>
-                  setContactInfo({ ...contactInfo, first_name: v })
-                }
+                onChange={(v) => {
+                  setContactInfo({ ...contactInfo, first_name: v });
+                  if (v.trim())
+                    setFieldErrors((p) => ({ ...p, first_name: "" }));
+                }}
                 noLeadingSpace
-                placeholder="Enter first name"
+                placeholder="First name"
               />
               <InputField
-                label="Last Name *"
+                label="Last Name"
+                required
+                error={fieldErrors.last_name}
                 value={contactInfo.last_name}
-                onChange={(v) =>
-                  setContactInfo({ ...contactInfo, last_name: v })
-                }
+                onChange={(v) => {
+                  setContactInfo({ ...contactInfo, last_name: v });
+                  if (v.trim())
+                    setFieldErrors((p) => ({ ...p, last_name: "" }));
+                }}
                 noLeadingSpace
-                placeholder="Enter last name"
+                placeholder="Last name"
               />
               <InputField
-                label="Email *"
+                label="Email"
+                required
+                error={fieldErrors.email}
                 value={contactInfo.email}
-                onChange={(v) => setContactInfo({ ...contactInfo, email: v })}
+                onChange={(v) => {
+                  setContactInfo({ ...contactInfo, email: v });
+                  if (v.trim()) setFieldErrors((p) => ({ ...p, email: "" }));
+                }}
                 noLeadingSpace
-                placeholder="Enter email address"
+                placeholder="Email address"
               />
               <InputField
                 label="Phone"
+                error={fieldErrors.phone}
                 value={contactInfo.phone}
-                onChange={(v) => setContactInfo({ ...contactInfo, phone: v })}
+                maxLength={10}
+                onChange={(v) => {
+                  const val = v.replace(/\D/g, "");
+                  setContactInfo({ ...contactInfo, phone: val });
+                  if (val.length === 10)
+                    setFieldErrors((p) => ({ ...p, phone: "" }));
+                }}
                 noLeadingSpace
-                placeholder="Enter phone number"
+                placeholder="10-digit number"
               />
               <InputField
                 label="Birthday"
@@ -339,19 +331,16 @@ export default function CreateContactForm({
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, job_title: v })
                 }
-                noLeadingSpace
-                placeholder="Enter job title"
+                placeholder="Job title"
               />
+
               <SelectDropdown
                 label="Owner"
                 value={contactInfo.owner_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, owner_id: v })
                 }
-                options={owners.map((source) => ({
-                  label: source.name,
-                  value: source.id,
-                }))}
+                options={owners.map((o) => ({ label: o.name, value: o.id }))}
                 placeholder="Select Owner"
               />
               <SelectDropdown
@@ -360,10 +349,7 @@ export default function CreateContactForm({
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, company_id: v })
                 }
-                options={companies.map((source) => ({
-                  label: source.name,
-                  value: source.id,
-                }))}
+                options={companies.map((c) => ({ label: c.name, value: c.id }))}
                 onAddClick={() => setOpenCompanySlider(true)}
                 placeholder="Select Company"
               />
@@ -373,9 +359,9 @@ export default function CreateContactForm({
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, department_id: v })
                 }
-                options={departments.map((source) => ({
-                  label: source.name,
-                  value: source.id,
+                options={departments.map((d) => ({
+                  label: d.name,
+                  value: d.id,
                 }))}
                 onAddClick={() => setOpenDepartmentModal(true)}
                 placeholder="Select Department"
@@ -386,36 +372,30 @@ export default function CreateContactForm({
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, industry_id: v })
                 }
-                options={industries.map((source) => ({
-                  label: source.name,
-                  value: source.id,
+                options={industries.map((i) => ({
+                  label: i.name,
+                  value: i.id,
                 }))}
-                onAddClick={() => setOpenDepartmentModal(true)}
+                onAddClick={() => setOpenIndustryModal(true)}
                 placeholder="Select Industry"
               />
               <SelectDropdown
-                label="Contact Source"
+                label="Source"
                 value={contactInfo.contact_source_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, contact_source_id: v })
                 }
-                options={sources.map((source) => ({
-                  label: source.name,
-                  value: source.id,
-                }))}
+                options={sources.map((s) => ({ label: s.name, value: s.id }))}
                 onAddClick={() => setOpenContactSourceModal(true)}
                 placeholder="Select Source"
               />
               <SelectDropdown
-                label="Contact Stage"
+                label="Stage"
                 value={contactInfo.contact_stage_id}
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, contact_stage_id: v })
                 }
-                options={stages.map((source) => ({
-                  label: source.name,
-                  value: source.id,
-                }))}
+                options={stages.map((s) => ({ label: s.name, value: s.id }))}
                 onAddClick={() => setOpenContactStageModal(true)}
                 placeholder="Select Stage"
               />
@@ -423,8 +403,7 @@ export default function CreateContactForm({
                 label="Twitter"
                 value={contactInfo.twitter}
                 onChange={(v) => setContactInfo({ ...contactInfo, twitter: v })}
-                noLeadingSpace
-                placeholder="https://twitter.com/username"
+                placeholder="Twitter URL"
               />
               <InputField
                 label="LinkedIn"
@@ -432,167 +411,71 @@ export default function CreateContactForm({
                 onChange={(v) =>
                   setContactInfo({ ...contactInfo, linkedin: v })
                 }
-                noLeadingSpace
-                placeholder="https://linkedin.com/in/username"
+                placeholder="LinkedIn URL"
               />
             </div>
           </div>
         )}
 
-        {/* Step 2: Address Information */}
         {currentStep === 2 && (
           <div className="space-y-8">
-            {/* Present Address */}
-            <div>
-              <h3 className="text-md font-semibold text-gray-800 mb-4">
-                Present Address
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Address"
-                    value={address.present_address}
-                    onChange={(v) =>
-                      setAddress({ ...address, present_address: v })
-                    }
-                    noLeadingSpace
-                    placeholder="Enter street address"
-                  />
-                </div>
-                <InputField
-                  label="City"
-                  value={address.present_city}
-                  onChange={(v) => setAddress({ ...address, present_city: v })}
-                  noLeadingSpace
-                  placeholder="Enter city"
-                />
-                <InputField
-                  label="State"
-                  value={address.present_state}
-                  onChange={(v) => setAddress({ ...address, present_state: v })}
-                  noLeadingSpace
-                  placeholder="Enter state"
-                />
-                <InputField
-                  label="ZIP Code"
-                  value={address.present_zip}
-                  onChange={(v) => setAddress({ ...address, present_zip: v })}
-                  noLeadingSpace
-                  placeholder="Enter ZIP code"
-                />
-                <InputField
-                  label="Country"
-                  value={address.present_country}
-                  onChange={(v) =>
-                    setAddress({ ...address, present_country: v })
-                  }
-                  noLeadingSpace
-                  placeholder="Enter country"
-                />
-              </div>
-            </div>
-
-            {/* Copy Address Checkbox */}
-            <div className="flex items-center gap-2">
+            <AddressGroup
+              title="Present Address"
+              address={address}
+              setAddress={setAddress}
+              prefix="present"
+            />
+            <div className="flex items-center gap-2 bg-brand-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-brand-100 shadow-sm">
               <input
                 type="checkbox"
                 id="copyAddress"
                 checked={copyAddress}
                 onChange={(e) => handleCopyAddress(e.target.checked)}
-                className="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500"
+                className="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-brand-200"
               />
-              <label htmlFor="copyAddress" className="text-sm text-gray-700">
+              <label
+                htmlFor="copyAddress"
+                className="text-xs sm:text-sm font-semibold text-brand-700"
+              >
                 Same as Present Address
               </label>
             </div>
-
-            {/* Permanent Address */}
-            <div>
-              <h3 className="text-md font-semibold text-gray-800 mb-4">
-                Permanent Address
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Address"
-                    value={address.permanent_address}
-                    onChange={(v) =>
-                      setAddress({ ...address, permanent_address: v })
-                    }
-                    noLeadingSpace
-                    placeholder="Enter street address"
-                    disabled={copyAddress}
-                  />
-                </div>
-                <InputField
-                  label="City"
-                  value={address.permanent_city}
-                  onChange={(v) =>
-                    setAddress({ ...address, permanent_city: v })
-                  }
-                  noLeadingSpace
-                  placeholder="Enter city"
-                  disabled={copyAddress}
-                />
-                <InputField
-                  label="State"
-                  value={address.permanent_state}
-                  onChange={(v) =>
-                    setAddress({ ...address, permanent_state: v })
-                  }
-                  noLeadingSpace
-                  placeholder="Enter state"
-                  disabled={copyAddress}
-                />
-                <InputField
-                  label="ZIP Code"
-                  value={address.permanent_zip}
-                  onChange={(v) => setAddress({ ...address, permanent_zip: v })}
-                  noLeadingSpace
-                  placeholder="Enter ZIP code"
-                  disabled={copyAddress}
-                />
-                <InputField
-                  label="Country"
-                  value={address.permanent_country}
-                  onChange={(v) =>
-                    setAddress({ ...address, permanent_country: v })
-                  }
-                  noLeadingSpace
-                  placeholder="Enter country"
-                  disabled={copyAddress}
-                />
-              </div>
-            </div>
+            {!copyAddress && (
+              <AddressGroup
+                title="Permanent Address"
+                address={address}
+                setAddress={setAddress}
+                prefix="permanent"
+              />
+            )}
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between px-6 py-4 border-t">
-        <div>
-          {currentStep > 1 && (
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={submitting}
-            >
-              Previous
-            </Button>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-white">
+        <Button
+          variant="outline"
+          onClick={handlePrevious}
+          disabled={submitting || currentStep === 1}
+          className="w-full sm:w-auto"
+        >
+          Previous
+        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="ghost" onClick={onClose} disabled={submitting} className="w-full sm:w-auto order-2 sm:order-1">
             Cancel
           </Button>
           {currentStep < steps.length ? (
-            <Button onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext} className="w-full sm:w-auto order-1 sm:order-2">Next</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full sm:w-auto sm:min-w-[120px] order-1 sm:order-2"
+            >
               {submitting
-                ? mode === "edit"
-                  ? "Updating..."
-                  : "Creating..."
+                ? "Processing..."
                 : mode === "edit"
                   ? "Update Contact"
                   : "Create Contact"}
@@ -600,20 +483,21 @@ export default function CreateContactForm({
           )}
         </div>
       </div>
+
+      {/* Helper Dialogs/Sliders Logic */}
       {openContactSourceModal && (
         <Dialog
           open={openContactSourceModal}
-          onOpenChange={() => setOpenContactSourceModal(false)}
+          onOpenChange={setOpenContactSourceModal}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateContactSourceForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenContactSourceModal(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenContactSourceModal(false);
-
                 const res = await getAllActiveContactSource();
                 setSources(res.data || []);
               }}
@@ -625,17 +509,16 @@ export default function CreateContactForm({
       {openContactStageModal && (
         <Dialog
           open={openContactStageModal}
-          onOpenChange={() => setOpenContactStageModal(false)}
+          onOpenChange={setOpenContactStageModal}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateContactStageForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenContactStageModal(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenContactStageModal(false);
-
                 const res = await getAllActiveContactStage();
                 setStages(res.data || []);
               }}
@@ -645,43 +528,17 @@ export default function CreateContactForm({
       )}
 
       {openIndustryModal && (
-        <Dialog
-          open={openIndustryModal}
-          onOpenChange={() => setOpenIndustryModal(false)}
-        >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={openIndustryModal} onOpenChange={setOpenIndustryModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateIndustryForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenIndustryModal(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenIndustryModal(false);
-
                 const res = await getAllActiveIndustry();
                 setIndustries(res.data || []);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {openDepartmentModal && (
-        <Dialog
-          open={openDepartmentModal}
-          onOpenChange={() => setOpenDepartmentModal(false)}
-        >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader />
-            <CreateIndustryForm
-              mode={mode}
-              onClose={onClose}
-              popUp={true}
-              onSuccess={async () => {
-                setOpenDepartmentModal(false);
-
-                const res = await getAllActiveDepartment();
-                setDepartments(res.data || []);
               }}
             />
           </DialogContent>
@@ -692,20 +549,65 @@ export default function CreateContactForm({
         <SlideOver
           open={openCompanySlider}
           onClose={() => setOpenCompanySlider(false)}
-          width="sm:w-[70vw] lg:w-[40vw]"
+          width="max-w-2xl"
         >
           <CreateCompanyForm
-            mode={mode}
+            mode="create"
             onClose={() => setOpenCompanySlider(false)}
             onSuccess={async () => {
               setOpenCompanySlider(false);
-
               const res = await getAllActiveCompany();
               setCompanies(res.data || []);
             }}
           />
         </SlideOver>
       )}
+    </div>
+  );
+}
+
+function AddressGroup({ title, address, setAddress, prefix }: any) {
+  const update = (key: string, v: string) =>
+    setAddress((p: any) => ({ ...p, [`${prefix}_${key}`]: v }));
+  return (
+    <div>
+      <h3 className="text-sm sm:text-md font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
+        <span className="w-1 h-4 bg-brand-500 rounded-full" /> {title}
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
+        <div className="md:col-span-2">
+          <InputField
+            label="Address"
+            value={address[`${prefix}_address`]}
+            onChange={(v) => update("address", v)}
+            placeholder="Street address"
+          />
+        </div>
+        <InputField
+          label="City"
+          value={address[`${prefix}_city`]}
+          onChange={(v) => update("city", v)}
+          placeholder="City"
+        />
+        <InputField
+          label="State"
+          value={address[`${prefix}_state`]}
+          onChange={(v) => update("state", v)}
+          placeholder="State"
+        />
+        <InputField
+          label="ZIP Code"
+          value={address[`${prefix}_zip`]}
+          onChange={(v) => update("zip", v)}
+          placeholder="ZIP"
+        />
+        <InputField
+          label="Country"
+          value={address[`${prefix}_country`]}
+          onChange={(v) => update("country", v)}
+          placeholder="Country"
+        />
+      </div>
     </div>
   );
 }

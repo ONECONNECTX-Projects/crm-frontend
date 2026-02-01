@@ -73,7 +73,7 @@ export default function PageActions({
         {showFilter && (
           <Button
             variant="outline"
-            className="flex gap-2 border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
             onClick={onFilterClick}
           >
             <Filter className="w-4 h-4" />
@@ -87,7 +87,7 @@ export default function PageActions({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex gap-2 border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+                className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
               >
                 <Columns className="w-4 h-4" />
                 Columns
@@ -115,7 +115,7 @@ export default function PageActions({
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
           <Button
             variant="outline"
-            className="flex gap-2 border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
             onClick={onPrintPDF}
           >
             <Printer className="w-4 h-4" />
@@ -124,7 +124,7 @@ export default function PageActions({
 
           <Button
             variant="outline"
-            className="flex gap-2 border-gray-300 hover:bg-gray-50 w-full sm:w-auto"
+            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
             onClick={onDownloadCSV}
           >
             <Download className="w-4 h-4" />

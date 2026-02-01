@@ -207,7 +207,12 @@ const settingsMenu: MenuItem[] = [
   { name: "Priority", icon: MdGroups3, path: "/settings/priority" },
 ];
 
-export default function Sidebar({ collapsed }: any) {
+interface SidebarProps {
+  collapsed: boolean;
+  onNavigate?: () => void;
+}
+
+export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -264,6 +269,7 @@ export default function Sidebar({ collapsed }: any) {
                       <Link
                         href={item.path}
                         className="flex items-center gap-3 w-full"
+                        onClick={onNavigate}
                       >
                         <item.icon className="text-xl" />
                         {!collapsed && <span>{item.name}</span>}
@@ -294,7 +300,7 @@ export default function Sidebar({ collapsed }: any) {
                 {item.children && openMenu === item.name && !collapsed && (
                   <div className="ml-10 mt-1 space-y-1">
                     {item.children.map((child) => (
-                      <Link key={child.name} href={child.path}>
+                      <Link key={child.name} href={child.path} onClick={onNavigate}>
                         <div
                           className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                             pathname === child.path
@@ -353,6 +359,7 @@ export default function Sidebar({ collapsed }: any) {
                       <Link
                         href={item.path ?? "#"}
                         className="flex items-center gap-3 w-full"
+                        onClick={onNavigate}
                       >
                         {item.icon && <item.icon className="text-lg" />}
                         {!collapsed && <span>{item.name}</span>}
@@ -364,7 +371,7 @@ export default function Sidebar({ collapsed }: any) {
                   {item.children && openMenu === item.name && !collapsed && (
                     <div className="ml-10 mt-1 space-y-1">
                       {item.children.map((child) => (
-                        <Link key={child.name} href={child.path}>
+                        <Link key={child.name} href={child.path} onClick={onNavigate}>
                           <div
                             className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                               pathname === child.path

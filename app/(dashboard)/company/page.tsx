@@ -28,35 +28,18 @@ export default function CompanyPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+
+  // 1. Initial Columns State (Keys here must match keys in tableColumns checks)
   const [columns, setColumns] = useState([
-    {
-      key: "name",
-      label: "Name",
-      visible: true,
-    },
+    { key: "sNo", label: "S.No", visible: true },
+    { key: "name", label: "Name", visible: true },
     { key: "email", label: "Email", visible: true },
     { key: "phone", label: "Phone number", visible: true },
-    {
-      key: "owner",
-      label: "Owner",
-      visible: true,
-    },
-    {
-      key: "company_type",
-      label: "Type",
-      visible: true,
-    },
+    { key: "owner", label: "Owner", visible: true },
+    { key: "company_type", label: "Type", visible: true },
     { key: "company_size", label: "Size", visible: true },
-    {
-      key: "annual_revenue",
-      label: "Annual Revenue",
-      visible: true,
-    },
-    {
-      key: "industry",
-      label: "Industry",
-      visible: true,
-    },
+    { key: "annual_revenue", label: "Annual Revenue", visible: true },
+    { key: "industry", label: "Industry", visible: true },
   ]);
 
   const fetchCompany = async () => {
@@ -79,11 +62,11 @@ export default function CompanyPage() {
     if (window.confirm(`Are you sure you want to delete "${company?.name}"?`)) {
       try {
         await deleteCompany(company.id);
-        showSuccess("Staff deleted successfully");
+        showSuccess("Company deleted successfully");
         fetchCompany();
       } catch (error) {
-        console.error("Failed to delete staff:", error);
-        showError("Failed to delete staff");
+        console.error("Failed to delete company:", error);
+        showError("Failed to delete company");
       }
     }
   };
@@ -94,10 +77,7 @@ export default function CompanyPage() {
   };
 
   const actions: TableAction<Company>[] = [
-    {
-      label: "View",
-      onClick: (row) => router.push(`/company/${row.id}`),
-    },
+    { label: "View", onClick: (row) => router.push(`/company/${row.id}`) },
     {
       label: "Edit",
       onClick: (row) => {
@@ -113,19 +93,20 @@ export default function CompanyPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Company>[] = [
+  // 2. Table Column Definitions with Fixed Visibility Keys
+  const tableColumns: TableColumn<Company & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "Id",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "S.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
       key: "name",
       label: "Name",
-      visible: columns.find((c) => c.key === "employee_code")?.visible,
+      visible: columns.find((c) => c.key === "name")?.visible,
       render: (row) => (
         <span className="font-medium text-brand-500">{row.name}</span>
       ),
@@ -135,15 +116,13 @@ export default function CompanyPage() {
       label: "Email",
       visible: columns.find((c) => c.key === "email")?.visible,
       render: (row) => (
-        <div>
-          <div className="font-medium text-gray-900">{row.email || "-"}</div>
-        </div>
+        <span className="text-gray-900">{row.email || "-"}</span>
       ),
     },
     {
       key: "phone",
       label: "Phone",
-      visible: columns.find((c) => c.key === "email")?.visible,
+      visible: columns.find((c) => c.key === "phone")?.visible,
       render: (row) => (
         <span className="text-gray-600">{row?.phone || "-"}</span>
       ),
@@ -153,13 +132,13 @@ export default function CompanyPage() {
       label: "Owner",
       visible: columns.find((c) => c.key === "owner")?.visible,
       render: (row) => (
-        <span className="text-gray-600">{row.owner.name || "-"}</span>
+        <span className="text-gray-600">{row.owner?.name || "-"}</span>
       ),
     },
     {
-      key: "companyType",
+      key: "company_type",
       label: "Company Type",
-      visible: columns.find((c) => c.key === "companyType")?.visible,
+      visible: columns.find((c) => c.key === "company_type")?.visible,
       render: (row) => (
         <span className="text-gray-700">{row.company_type?.name || "-"}</span>
       ),
@@ -185,7 +164,7 @@ export default function CompanyPage() {
       label: "Industry Name",
       visible: columns.find((c) => c.key === "industry")?.visible,
       render: (row) => (
-        <span className="text-gray-700">{row.industry.name || "-"}</span>
+        <span className="text-gray-700">{row?.industry?.name || "-"}</span>
       ),
     },
   ];
@@ -205,15 +184,17 @@ export default function CompanyPage() {
       .includes(searchValue.toLowerCase()),
   );
 
-  const paginated = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  // 3. Serial Number Injection based on Pagination
+  const paginated = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
-      <div className="space-y-6">
-        {/* Header */}
+    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+      <div className="space-y-4 sm:space-y-6">
         <PageHeader
           title="Company"
           createButtonText="Create Company"
@@ -224,7 +205,6 @@ export default function CompanyPage() {
           }}
         />
 
-        {/* Actions */}
         <PageActions
           searchValue={searchValue}
           onSearchChange={(v) => {
@@ -239,7 +219,6 @@ export default function CompanyPage() {
           onDownloadCSV={() => {}}
         />
 
-        {/* Table */}
         <DataTable
           columns={tableColumns}
           data={paginated}
@@ -247,7 +226,6 @@ export default function CompanyPage() {
           emptyMessage="No companies found."
         />
 
-        {/* Pagination */}
         <Pagination
           currentPage={currentPage}
           totalItems={filtered.length}
@@ -269,7 +247,7 @@ export default function CompanyPage() {
             data={editingCompany || undefined}
             onClose={() => setOpenCreate(false)}
             onSuccess={handleFormSuccess}
-          />{" "}
+          />
         </SlideOver>
       </div>
     </div>

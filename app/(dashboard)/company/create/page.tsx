@@ -6,7 +6,6 @@ import InputField from "@/app/common/InputFeild";
 import { useError } from "@/app/providers/ErrorProvider";
 import { getAllActiveIndustry } from "@/app/services/Industry/industry.service";
 import { getAllActiveUsers } from "@/app/services/user/user.service";
-import { getAllActiveDepartment } from "@/app/services/department/departments.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import {
   Company,
@@ -18,10 +17,10 @@ import {
 } from "@/app/services/company/company.service";
 import { getAllActiveCompanyType } from "@/app/services/company-type/company-type.service";
 import SelectDropdown from "@/app/common/dropdown";
-import { Dialog } from "@radix-ui/react-dialog";
-import { DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
 import CreateCompanyTypeForm from "../../settings/company-setup/company-type/create/page";
+
 interface CreateCompanyFormProps {
   mode: "create" | "edit";
   data?: Company;
@@ -74,18 +73,17 @@ export default function CreateCompanyForm({
   const [CompanyInfo, setCompanyInfo] =
     useState<CompanyInfo>(initialCompanyInfo);
   const [address, setAddress] = useState<CompanyAddress>(initialAddress);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({}); // Validation state
   const [submitting, setSubmitting] = useState(false);
   const [copyAddress, setCopyAddress] = useState(false);
 
-  // Dropdown options
   const [owners, setOwners] = useState<OptionDropDownModel[]>([]);
   const [industries, setIndustries] = useState<OptionDropDownModel[]>([]);
   const [companyTypes, setCompanyType] = useState<OptionDropDownModel[]>([]);
 
-  //Modal
   const [openIndustryModal, setOpenIndustryModal] = useState(false);
   const [openCompanyTypeModal, setOpenCompanyTypeModal] = useState(false);
-  // Fetch dropdown data
+
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
@@ -104,7 +102,6 @@ export default function CreateCompanyForm({
     fetchDropdowns();
   }, []);
 
-  // Load data on edit
   useEffect(() => {
     if (mode === "edit" && data) {
       setCompanyInfo({
@@ -123,26 +120,11 @@ export default function CreateCompanyForm({
         website: data.website || "",
       });
       if (data.address) {
-        setAddress({
-          billing_city: data.address.billing_city,
-          billing_country: data.address.billing_country,
-          billing_state: data.address.billing_state,
-          billing_street: data.address.billing_street,
-          billing_zip: data.address.billing_zip,
-          shipping_city: data.address.shipping_city,
-          shipping_country: data.address.shipping_country,
-          shipping_state: data.address.shipping_state,
-          shipping_street: data.address.shipping_street,
-          shipping_zip: data.address.shipping_zip,
-        });
+        setAddress({ ...data.address });
       }
-    } else {
-      setCompanyInfo(initialCompanyInfo);
-      setAddress(initialAddress);
     }
   }, [mode, data]);
 
-  // Copy present address to permanent address
   const handleCopyAddress = (checked: boolean) => {
     setCopyAddress(checked);
     if (checked) {
@@ -157,35 +139,41 @@ export default function CreateCompanyForm({
     }
   };
 
-  const validateStep1 = () => {
-    if (!CompanyInfo.name.trim()) {
-      showError("Please enter name");
-      return false;
+  const validateStep = () => {
+    const errors: { [key: string]: string } = {};
+    if (currentStep === 1) {
+      if (!CompanyInfo.name.trim()) errors.name = "Name is required";
+      if (!CompanyInfo.owner_id) errors.owner_id = "Owner is required";
+      if (!CompanyInfo.email.trim()) errors.email = "Email is required";
+      if (CompanyInfo.phone && CompanyInfo.phone.trim().length !== 10) {
+        errors.phone = "Phone number must be exactly 10 digits";
+      }
     }
-    // if (!CompanyInfo.email.trim()) {
-    //   showError("Please enter email address");
-    //   return false;
-    // }
-    return true;
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleNext = () => {
-    if (currentStep === 1 && !validateStep1()) return;
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+    if (validateStep()) {
+      setCurrentStep((prev) => Math.min(prev + 1, steps.length));
+    } else {
+      showError("Please fill required fields");
+    }
   };
 
-  const handlePrevious = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  };
+  const handlePrevious = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const handleSubmit = async () => {
+    if (!validateStep()) {
+      showError("Please fill required fields");
+      return;
+    }
     setSubmitting(true);
     try {
       const payload: CompanyPayload = {
         company: CompanyInfo,
         address: address,
       };
-
       if (mode === "edit") {
         await updateCompany(data?.id || 0, payload);
         showSuccess("Company updated successfully");
@@ -195,12 +183,7 @@ export default function CreateCompanyForm({
       }
       onSuccess?.();
     } catch (error: any) {
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        (mode === "edit" ? "Failed to update staff" : "Failed to create staff");
-      console.error("Failed to save Company:", error);
-      showError(errorMessage);
+      showError(error?.response?.data?.message || "Server Error");
     } finally {
       setSubmitting(false);
     }
@@ -208,44 +191,35 @@ export default function CreateCompanyForm({
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-semibold">
           {mode === "edit" ? "Edit Company" : "Create Company"}
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
           X
         </button>
       </div>
 
-      {/* Stepper */}
-      <div className="px-6 py-4 border-b">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b">
         <div className="flex items-center justify-center">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className="flex items-center">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    currentStep >= step.id
-                      ? "bg-brand-500 text-white"
-                      : "bg-gray-200 text-gray-600"
-                  }`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium ${currentStep >= step.id ? "bg-brand-500 text-white" : "bg-gray-200 text-gray-600"}`}
                 >
                   {step.id}
                 </div>
                 <span
-                  className={`ml-2 text-sm font-medium ${
-                    currentStep >= step.id ? "text-brand-500" : "text-gray-500"
-                  }`}
+                  className={`ml-1.5 sm:ml-2 text-xs sm:text-sm font-medium ${currentStep >= step.id ? "text-brand-500" : "text-gray-500"}`}
                 >
-                  {step.title}
+                  <span className="hidden sm:inline">{step.title}</span>
+                  <span className="sm:hidden">{step.id === 1 ? "Info" : "Address"}</span>
                 </span>
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`w-24 h-0.5 mx-4 ${
-                    currentStep > step.id ? "bg-brand-500" : "bg-gray-200"
-                  }`}
+                  className={`w-8 sm:w-24 h-0.5 mx-2 sm:mx-4 ${currentStep > step.id ? "bg-brand-500" : "bg-gray-200"}`}
                 />
               )}
             </div>
@@ -253,25 +227,35 @@ export default function CreateCompanyForm({
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6">
-        {/* Step 1: Company Information */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         {currentStep === 1 && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
               <InputField
-                label="Name *"
+                label="Name"
+                required={true}
+                error={fieldErrors.name}
                 value={CompanyInfo.name}
-                onChange={(v) => setCompanyInfo({ ...CompanyInfo, name: v })}
+                onChange={(v) => {
+                  setCompanyInfo({ ...CompanyInfo, name: v });
+                  if (v.trim())
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      name: "",
+                    }));
+                }}
                 noLeadingSpace
                 placeholder="Enter Name"
               />
               <SelectDropdown
                 label="Owner"
+                required
+                error={fieldErrors.owner_id}
                 value={CompanyInfo.owner_id}
-                onChange={(v) =>
-                  setCompanyInfo({ ...CompanyInfo, owner_id: v })
-                }
+                onChange={(v) => {
+                  setCompanyInfo({ ...CompanyInfo, owner_id: v });
+                  setFieldErrors((prev) => ({ ...prev, owner_id: "" }));
+                }}
                 options={owners.map((source) => ({
                   label: source.name,
                   value: source.id,
@@ -279,31 +263,52 @@ export default function CreateCompanyForm({
                 placeholder="Select Owner"
               />
               <InputField
+                label="Email"
+                required={true}
+                error={fieldErrors.email}
+                value={CompanyInfo.email}
+                onChange={(v) => {
+                  setCompanyInfo({ ...CompanyInfo, email: v });
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    name: "",
+                  }));
+                }}
+                placeholder="Enter email"
+              />
+              <InputField
                 label="Phone"
+                error={fieldErrors.phone}
                 value={CompanyInfo.phone}
-                onChange={(v) => setCompanyInfo({ ...CompanyInfo, phone: v })}
+                maxLength={10}
+                onChange={(v) => {
+                  const val = v.replace(/\D/g, "");
+                  setCompanyInfo({ ...CompanyInfo, phone: val });
+                  if (val.length === 10)
+                    setFieldErrors((prev) => ({ ...prev, phone: "" }));
+                }}
                 noLeadingSpace
-                placeholder="Enter phone number"
+                placeholder="Enter 10-digit phone number"
               />
               <InputField
                 label="Company Size"
                 value={CompanyInfo.company_size}
+                maxLength={10}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, company_size: v })
                 }
+                placeholder="Enter size"
               />
               <InputField
                 label="Annual Revenue"
                 value={CompanyInfo.annual_revenue}
+                maxLength={10}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, annual_revenue: v })
                 }
+                placeholder="Enter revenue"
               />
-              <InputField
-                label="Email"
-                value={CompanyInfo.email}
-                onChange={(v) => setCompanyInfo({ ...CompanyInfo, email: v })}
-              />
+
               <SelectDropdown
                 label="Industry"
                 value={CompanyInfo.industry_id}
@@ -317,9 +322,8 @@ export default function CreateCompanyForm({
                 onAddClick={() => setOpenIndustryModal(true)}
                 placeholder="Select Industry"
               />
-
               <SelectDropdown
-                label="Company"
+                label="Company Type"
                 value={CompanyInfo.company_type_id}
                 onChange={(v) =>
                   setCompanyInfo({ ...CompanyInfo, company_type_id: v })
@@ -333,18 +337,11 @@ export default function CreateCompanyForm({
               />
 
               <InputField
-                label="Website"
-                value={CompanyInfo.website}
-                onChange={(v) => setCompanyInfo({ ...CompanyInfo, website: v })}
-                noLeadingSpace
-                placeholder="https://twitter.com/username"
-              />
-              <InputField
                 label="Twitter"
                 value={CompanyInfo.twitter}
                 onChange={(v) => setCompanyInfo({ ...CompanyInfo, twitter: v })}
                 noLeadingSpace
-                placeholder="https://twitter.com/username"
+                placeholder="Twitter URL"
               />
               <InputField
                 label="LinkedIn"
@@ -353,7 +350,7 @@ export default function CreateCompanyForm({
                   setCompanyInfo({ ...CompanyInfo, linkedin: v })
                 }
                 noLeadingSpace
-                placeholder="https://linkedin.com/in/username"
+                placeholder="LinkedIn URL"
               />
               <InputField
                 label="Instagram"
@@ -362,7 +359,7 @@ export default function CreateCompanyForm({
                   setCompanyInfo({ ...CompanyInfo, instagram: v })
                 }
                 noLeadingSpace
-                placeholder="https://twitter.com/username"
+                placeholder="Instagram URL"
               />
               <InputField
                 label="FaceBook"
@@ -371,21 +368,26 @@ export default function CreateCompanyForm({
                   setCompanyInfo({ ...CompanyInfo, facebook: v })
                 }
                 noLeadingSpace
-                placeholder="https://twitter.com/username"
+                placeholder="Facebook URL"
+              />
+              <InputField
+                label="Website"
+                value={CompanyInfo.website}
+                onChange={(v) => setCompanyInfo({ ...CompanyInfo, website: v })}
+                noLeadingSpace
+                placeholder="Website URL"
               />
             </div>
           </div>
         )}
 
-        {/* Step 2: Address Information */}
         {currentStep === 2 && (
-          <div className="space-y-8">
-            {/* Present Address */}
+          <div className="space-y-6 sm:space-y-8">
             <div>
-              <h3 className="text-md font-semibold text-gray-800 mb-4">
+              <h3 className="text-sm sm:text-md font-semibold text-gray-800 mb-3 sm:mb-4">
                 Billing Address
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
                 <div className="md:col-span-2">
                   <InputField
                     label="Address"
@@ -394,7 +396,7 @@ export default function CreateCompanyForm({
                       setAddress({ ...address, billing_street: v })
                     }
                     noLeadingSpace
-                    placeholder="Enter street address"
+                    placeholder="Street address"
                   />
                 </div>
                 <InputField
@@ -402,21 +404,21 @@ export default function CreateCompanyForm({
                   value={address.billing_city}
                   onChange={(v) => setAddress({ ...address, billing_city: v })}
                   noLeadingSpace
-                  placeholder="Enter city"
+                  placeholder="City"
                 />
                 <InputField
                   label="State"
                   value={address.billing_state}
                   onChange={(v) => setAddress({ ...address, billing_state: v })}
                   noLeadingSpace
-                  placeholder="Enter state"
+                  placeholder="State"
                 />
                 <InputField
                   label="ZIP Code"
                   value={address.billing_zip}
                   onChange={(v) => setAddress({ ...address, billing_zip: v })}
                   noLeadingSpace
-                  placeholder="Enter ZIP code"
+                  placeholder="ZIP"
                 />
                 <InputField
                   label="Country"
@@ -425,13 +427,12 @@ export default function CreateCompanyForm({
                     setAddress({ ...address, billing_country: v })
                   }
                   noLeadingSpace
-                  placeholder="Enter country"
+                  placeholder="Country"
                 />
               </div>
             </div>
 
-            {/* Copy Address Checkbox */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-brand-50 p-3 sm:p-4 rounded-lg sm:rounded-xl border border-brand-100">
               <input
                 type="checkbox"
                 id="copyAddress"
@@ -439,17 +440,16 @@ export default function CreateCompanyForm({
                 onChange={(e) => handleCopyAddress(e.target.checked)}
                 className="w-4 h-4 text-brand-500 border-gray-300 rounded focus:ring-brand-500"
               />
-              <label htmlFor="copyAddress" className="text-sm text-gray-700">
+              <label htmlFor="copyAddress" className="text-xs sm:text-sm font-medium text-gray-700">
                 Same as Billing Address
               </label>
             </div>
 
-            {/* Permanent Address */}
             <div>
-              <h3 className="text-md font-semibold text-gray-800 mb-4">
+              <h3 className="text-sm sm:text-md font-semibold text-gray-800 mb-3 sm:mb-4">
                 Shipping Address
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
                 <div className="md:col-span-2">
                   <InputField
                     label="Address"
@@ -458,7 +458,7 @@ export default function CreateCompanyForm({
                       setAddress({ ...address, shipping_street: v })
                     }
                     noLeadingSpace
-                    placeholder="Enter street address"
+                    placeholder="Street address"
                     disabled={copyAddress}
                   />
                 </div>
@@ -467,7 +467,7 @@ export default function CreateCompanyForm({
                   value={address.shipping_city}
                   onChange={(v) => setAddress({ ...address, shipping_city: v })}
                   noLeadingSpace
-                  placeholder="Enter city"
+                  placeholder="City"
                   disabled={copyAddress}
                 />
                 <InputField
@@ -477,7 +477,7 @@ export default function CreateCompanyForm({
                     setAddress({ ...address, shipping_state: v })
                   }
                   noLeadingSpace
-                  placeholder="Enter state"
+                  placeholder="State"
                   disabled={copyAddress}
                 />
                 <InputField
@@ -485,7 +485,7 @@ export default function CreateCompanyForm({
                   value={address.shipping_zip}
                   onChange={(v) => setAddress({ ...address, shipping_zip: v })}
                   noLeadingSpace
-                  placeholder="Enter ZIP code"
+                  placeholder="ZIP"
                   disabled={copyAddress}
                 />
                 <InputField
@@ -495,7 +495,7 @@ export default function CreateCompanyForm({
                     setAddress({ ...address, shipping_country: v })
                   }
                   noLeadingSpace
-                  placeholder="Enter country"
+                  placeholder="Country"
                   disabled={copyAddress}
                 />
               </div>
@@ -504,27 +504,23 @@ export default function CreateCompanyForm({
         )}
       </div>
 
-      {/* Footer */}
-      <div className="flex justify-between px-6 py-4 border-t">
-        <div>
-          {currentStep > 1 && (
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={submitting}
-            >
-              Previous
-            </Button>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
+      <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t">
+        <Button
+          variant="outline"
+          onClick={handlePrevious}
+          disabled={submitting || currentStep === 1}
+          className="w-full sm:w-auto"
+        >
+          Previous
+        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <Button variant="outline" onClick={onClose} disabled={submitting} className="w-full sm:w-auto order-2 sm:order-1">
             Cancel
           </Button>
           {currentStep < steps.length ? (
-            <Button onClick={handleNext}>Next</Button>
+            <Button onClick={handleNext} className="w-full sm:w-auto order-1 sm:order-2">Next</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={submitting}>
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full sm:w-auto order-1 sm:order-2">
               {submitting
                 ? mode === "edit"
                   ? "Updating..."
@@ -538,19 +534,14 @@ export default function CreateCompanyForm({
       </div>
 
       {openIndustryModal && (
-        <Dialog
-          open={openIndustryModal}
-          onOpenChange={() => setOpenIndustryModal(false)}
-        >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader />
+        <Dialog open={openIndustryModal} onOpenChange={setOpenIndustryModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <CreateIndustryForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenIndustryModal(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenIndustryModal(false);
-
                 const res = await getAllActiveIndustry();
                 setIndustries(res.data || []);
               }}
@@ -562,17 +553,15 @@ export default function CreateCompanyForm({
       {openCompanyTypeModal && (
         <Dialog
           open={openCompanyTypeModal}
-          onOpenChange={() => setOpenCompanyTypeModal(false)}
+          onOpenChange={setOpenCompanyTypeModal}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader />
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <CreateCompanyTypeForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenCompanyTypeModal(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenCompanyTypeModal(false);
-
                 const res = await getAllActiveCompanyType();
                 setCompanyType(res.data || []);
               }}

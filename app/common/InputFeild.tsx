@@ -17,6 +17,7 @@ interface InputFieldProps {
   icon?: React.ReactNode;
   noLeadingSpace?: boolean;
   disabled?: boolean;
+  required?: boolean; // New prop
 }
 
 export default function InputField({
@@ -32,13 +33,13 @@ export default function InputField({
   icon,
   noLeadingSpace = false,
   disabled = false,
+  required = false, // Default to false
 }: InputFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
 
   const isPassword = type === "password";
 
-  // Prevent leading space BEFORE it is typed
   const handleKeyDown = (e: any) => {
     if (noLeadingSpace && value === "" && e.key === " ") {
       e.preventDefault();
@@ -46,33 +47,34 @@ export default function InputField({
     }
   };
 
-  // Validate leading space after input
   const validateValue = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     let val = e.target.value;
-
     if (noLeadingSpace && val.startsWith(" ")) {
       setLocalError("Cannot start with space");
       val = val.trimStart();
-      e.target.value = val;
     } else {
       setLocalError("");
     }
-
     onChange(val);
   };
+
+  // Combine local validation and parent errors
+  const hasError = !!(localError || error);
 
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-1 font-medium text-gray-700">{label}</label>
+        <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
       )}
 
       <div className="relative flex items-center">
         {icon && <div className="absolute left-3 text-gray-500">{icon}</div>}
 
-        {/* TEXTAREA */}
         {multiline ? (
           <textarea
             placeholder={placeholder}
@@ -82,8 +84,8 @@ export default function InputField({
             maxLength={maxLength}
             rows={rows}
             disabled={disabled}
-            className={`w-full p-3 pl-10 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
-              localError || error
+            className={`w-full p-2.5 sm:p-3 text-sm sm:text-base ${icon ? "pl-10" : ""} border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
+              hasError
                 ? "border-red-500 focus:ring-red-400"
                 : "border-gray-300 focus:ring-brand-500"
             } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
@@ -98,30 +100,24 @@ export default function InputField({
               onKeyDown={handleKeyDown}
               maxLength={maxLength}
               disabled={disabled}
-              className={`w-full p-3 ${
-                icon ? "pl-10" : ""
-              } pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
-                localError || error
+              className={`w-full p-2.5 sm:p-3 text-sm sm:text-base ${icon ? "pl-10" : ""} pr-10 sm:pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
+                hasError
                   ? "border-red-500 focus:ring-red-400"
                   : "border-gray-300 focus:ring-brand-500"
               } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
             />
-
             {isPassword && (
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 cursor-pointer text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600"
               >
-                {showPassword ? <FiEye size={20} /> : <FiEyeOff size={20} />}
+                {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
               </span>
             )}
           </>
         )}
       </div>
-
-      {(localError || error) && (
-        <p className="text-red-500 text-sm mt-1">{localError || error}</p>
-      )}
+      {hasError && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
     </div>
   );
 }

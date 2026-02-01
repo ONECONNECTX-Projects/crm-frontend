@@ -9,7 +9,7 @@ export default function EditRolePage() {
   const roleId = params.id ? parseInt(params.id as string) : null;
 
   return (
-    <div className="min-h-screen bg-white rounded-xl">
+    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl">
       <CreateRoleForm
         mode="edit"
         roleId={roleId}

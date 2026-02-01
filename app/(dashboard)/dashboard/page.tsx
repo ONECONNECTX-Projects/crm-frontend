@@ -1,268 +1,239 @@
 "use client";
 
-import React from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
   Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
   Legend,
 } from "recharts";
-import { Building2, Contact, TrendingUp, User } from "lucide-react";
-
-export function Card({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`rounded-xl shadow p-4 bg-white ${className || ""}`}>
-      {children}
-    </div>
-  );
-}
-
-export function CardContent({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <div className={className}>{children}</div>;
-}
-// ----------------------- Dummy Data -----------------------
-const transactionData = [
-  { month: "Jan", value: 4500 },
-  { month: "Feb", value: 5000 },
-  { month: "Mar", value: 7000 },
-  { month: "Apr", value: 5500 },
-  { month: "May", value: 6500 },
-  { month: "Jun", value: 9000 },
-  { month: "Jul", value: 12000 },
-  { month: "Aug", value: 21000 },
-  { month: "Sep", value: 23000 },
-  { month: "Oct", value: 17000 },
-  { month: "Nov", value: 16500 },
-  { month: "Dec", value: 35000 },
-];
-
-const ticketStatus = [
-  { name: "Closed", value: 10 },
-  { name: "In-progress", value: 7 },
-  { name: "Need information", value: 5 },
-  { name: "Open", value: 12 },
-  { name: "Pending", value: 4 },
-  { name: "Resolved", value: 9 },
-];
+import { Building2, Contact, TrendingUp, User, Loader2 } from "lucide-react";
+import {
+  DashboardData,
+  getDashboardSummary,
+} from "@/app/services/dashboard/dashboard.service";
 
 const COLORS = [
-  "#ef4444",
-  "#ec4899",
-  "#CC6118",
   "#01558C",
-  "#8b5cf6",
   "#22c55e",
-]; // red, pink, accent-orange, brand-blue, purple, green
-
-const recentQuotes = [
-  "Cloud Migration",
-  "Website Redesign",
-  "Annual Support Package",
-  "Hello",
+  "#8b5cf6",
+  "#CC6118",
+  "#ec4899",
+  "#ef4444",
 ];
 
-const contacts = [
-  { name: "Sara Khan", email: "sara.khan@greenfields.example" },
-  { name: "Carlos Mendez", email: "carlos.mendez@technova.example" },
-  { name: "Aisha Rahman", email: "aisha.rahman@omega-solutions.example" },
-  { name: "John Doe", email: "example@gmail.com" },
-];
+// Look-up table to fix Tailwind Purging
+const bgGradients: Record<string, string> = {
+  "Total Leads": "from-blue-400 to-blue-600",
+  "Total Contact": "from-purple-500 to-purple-700",
+  "Total Company": "from-orange-400 to-orange-600",
+  Opportunities: "from-pink-500 to-pink-700",
+};
 
-// ----------------------- Dashboard Component -----------------------
 export default function Dashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await getDashboardSummary();
+        if (response.isSuccess) {
+          setData(response.data || null);
+        }
+      } catch (error) {
+        console.error("Dashboard Load Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-3xl font-bold text-gray-600">Dashboard</h1>
-      <p className="text-gray-600">
-        Track your business metrics and performance
-      </p>
+    <div className="p-6 space-y-6  bg-white min-h-screen">
+      <div>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
+          Dashboard
+        </h1>
+        <p className="text-sm sm:text-base text-gray-500">
+          Track your business metrics and performance
+        </p>
+      </div>
 
       {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-4">
-        {[
-          {
-            title: "Total Leads",
-            count: 4,
-            subtitle: "Active Leads",
-            color: "from-brand-400 to-brand-600",
-            icon: <User className="w-7 h-7 text-white" />,
-          },
-          {
-            title: "Total Contact",
-            count: 4,
-            subtitle: "Registered Contacts",
-            color: "from-purple-500 to-purple-700",
-            icon: <Contact className="w-7 h-7 text-white" />,
-          },
-          {
-            title: "Total Company",
-            count: 4,
-            subtitle: "Registered Companies",
-            color: "from-accent-brand-400 to-accent-brand-600",
-            icon: <Building2 className="w-7 h-7 text-white" />,
-          },
-          {
-            title: "Opportunities",
-            count: 1,
-            subtitle: "Open Opportunities",
-            color: "from-pink-500 to-pink-700",
-            icon: <TrendingUp className="w-7 h-7 text-white" />,
-          },
-        ].map((item, index) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+        {data?.stats?.map((item, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ delay: index * 0.1 }}
+            className={`relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg text-white bg-gradient-to-r ${bgGradients[item.title] || "from-gray-400 to-gray-600"}`}
           >
-            <Card
-              className={`bg-gradient-to-r ${item.color} text-white rounded-2xl p-4 shadow-lg`}
-            >
-              <CardContent className="relative">
-                {/* ICON */}
-                <div className="absolute top-4 right-4 bg-white/20 p-2 rounded-xl">
-                  {item.icon}
+            <div className="relative z-10">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs sm:text-sm font-medium opacity-80">
+                    {item.title}
+                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-bold mt-1">
+                    {item.count}
+                  </h3>
                 </div>
-
-                <h2 className="text-sm opacity-80">{item.title}</h2>
-                <p className="text-4xl font-bold mt-2">{item.count}</p>
-                <p className="text-sm opacity-80 mt-1">{item.subtitle}</p>
-              </CardContent>
-            </Card>
+                <div className="bg-white/20 p-1.5 sm:p-2 rounded-lg">
+                  {item.title.includes("Lead") && (
+                    <User className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
+                  {item.title.includes("Contact") && (
+                    <Contact className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
+                  {item.title.includes("Company") && (
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
+                  {item.title.includes("Opp") && (
+                    <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs mt-3 sm:mt-4 opacity-70">{item.subtitle}</p>
+            </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Sales + Ticket Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Sales Overview */}
-        <Card className="rounded-2xl p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-600">
-            Sales Overview
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+        {/* Task Chart */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
+            Task Status Distribution
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={transactionData}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#01558C" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-
-        {/* Ticket Status */}
-        <Card className="rounded-2xl p-4">
-          <h3 className="text-lg font-semibold mb-4 text-gray-600">
-            Ticket Status
-          </h3>
-
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer
+            width="100%"
+            height={200}
+            className="sm:!h-[250px]"
+          >
             <PieChart>
-              <Tooltip />
-
               <Pie
-                data={ticketStatus}
+                data={data?.taskStatusDistribution?.map((item) => ({
+                  ...item,
+                }))}
                 dataKey="value"
                 nameKey="name"
-                innerRadius={60}
-                outerRadius={90}
-                paddingAngle={2}
-                labelLine={false}
-                label={({ percent }) =>
-                  percent ? `${(percent * 100).toFixed(0)}%` : "0%"
-                }
+                innerRadius={50}
+                outerRadius={70}
+                paddingAngle={5}
               >
-                {ticketStatus.map((entry, index) => (
-                  <Cell key={index} fill={COLORS[index]} />
+                {data?.taskStatusDistribution?.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-
-              {/* LEGEND BELOW */}
-              <Legend
-                verticalAlign="bottom"
-                align="center"
-                layout="horizontal"
-                iconType="circle"
-                wrapperStyle={{
-                  paddingTop: "20px",
-                  fontSize: "14px",
-                }}
-              />
+              <Tooltip />
+              <Legend verticalAlign="bottom" height={36} />
             </PieChart>
           </ResponsiveContainer>
-        </Card>
+        </div>
+
+        {/* Ticket Chart */}
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
+            Ticket Status
+          </h3>
+          <ResponsiveContainer
+            width="100%"
+            height={200}
+            className="sm:!h-[250px]"
+          >
+            {data?.ticketStatusDistribution &&
+            data.ticketStatusDistribution.some((item) => item.value > 0) ? (
+              <PieChart>
+                <Tooltip />
+                <Pie
+                  data={data.ticketStatusDistribution?.map((item) => ({
+                    ...item,
+                  }))}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={5}
+                >
+                  {data.ticketStatusDistribution.map((_, i) => (
+                    <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Legend verticalAlign="bottom" iconType="circle" />
+              </PieChart>
+            ) : (
+              /* Fallback UI when no data is found */
+              <div className="flex flex-col items-center justify-center h-full space-y-2">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-dashed border-gray-200 flex items-center justify-center">
+                  <span className="text-gray-300 text-xs">0%</span>
+                </div>
+                <p className="text-gray-400 text-sm font-medium">
+                  No Data Found
+                </p>
+              </div>
+            )}
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* Recent Quotes + Contacts */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* Recent Quotes */}
-        <Card className="rounded-2xl p-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-600">
-              Recent Quotes
-            </h3>
-            <button className="text-brand-500">View All →</button>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {recentQuotes.map((item, index) => (
+      {/* Recent Lists */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
+            Recent Quotes
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {data?.recentQuotes?.map((quote: any, i: number) => (
               <div
-                key={index}
-                className="p-4 rounded-xl bg-gray-50 flex justify-between items-center"
+                key={i}
+                className="flex justify-between items-center p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl"
               >
-                <div>
-                  <p className="font-medium">{item}</p>
-                  <p className="text-sm text-gray-500">demo</p>
-                </div>
+                <span className="font-medium text-sm sm:text-base text-gray-700 truncate mr-2">
+                  {quote.name}
+                </span>
+                <span className="text-blue-600 font-bold text-sm sm:text-base whitespace-nowrap">
+                  ${quote.total_amount}
+                </span>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
 
-        {/* Recent Contacts */}
-        <Card className="rounded-2xl p-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-600">
-              Recent Contacts
-            </h3>
-            <button className="text-brand-500">View All →</button>
-          </div>
-
-          <div className="mt-4 space-y-4">
-            {contacts.map((user, index) => (
+        <div className="bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4">
+            Recent Contacts
+          </h3>
+          <div className="space-y-2 sm:space-y-3">
+            {data?.recentContacts?.map((contact: any, i: number) => (
               <div
-                key={index}
-                className="p-4 rounded-xl bg-gray-50 flex justify-between items-center"
+                key={i}
+                className="p-2.5 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl"
               >
-                <div>
-                  <p className="font-medium">{user.name}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                </div>
+                <p className="font-medium text-sm sm:text-base text-gray-700">
+                  {contact.first_name} {contact.last_name}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {contact.email}
+                </p>
               </div>
             ))}
           </div>
-        </Card>
+        </div>
       </div>
     </div>
   );

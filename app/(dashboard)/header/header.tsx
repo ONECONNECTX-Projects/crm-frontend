@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { LuUser } from "react-icons/lu";
 import { RxEnterFullScreen, RxExitFullScreen } from "react-icons/rx";
+import { FiMenu } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import CommonButton from "@/app/common/button";
 import {
@@ -10,7 +11,12 @@ import {
   Profile,
 } from "@/app/services/profile/profile.service";
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+  showMenuButton?: boolean;
+}
+
+export default function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
   const [isFull, setIsFull] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -67,10 +73,21 @@ export default function Header() {
   return (
     <>
       {/* HEADER */}
-      <header className="w-full h-16 bg-white border-b flex items-center justify-between px-4 relative">
-        <div></div>
+      <header className="w-full h-14 sm:h-16 bg-white border-b flex items-center justify-between px-3 sm:px-4 relative">
+        {/* LEFT - Mobile Menu Button */}
+        <div className="flex items-center">
+          {showMenuButton && (
+            <button
+              onClick={onMenuClick}
+              className="p-2 -ml-1 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Open menu"
+            >
+              <FiMenu className="text-xl text-gray-600" />
+            </button>
+          )}
+        </div>
 
-        <div className="flex items-center text-black gap-6">
+        <div className="flex items-center text-black gap-3 sm:gap-6">
           {/* FULL SCREEN */}
           <button onClick={toggleFullscreen}>
             {isFull ? (
@@ -108,8 +125,8 @@ export default function Header() {
 
       {/* CONFIRM LOGOUT POPUP */}
       {confirmLogout && (
-        <div className="fixed inset-0 bg-transparent bg-opacity-40 flex items-center justify-center z-[999]">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-80 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999] p-4">
+          <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-[320px] sm:max-w-sm animate-fadeIn">
             <h2 className="text-lg font-semibold text-gray-800">
               Confirm Logout
             </h2>

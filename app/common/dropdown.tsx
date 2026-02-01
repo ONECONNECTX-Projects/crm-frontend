@@ -15,6 +15,8 @@ interface SelectDropdownProps {
   className?: string;
   onAddClick?: () => void;
   disabled?: boolean;
+  required?: boolean; // New prop for red asterisk
+  error?: string; // New prop for error styling
 }
 
 const SelectDropdown: React.FC<SelectDropdownProps> = ({
@@ -26,18 +28,25 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
   className = "",
   disabled = false,
   onAddClick,
+  required = false,
+  error,
 }) => {
+  const hasError = !!error;
+
   return (
     <div className="w-full">
       {label && (
-        <div className="flex items-center  mb-1">
-          <label className="font-medium text-gray-700">{label}</label>
+        <div className="flex items-center mb-1">
+          <label className="text-sm sm:text-base font-medium text-gray-700">
+            {label}
+            {required && <span className="text-red-500 ml-1">*</span>}
+          </label>
 
           {onAddClick && (
             <button
               type="button"
               onClick={onAddClick}
-              className="ml-2 p-2 rounded  hover:bg-brand-50"
+              className="ml-2 p-1 rounded hover:bg-brand-50"
               title={`Add ${label}`}
             >
               <Plus className="w-4 h-4 text-brand-500" />
@@ -50,9 +59,11 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
-          disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-        } ${className}`}
+        className={`w-full p-2.5 sm:p-3 text-sm sm:text-base border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
+          hasError
+            ? "border-red-500 focus:ring-red-400"
+            : "border-gray-300 focus:ring-brand-500"
+        } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"} ${className}`}
       >
         <option value="">{placeholder}</option>
 
@@ -62,6 +73,8 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
           </option>
         ))}
       </select>
+
+      {hasError && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
     </div>
   );
 };
