@@ -27,7 +27,8 @@ import {
   uploadFolder,
 } from "@/app/services/media/media.service";
 import { useError } from "@/app/providers/ErrorProvider";
-import { api } from "@/app/utils/apiClient";
+import { api, getAuthToken } from "@/app/utils/apiClient";
+import { getFileUrl } from "@/app/services/File/file.service";
 
 export default function MediaPage() {
   const { showSuccess, showError } = useError();
@@ -48,6 +49,14 @@ export default function MediaPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+
+  // Set webkitdirectory and directory attributes imperatively
+  useEffect(() => {
+    if (folderInputRef.current) {
+      (folderInputRef.current as any).webkitdirectory = true;
+      (folderInputRef.current as any).directory = true;
+    }
+  }, [folderInputRef]);
 
   // Fetch media items
   const fetchMedia = async () => {
@@ -259,9 +268,16 @@ export default function MediaPage() {
   };
 
   // Handle download
-  const handleDownload = (item: Media) => {
-    if (item.path) {
-      window.open(item.path, "_blank");
+  const handleDownload = async (item: Media) => {
+    if (item?.path) {
+      // Create a temporary anchor to trigger download
+      const link = document.createElement("a");
+      link.href = getFileUrl(item.path);
+      link.download = item.path || "download";
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -283,13 +299,13 @@ export default function MediaPage() {
 
         <div className="flex-1" />
 
-        <button
+        {/* <button
           onClick={() => setShowCreateFolder(true)}
           className="bg-[#4a9d5b] px-5 py-3 rounded cursor-pointer hover:bg-[#3d8c4d] flex items-center gap-3"
         >
           <Plus className="w-6 h-6" />
           New Folder
-        </button>
+        </button> */}
 
         <label
           className={`bg-[#5a8dee] px-5 py-3 rounded cursor-pointer hover:bg-[#4a7dde] flex items-center gap-3 ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -315,10 +331,6 @@ export default function MediaPage() {
             ref={folderInputRef}
             type="file"
             multiple
-            // @ts-ignore: webkitdirectory is non-standard
-            webkitdirectory=""
-            // @ts-ignore: directory is non-standard
-            directory=""
             hidden
             onChange={handleFolderUpload}
             disabled={uploading}
