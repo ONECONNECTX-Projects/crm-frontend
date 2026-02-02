@@ -15,6 +15,7 @@ import {
   OpportunitySource,
   updateOpportunitySourceStatus,
 } from "@/app/services/opportunity-source/opportunity-source.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function OpportunitySourcesPage() {
   const { showSuccess, showError } = useError();
@@ -175,6 +176,20 @@ export default function OpportunitySourcesPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: OpportunitySource) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredOpportunitySources, columns, "opportunity-sources", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredOpportunitySources, columns, "Opportunity Sources", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -197,8 +212,8 @@ export default function OpportunitySourcesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

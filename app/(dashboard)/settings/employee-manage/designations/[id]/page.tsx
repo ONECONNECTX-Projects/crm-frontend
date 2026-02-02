@@ -7,6 +7,7 @@ import SlideOver from "@/app/common/slideOver";
 import CreateDesignationForm from "../create/page";
 import DataTable, { TableColumn } from "@/app/common/DataTable";
 import PageActions from "@/app/common/PageActions";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 /* ---------------- TYPES ---------------- */
 
@@ -101,6 +102,14 @@ export default function ViewDesignationPage() {
     )
   );
 
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredEmployees, columns, "designation-employees");
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredEmployees, columns, `Employees - ${designation.name}`);
+  };
+
   const tableColumns: TableColumn<EmployeeRow>[] = columns.map((col) => ({
     key: col.key as keyof EmployeeRow,
     label: col.label,
@@ -152,8 +161,8 @@ export default function ViewDesignationPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
         <DataTable
           columns={tableColumns}

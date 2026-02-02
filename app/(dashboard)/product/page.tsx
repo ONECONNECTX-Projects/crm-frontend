@@ -13,6 +13,7 @@ import {
   Product,
 } from "@/app/services/product/product.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function ProductsPage() {
   const { showSuccess, showError } = useError();
@@ -126,6 +127,19 @@ export default function ProductsPage() {
     fetchProduct();
   };
 
+  // Custom extractors for nested objects
+  const productExtractors: Record<string, (row: Product) => string> = {
+    category: (row) => row.category?.name || "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredProducts, columns, "products", productExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredProducts, columns, "Products", productExtractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -148,8 +162,8 @@ export default function ProductsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

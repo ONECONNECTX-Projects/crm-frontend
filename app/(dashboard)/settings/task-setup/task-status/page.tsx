@@ -16,6 +16,7 @@ import {
   TaskStatus,
   updateTaskStatusStatus,
 } from "@/app/services/task-status/task-status.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function TaskStatusPage() {
   const [companies, setTaskStatus] = useState<TaskStatus[]>([]);
@@ -177,6 +178,20 @@ export default function TaskStatusPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: TaskStatus) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredTaskStatus, columns, "task-status", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredTaskStatus, columns, "Task Status", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -199,8 +214,8 @@ export default function TaskStatusPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

@@ -16,6 +16,7 @@ import {
   updateLeadStatusStatus,
 } from "@/app/services/lead-status/lead-status.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function LeadStatusPage() {
   const { showSuccess, showError } = useError();
@@ -82,6 +83,19 @@ export default function LeadStatusPage() {
         col.key === key ? { ...col, visible: !col.visible } : col
       )
     );
+  };
+
+  const extractors: Record<string, (row: LeadStatus) => string> = {
+    status: (row) => row.is_active ? "Active" : "Inactive",
+    createdAt: (row) => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredData, columns, "lead_status", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredData, columns, "Lead Status", extractors);
   };
 
   const handleStatusToggle = async (role: LeadStatus, newStatus: boolean) => {
@@ -193,8 +207,8 @@ export default function LeadStatusPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

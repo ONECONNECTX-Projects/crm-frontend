@@ -15,6 +15,7 @@ import {
   Staff,
 } from "@/app/services/staff/staff.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function StaffPage() {
   const [searchValue, setSearchValue] = useState("");
@@ -82,6 +83,23 @@ export default function StaffPage() {
   const handleFormSuccess = () => {
     setOpenCreate(false);
     fetchStaff();
+  };
+
+  const staffExtractors: Record<string, (row: Staff) => string> = {
+    name: (row) => row.user?.name || "-",
+    email: (row) => row.user?.email || "-",
+    mobile: (row) => row.user?.mobile || "-",
+    department: (row) => row.department?.name || "-",
+    designation: (row) => row.designation?.name || "-",
+    status: (row) => row.is_active ? "Active" : "Inactive",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredStaff, columns, "staff", staffExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredStaff, columns, "Staff", staffExtractors);
   };
 
   const tableColumns: TableColumn<Staff>[] = [
@@ -223,8 +241,8 @@ export default function StaffPage() {
             columns={columns}
             onColumnToggle={handleColumnToggle}
             onFilterClick={() => console.log("Filter clicked")}
-            onPrintPDF={() => console.log("Print PDF")}
-            onDownloadCSV={() => console.log("Download CSV")}
+            onPrintPDF={handlePrintPDF}
+            onDownloadExcel={handleDownloadExcel}
           />
 
           <DataTable

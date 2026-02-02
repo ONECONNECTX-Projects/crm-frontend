@@ -16,6 +16,7 @@ import {
   ProductCategory,
   updateProductCategoryStatus,
 } from "@/app/services/product-category/product-category.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function ProductCategoryPage() {
   const { showSuccess, showError } = useError();
@@ -173,6 +174,20 @@ export default function ProductCategoryPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: ProductCategory) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredProductCategory, columns, "product-categories", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredProductCategory, columns, "Product Categories", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -195,8 +210,8 @@ export default function ProductCategoryPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

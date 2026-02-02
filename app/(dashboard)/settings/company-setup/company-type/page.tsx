@@ -15,6 +15,7 @@ import {
   updateCompanyTypeStatus,
 } from "@/app/services/company-type/company-type.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function CompanyTypesPage() {
   const { showSuccess, showError } = useError();
@@ -116,6 +117,19 @@ export default function CompanyTypesPage() {
     );
   };
 
+  const extractors: Record<string, (row: CompanyType) => string> = {
+    status: (row) => row.is_active ? "Active" : "Inactive",
+    createdAt: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredCompanyType, columns, "company_types", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredCompanyType, columns, "Company Types", extractors);
+  };
+
   /* =========================
      Table Actions
   ========================== */
@@ -205,8 +219,8 @@ export default function CompanyTypesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

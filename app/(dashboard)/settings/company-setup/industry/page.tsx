@@ -15,6 +15,7 @@ import {
   updateIndustryStatus,
 } from "@/app/services/Industry/industry.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function IndustrysPage() {
   const { showSuccess, showError } = useError();
@@ -177,6 +178,20 @@ export default function IndustrysPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: Industry) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredIndustry, columns, "industries", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredIndustry, columns, "Industries", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -199,8 +214,8 @@ export default function IndustrysPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

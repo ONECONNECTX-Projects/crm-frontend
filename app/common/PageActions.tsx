@@ -29,7 +29,7 @@ interface PageActionsProps {
   onColumnToggle?: (key: string) => void;
   showExport?: boolean;
   onPrintPDF?: () => void;
-  onDownloadCSV?: () => void;
+  onDownloadExcel?: () => void;
 }
 
 export default function PageActions({
@@ -43,7 +43,7 @@ export default function PageActions({
   onColumnToggle,
   showExport = true,
   onPrintPDF,
-  onDownloadCSV,
+  onDownloadExcel,
 }: PageActionsProps) {
   return (
     <div
@@ -70,7 +70,7 @@ export default function PageActions({
         </div>
 
         {/* FILTER BUTTON */}
-        {showFilter && (
+        {/* {showFilter && (
           <Button
             variant="outline"
             className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
@@ -79,7 +79,7 @@ export default function PageActions({
             <Filter className="w-4 h-4" />
             Filter
           </Button>
-        )}
+        )} */}
 
         {/* COLUMNS DROPDOWN */}
         {showColumns && columns.length > 0 && (
@@ -125,10 +125,10 @@ export default function PageActions({
           <Button
             variant="outline"
             className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
-            onClick={onDownloadCSV}
+            onClick={onDownloadExcel}
           >
             <Download className="w-4 h-4" />
-            Download CSV
+            Download Excel
           </Button>
         </div>
       )}

@@ -14,6 +14,7 @@ import {
   getAllOpportunity,
   Opportunity,
 } from "@/app/services/opportunity/opportunity.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function OpportunityPage() {
   const router = useRouter();
@@ -141,6 +142,25 @@ export default function OpportunityPage() {
     fetchOpportunities();
   };
 
+  // Custom extractors for nested objects and formatted values
+  const opportunityExtractors: Record<string, (row: Opportunity) => string> = {
+    owner: (row) => row.owner?.name || "-",
+    company: (row) => row.company?.name || "-",
+    stage: (row) => row.stage?.name || "-",
+    type: (row) => row.type?.name || "-",
+    source: (row) => row.source?.name || "-",
+    created_at: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(opportunities, columns, "opportunities", opportunityExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(opportunities, columns, "Opportunities", opportunityExtractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
       <div className="max-w-9xl mx-auto space-y-4 sm:space-y-6">
@@ -161,8 +181,8 @@ export default function OpportunityPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         <DataTable

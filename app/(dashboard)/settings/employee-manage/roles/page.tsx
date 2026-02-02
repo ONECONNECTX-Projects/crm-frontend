@@ -16,6 +16,7 @@ import {
 } from "@/app/services/roles/roles.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function RolesPage() {
   const router = useRouter();
@@ -179,6 +180,20 @@ export default function RolesPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: Role) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredRoles, columns, "roles", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredRoles, columns, "Roles & Permissions", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
       <div className="space-y-4 sm:space-y-6">
@@ -201,8 +216,8 @@ export default function RolesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

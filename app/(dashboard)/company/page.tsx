@@ -14,6 +14,7 @@ import {
   getAllCompany,
 } from "@/app/services/company/company.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function CompanyPage() {
   const { showSuccess, showError } = useError();
@@ -74,6 +75,32 @@ export default function CompanyPage() {
   const handleFormSuccess = () => {
     setOpenCreate(false);
     fetchCompany();
+  };
+
+  // Custom extractors for nested objects and formatted values
+  const companyExtractors: Record<string, (row: Company & { sNo?: number }) => string> = {
+    sNo: (row) => String(row.sNo || "-"),
+    owner: (row) => row.owner?.name || "-",
+    company_type: (row) => row.company_type?.name || "-",
+    industry: (row) => row.industry?.name || "-",
+  };
+
+  const handleDownloadExcel = () => {
+    // Add sNo to filtered data for export
+    const dataWithSNo = filtered.map((item, index) => ({
+      ...item,
+      sNo: index + 1,
+    }));
+    downloadExcel(dataWithSNo, columns, "companies", companyExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    // Add sNo to filtered data for print
+    const dataWithSNo = filtered.map((item, index) => ({
+      ...item,
+      sNo: index + 1,
+    }));
+    printPDF(dataWithSNo, columns, "Companies", companyExtractors);
   };
 
   const actions: TableAction<Company>[] = [
@@ -215,8 +242,8 @@ export default function CompanyPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         <DataTable

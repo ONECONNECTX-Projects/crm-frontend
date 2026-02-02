@@ -20,6 +20,7 @@ import {
 } from "@/app/services/task/task.service";
 import { getAllActiveTaskStatus } from "@/app/services/task-status/task-status.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 /* ---------------- Types ---------------- */
 
@@ -228,6 +229,14 @@ export default function TasksPage() {
     );
   };
 
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredTasks, columns, "tasks");
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredTasks, columns, "Tasks");
+  };
+
   const filteredTasks = tasks.filter((task) =>
     Object.values(task).join(" ").toLowerCase().includes(search.toLowerCase()),
   );
@@ -393,8 +402,8 @@ export default function TasksPage() {
               columns={columns}
               onColumnToggle={handleColumnToggle}
               onFilterClick={() => {}}
-              onPrintPDF={() => {}}
-              onDownloadCSV={() => {}}
+              onPrintPDF={handlePrintPDF}
+              onDownloadExcel={handleDownloadExcel}
             />
 
             <DataTable

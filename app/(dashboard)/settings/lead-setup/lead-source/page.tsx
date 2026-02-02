@@ -16,6 +16,7 @@ import {
   updateLeadSourceStatus,
 } from "@/app/services/lead-source/lead-source.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function LeadSourcePage() {
   const { showSuccess, showError } = useError();
@@ -114,6 +115,19 @@ export default function LeadSourcePage() {
     );
   };
 
+  const extractors: Record<string, (row: LeadSource) => string> = {
+    status: (row) => row.is_active ? "Active" : "Inactive",
+    createdAt: (row) => row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredData, columns, "lead_sources", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredData, columns, "Lead Sources", extractors);
+  };
+
   /* =========================
      Table Actions
   ========================== */
@@ -201,8 +215,8 @@ export default function LeadSourcePage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

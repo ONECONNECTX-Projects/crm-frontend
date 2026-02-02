@@ -16,6 +16,7 @@ import {
 } from "@/app/services/department/departments.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function DepartmentsPage() {
   const { showSuccess, showError } = useError();
@@ -170,6 +171,20 @@ export default function DepartmentsPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: Department) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredDepartments, columns, "departments", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredDepartments, columns, "Departments", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -192,8 +207,8 @@ export default function DepartmentsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

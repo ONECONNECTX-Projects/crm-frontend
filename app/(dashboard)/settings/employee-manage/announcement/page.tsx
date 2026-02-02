@@ -8,6 +8,7 @@ import Pagination from "@/app/common/pagination";
 import SlideOver from "@/app/common/slideOver";
 import InputField from "@/app/common/InputFeild";
 import AnnouncementForm from "./create/page";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 interface Announcement {
   id: number;
@@ -204,6 +205,14 @@ export default function AnnouncementPage() {
     currentPage * pageSize
   );
 
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredAnnouncements, columns, "announcements");
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredAnnouncements, columns, "Announcements");
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -222,8 +231,8 @@ export default function AnnouncementPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

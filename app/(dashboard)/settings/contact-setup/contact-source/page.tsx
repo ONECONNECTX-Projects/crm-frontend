@@ -16,6 +16,7 @@ import {
   updateContactSourceStatus,
 } from "@/app/services/contact-source/contact-source.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function ContactSourcesPage() {
   const { showSuccess, showError } = useError();
@@ -117,6 +118,19 @@ export default function ContactSourcesPage() {
     );
   };
 
+  const contactSourceExtractors: Record<string, (row: ContactSource) => string> = {
+    status: (row) => row.is_active ? "Active" : "Inactive",
+    createdAt: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredContactSources, columns, "contact_sources", contactSourceExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredContactSources, columns, "Contact Sources", contactSourceExtractors);
+  };
+
   /* =========================
      Table Actions
   ========================== */
@@ -206,8 +220,8 @@ export default function ContactSourcesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

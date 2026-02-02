@@ -7,6 +7,7 @@ import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 interface Account {
   id: number;
@@ -159,6 +160,19 @@ export default function AccountPage() {
     );
   };
 
+  // Custom extractors for formatted values
+  const accountExtractors: Record<string, (row: Account) => string> = {
+    balance: (row) => `$${row.balance.toLocaleString()}`,
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "accounts", accountExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Accounts", accountExtractors);
+  };
+
   const actions: TableAction<Account>[] = [
     {
       label: "Edit",
@@ -239,6 +253,8 @@ export default function AccountPage() {
         }}
         columns={columns}
         onColumnToggle={handleColumnToggle}
+        onPrintPDF={handlePrintPDF}
+        onDownloadExcel={handleDownloadExcel}
       />
 
       <DataTable

@@ -16,6 +16,7 @@ import {
   Leads,
 } from "@/app/services/lead/lead.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function LeadsPage() {
   const [searchValue, setSearchValue] = useState("");
@@ -86,6 +87,23 @@ export default function LeadsPage() {
   const handleFormSuccess = () => {
     setOpenCreate(false);
     fetchLeads();
+  };
+
+  // Custom extractors for nested objects and formatted values
+  const leadExtractors: Record<string, (row: Leads) => string> = {
+    owner: (row) => row.owner?.name || "-",
+    status: (row) => row.status?.name || "-",
+    value: (row) => `$${parseInt(row.lead_value || "0").toLocaleString()}`,
+    source: (row) => row.source?.name || "-",
+    convert: (row) => (row?.contact?.id > 0 ? "Converted" : "Not Converted"),
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredLeads, columns, "leads", leadExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredLeads, columns, "Leads", leadExtractors);
   };
 
   const tableColumns: TableColumn<Leads>[] = [
@@ -236,8 +254,8 @@ export default function LeadsPage() {
             columns={columns}
             onColumnToggle={handleColumnToggle}
             onFilterClick={() => console.log("Filter clicked")}
-            onPrintPDF={() => console.log("Print PDF")}
-            onDownloadCSV={() => console.log("Download CSV")}
+            onPrintPDF={handlePrintPDF}
+            onDownloadExcel={handleDownloadExcel}
           />
 
           <DataTable

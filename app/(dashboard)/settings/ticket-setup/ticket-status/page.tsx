@@ -16,6 +16,7 @@ import {
   updateTicketStatusStatus,
   TicketStatus,
 } from "@/app/services/ticket-status/ticket-status.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function TicketStatusPage() {
   const { showSuccess, showError } = useError();
@@ -171,6 +172,20 @@ export default function TicketStatusPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: TicketStatus) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredTicketStatus, columns, "ticket-status", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredTicketStatus, columns, "Ticket Status", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -193,8 +208,8 @@ export default function TicketStatusPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

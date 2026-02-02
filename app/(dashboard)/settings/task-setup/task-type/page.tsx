@@ -15,6 +15,7 @@ import {
   updateTaskTypeStatus,
 } from "@/app/services/task-type/task-type.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function TaskTypesPage() {
   const [companies, setTaskType] = useState<TaskType[]>([]);
@@ -174,6 +175,20 @@ export default function TaskTypesPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: TaskType) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredTaskType, columns, "task-types", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredTaskType, columns, "Task Types", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -196,8 +211,8 @@ export default function TaskTypesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

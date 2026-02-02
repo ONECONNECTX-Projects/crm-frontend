@@ -16,6 +16,7 @@ import {
   QuoteStage,
   updateQuoteStageStatus,
 } from "@/app/services/quote-stage-setup/quote-stage-setup.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function QuoteStagesPage() {
   const { showSuccess, showError } = useError();
@@ -172,6 +173,20 @@ export default function QuoteStagesPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: QuoteStage) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredQuoteStages, columns, "quote-stages", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredQuoteStages, columns, "Quote Stages", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -194,8 +209,8 @@ export default function QuoteStagesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

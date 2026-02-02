@@ -7,6 +7,7 @@ import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
 import SlideOver from "@/app/common/slideOver";
 import InputField from "@/app/common/InputFeild";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 interface Award {
   id: number;
@@ -145,6 +146,14 @@ export default function AwardsPage() {
     currentPage * pageSize
   );
 
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredAwards, columns, "awards");
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredAwards, columns, "Awards");
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <PageHeader
@@ -160,8 +169,8 @@ export default function AwardsPage() {
         columns={columns}
         onColumnToggle={handleColumnToggle}
         onFilterClick={() => {}}
-        onPrintPDF={() => {}}
-        onDownloadCSV={() => {}}
+        onPrintPDF={handlePrintPDF}
+        onDownloadExcel={handleDownloadExcel}
       />
 
       <DataTable

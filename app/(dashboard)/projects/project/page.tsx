@@ -16,6 +16,7 @@ import {
 } from "@/app/services/project/project.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import StatusBadge from "@/app/common/StatusBadge";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 /* ================= Page ================= */
 
@@ -194,6 +195,25 @@ export default function ProjectsPage() {
     setEditingProject(null);
     setOpenCreate(true);
   };
+
+  // Custom extractors for nested objects
+  const projectExtractors: Record<string, (row: Project) => string> = {
+    contact: (row) => row.contact?.name || "-",
+    value: (row) => `₹${parseFloat(row.project_value || "0").toLocaleString("en-IN")}`,
+    priority: (row) => row.priority?.name || "-",
+    status: (row) => row.status?.name || "-",
+    startDate: (row) => row.start_date ? new Date(row.start_date).toLocaleDateString() : "-",
+    deadline: (row) => row.deadline ? new Date(row.deadline).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredProjects, columns, "projects", projectExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredProjects, columns, "Projects", projectExtractors);
+  };
+
   /* ================= Filter + Pagination ================= */
 
   const filteredProjects = projects.filter((project) =>
@@ -227,8 +247,8 @@ export default function ProjectsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

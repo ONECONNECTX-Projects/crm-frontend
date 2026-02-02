@@ -16,6 +16,7 @@ import {
 } from "@/app/services/designation/designation.service";
 import { useRouter } from "next/navigation";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function DesignationsPage() {
   const router = useRouter();
@@ -191,6 +192,20 @@ export default function DesignationsPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: Designation) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredDesignations, columns, "designations", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredDesignations, columns, "Designations", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -213,8 +228,8 @@ export default function DesignationsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

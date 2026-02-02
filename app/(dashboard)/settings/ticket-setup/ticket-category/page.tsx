@@ -16,6 +16,7 @@ import {
   updateTicketCategoryStatus,
   TicketCategory,
 } from "@/app/services/ticket-category/ticket-category.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function TicketCategoryPage() {
   const { showSuccess, showError } = useError();
@@ -171,6 +172,20 @@ export default function TicketCategoryPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: TicketCategory) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredTicketCategory, columns, "ticket-categories", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredTicketCategory, columns, "Ticket Categories", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -193,8 +208,8 @@ export default function TicketCategoryPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

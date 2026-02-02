@@ -16,6 +16,7 @@ import {
 } from "@/app/services/shift/shifts.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 const statusColorMap = {
   active: {
@@ -178,6 +179,20 @@ export default function ShiftsPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: Shift) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredShifts, columns, "shifts", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredShifts, columns, "Shifts", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -200,8 +215,8 @@ export default function ShiftsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

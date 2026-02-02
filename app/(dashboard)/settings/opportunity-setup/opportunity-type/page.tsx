@@ -16,6 +16,7 @@ import {
   OpportunityType,
   updateOpportunityTypeStatus,
 } from "@/app/services/opportunity-types/opportunity-types.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function OpportunityTypesPage() {
   const { showSuccess, showError } = useError();
@@ -175,6 +176,20 @@ export default function OpportunityTypesPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: OpportunityType) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredOpportunityTypes, columns, "opportunity-types", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredOpportunityTypes, columns, "Opportunity Types", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -197,8 +212,8 @@ export default function OpportunityTypesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

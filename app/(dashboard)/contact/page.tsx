@@ -14,6 +14,7 @@ import {
   Contact,
 } from "@/app/services/contact/contact.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function ContactsPage() {
   const [searchValue, setSearchValue] = useState("");
@@ -81,6 +82,26 @@ export default function ContactsPage() {
   const handleFormSuccess = () => {
     setOpenCreate(false);
     fetchContacts();
+  };
+
+  // Custom extractors for nested objects and formatted values
+  const contactExtractors: Record<string, (row: Contact) => string> = {
+    name: (row) => `${row.first_name} ${row.last_name}`,
+    owner: (row) => row.owner?.name || "-",
+    company: (row) => row.company?.name || "-",
+    source: (row) => row.source?.name || "-",
+    stage: (row) => row.stage?.name || "-",
+    industry: (row) => row.industry?.name || "-",
+    created_at: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredContacts, columns, "contacts", contactExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredContacts, columns, "Contacts", contactExtractors);
   };
 
   const tableActions: TableAction<Contact>[] = [
@@ -242,8 +263,8 @@ export default function ContactsPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         <DataTable

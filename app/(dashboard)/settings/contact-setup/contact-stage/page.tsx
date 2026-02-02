@@ -15,6 +15,7 @@ import {
   updateContactStageStatus,
 } from "@/app/services/contact-stages/contact-stages.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function ContactStagesPage() {
   const { showSuccess, showError } = useError();
@@ -86,6 +87,20 @@ export default function ContactStagesPage() {
       )
     );
   };
+
+  const extractors: Record<string, (row: ContactStage) => string> = {
+    status: (row) => row.is_active ? "Active" : "Inactive",
+    createdAt: (row) => row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredContactStages, columns, "contact_stages", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredContactStages, columns, "Contact Stages", extractors);
+  };
+
   const handleStatusToggle = async (
     contactStage: ContactStage,
     newStatus: boolean
@@ -204,8 +219,8 @@ export default function ContactStagesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

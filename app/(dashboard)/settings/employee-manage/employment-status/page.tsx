@@ -16,6 +16,7 @@ import {
 } from "@/app/services/employment-statuses/employment-statuses.service";
 import { useRouter } from "next/navigation";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function EmploymentStatusPage() {
   const router = useRouter();
@@ -193,6 +194,20 @@ export default function EmploymentStatusPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: EmploymentStatus) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredStatuses, columns, "employment-status", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredStatuses, columns, "Employment Status", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -215,8 +230,8 @@ export default function EmploymentStatusPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

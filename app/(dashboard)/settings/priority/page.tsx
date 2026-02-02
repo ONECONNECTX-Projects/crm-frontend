@@ -16,6 +16,7 @@ import {
   updatePriorityStatus,
 } from "@/app/services/priority/priority.service";
 import { Toggle } from "@/app/common/toggle";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function PriorityPage() {
   const { showSuccess, showError } = useError();
@@ -170,6 +171,20 @@ export default function PriorityPage() {
     currentPage * pageSize
   );
 
+  const extractors: Record<string, (row: Priority) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredData, columns, "priority", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredData, columns, "Priority", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -192,8 +207,8 @@ export default function PriorityPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}

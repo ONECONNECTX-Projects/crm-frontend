@@ -16,6 +16,7 @@ import {
   OpportunityStage,
   updateOpportunityStageStatus,
 } from "@/app/services/opportunity-stage/opportunity-stage.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function OpportunityStagesPage() {
   const { showSuccess, showError } = useError();
@@ -176,6 +177,20 @@ export default function OpportunityStagesPage() {
     setCurrentPage(page);
   };
 
+  const extractors: Record<string, (row: OpportunityStage) => string> = {
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+    createdAt: (row) =>
+      row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filteredOpportunityStages, columns, "opportunity-stages", extractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filteredOpportunityStages, columns, "Opportunity Stages", extractors);
+  };
+
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">
       <div className="space-y-6">
@@ -198,8 +213,8 @@ export default function OpportunityStagesPage() {
           columns={columns}
           onColumnToggle={handleColumnToggle}
           onFilterClick={() => {}}
-          onPrintPDF={() => {}}
-          onDownloadCSV={() => {}}
+          onPrintPDF={handlePrintPDF}
+          onDownloadExcel={handleDownloadExcel}
         />
 
         {/* Table */}
