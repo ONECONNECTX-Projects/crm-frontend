@@ -33,7 +33,7 @@ export default function ViewRolePage() {
   const [editMode, setEditMode] = useState(false);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [originalPermissions, setOriginalPermissions] = useState<Permission[]>(
-    []
+    [],
   );
 
   useEffect(() => {
@@ -67,14 +67,14 @@ export default function ViewRolePage() {
   /* ---------- HANDLE PERMISSION CHANGE ---------- */
   const handlePermissionChange = (
     moduleIndex: number,
-    permissionType: "can_read" | "can_create" | "can_update" | "can_delete"
+    permissionType: "can_read" | "can_create" | "can_update" | "can_delete",
   ) => {
     setPermissions((prev) =>
       prev.map((perm, index) =>
         index === moduleIndex
           ? { ...perm, [permissionType]: !perm[permissionType] }
-          : perm
-      )
+          : perm,
+      ),
     );
   };
 
@@ -97,8 +97,8 @@ export default function ViewRolePage() {
               can_update: !allSelected,
               can_delete: !allSelected,
             }
-          : perm
-      )
+          : perm,
+      ),
     );
   };
 
@@ -106,7 +106,7 @@ export default function ViewRolePage() {
   const handleSelectAll = () => {
     const allSelected = permissions.every(
       (perm) =>
-        perm.can_read && perm.can_create && perm.can_update && perm.can_delete
+        perm.can_read && perm.can_create && perm.can_update && perm.can_delete,
     );
     setPermissions((prev) =>
       prev.map((perm) => ({
@@ -115,7 +115,7 @@ export default function ViewRolePage() {
         can_create: !allSelected,
         can_update: !allSelected,
         can_delete: !allSelected,
-      }))
+      })),
     );
   };
 
@@ -176,7 +176,9 @@ export default function ViewRolePage() {
                 variant="default"
               />
             </div>
-            <p className="text-xs sm:text-sm text-gray-600">{role.description}</p>
+            <p className="text-xs sm:text-sm text-gray-600">
+              {role.description}
+            </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             {!editMode ? (
@@ -188,16 +190,26 @@ export default function ViewRolePage() {
                 >
                   Back to Roles
                 </Button>
-                <Button onClick={() => setEditMode(true)} className="w-full sm:w-auto text-sm">
+                <Button
+                  onClick={() => setEditMode(true)}
+                  className="w-full sm:w-auto text-sm"
+                >
                   Edit Permissions
                 </Button>
               </>
             ) : (
               <>
-                <Button variant="outline" onClick={handleCancelEdit} className="w-full sm:w-auto text-sm">
+                <Button
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  className="w-full sm:w-auto text-sm"
+                >
                   Cancel
                 </Button>
-                <Button onClick={handleSavePermissions} className="w-full sm:w-auto text-sm">
+                <Button
+                  onClick={handleSavePermissions}
+                  className="w-full sm:w-auto text-sm"
+                >
                   Save Permissions
                 </Button>
               </>
@@ -206,21 +218,19 @@ export default function ViewRolePage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <div className="bg-brand-50 border border-brand-200 rounded-lg p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-brand-500 font-medium">Permissions</p>
+            <p className="text-xs sm:text-sm text-brand-500 font-medium">
+              Permissions
+            </p>
             <p className="text-xl sm:text-2xl font-semibold text-brand-600 mt-1">
               {role.permissionsCount || permissions.length}
             </p>
           </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-green-600 font-medium">Users Assigned</p>
-            <p className="text-xl sm:text-2xl font-semibold text-green-900 mt-1">
-              {role.usersCount || 0}
-            </p>
-          </div>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
-            <p className="text-xs sm:text-sm text-purple-600 font-medium">Created</p>
+            <p className="text-xs sm:text-sm text-purple-600 font-medium">
+              Created
+            </p>
             <p className="text-xl sm:text-2xl font-semibold text-purple-900 mt-1">
               {formatDate(role.createdAt || "")}
             </p>
@@ -274,7 +284,13 @@ export default function ViewRolePage() {
                 {permissions.map((permission, index) => (
                   <tr key={permission.module_id} className="hover:bg-gray-50">
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
-                      {permission.module_name}
+                      {permission.module_name
+                        .split(" ")
+                        .map(
+                          (word) =>
+                            word.charAt(0).toUpperCase() + word.slice(1),
+                        )
+                        .join(" ")}{" "}
                     </td>
                     <td className="px-2 sm:px-6 py-3 sm:py-4 text-center">
                       {editMode ? (

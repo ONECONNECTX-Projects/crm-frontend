@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -47,7 +44,7 @@ export default function DataTable<T = any>({
   data,
   actions,
   emptyMessage = "No data available",
-rowKey = "id" as keyof T,
+  rowKey = "id" as keyof T,
 }: DataTableProps<T>) {
   const visibleColumns = columns.filter((col) => col.visible !== false);
 
@@ -55,7 +52,7 @@ rowKey = "id" as keyof T,
     if (typeof rowKey === "function") {
       return rowKey(row);
     }
-    return row[rowKey as keyof T] as string | number || index;
+    return (row[rowKey as keyof T] as string | number) || index;
   };
 
   return (
@@ -96,10 +93,20 @@ rowKey = "id" as keyof T,
                     className="hover:bg-gray-50 transition-colors"
                   >
                     {visibleColumns.map((column) => (
-                      <TableCell key={column.key} className="text-gray-700 text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3">
+                      <TableCell
+                        key={column.key}
+                        className="text-gray-700 text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-3"
+                      >
                         {column.render
                           ? column.render(row)
-                          : (row[column.key as keyof T] as React.ReactNode)}
+                          : (() => {
+                              const value = row[column.key as keyof T];
+                              return value === null ||
+                                value === undefined ||
+                                value === ""
+                                ? "-"
+                                : (value as React.ReactNode);
+                            })()}
                       </TableCell>
                     ))}
 

@@ -73,7 +73,11 @@ export default function InputField({
       )}
 
       <div className="relative flex items-center">
-        {icon && <div className="absolute left-3 text-gray-500">{icon}</div>}
+        {icon && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            {icon}
+          </div>
+        )}
 
         {multiline ? (
           <textarea
@@ -84,11 +88,17 @@ export default function InputField({
             maxLength={maxLength}
             rows={rows}
             disabled={disabled}
-            className={`w-full p-2.5 sm:p-3 text-sm sm:text-base ${icon ? "pl-10" : ""} border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
-              hasError
-                ? "border-red-500 focus:ring-red-400"
-                : "border-gray-300 focus:ring-brand-500"
-            } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+            className={`w-full p-2.5 sm:p-3 text-sm sm:text-base
+              ${icon ? "pl-11 sm:pl-12" : ""}
+              border rounded-lg text-gray-700
+              focus:outline-none focus:ring-2 transition-all
+              ${
+                hasError
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-brand-500"
+              }
+              ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+            `}
           />
         ) : (
           <>
@@ -100,12 +110,20 @@ export default function InputField({
               onKeyDown={handleKeyDown}
               maxLength={maxLength}
               disabled={disabled}
-              className={`w-full p-2.5 sm:p-3 text-sm sm:text-base ${icon ? "pl-10" : ""} pr-10 sm:pr-12 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
-                hasError
-                  ? "border-red-500 focus:ring-red-400"
-                  : "border-gray-300 focus:ring-brand-500"
-              } ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+              className={`w-full p-2.5 sm:p-3 text-sm sm:text-base
+                ${icon ? "pl-11 sm:pl-12" : ""}
+                pr-10 sm:pr-12
+                border rounded-lg text-gray-700
+                focus:outline-none focus:ring-2 transition-all
+                ${
+                  hasError
+                    ? "border-red-500 focus:ring-red-400"
+                    : "border-gray-300 focus:ring-brand-500"
+                }
+                ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+              `}
             />
+
             {isPassword && (
               <span
                 onClick={() => setShowPassword(!showPassword)}
@@ -117,7 +135,12 @@ export default function InputField({
           </>
         )}
       </div>
-      {hasError && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
+
+      {hasError && (
+        <p className="text-red-500 text-xs sm:text-sm mt-1">
+          {localError || error}
+        </p>
+      )}
     </div>
   );
 }

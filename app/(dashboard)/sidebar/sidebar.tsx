@@ -49,7 +49,7 @@ const menuItems: MenuItem[] = [
     name: "Sales",
     icon: FiShoppingCart,
     children: [
-      { name: "Invoices", path: "/sales/invoice" },
+      // { name: "Invoices", path: "/sales/invoice" },
       { name: "Quotes", path: "/sales/qoutes" },
     ],
   },
@@ -63,14 +63,14 @@ const menuItems: MenuItem[] = [
       { name: "Team", path: "/projects/team" },
     ],
   },
-  {
-    name: "Account",
-    icon: RiAccountBox2Line,
-    children: [
-      { name: "Account", path: "/accounts/account" },
-      { name: "Transaction", path: "/accounts/transaction" },
-    ],
-  },
+  // {
+  //   name: "Account",
+  //   icon: RiAccountBox2Line,
+  //   children: [
+  //     { name: "Account", path: "/accounts/account" },
+  //     { name: "Transaction", path: "/accounts/transaction" },
+  //   ],
+  // },
   { name: "Media", icon: CgMediaLive, path: "/media" },
   {
     name: "Other",
@@ -87,16 +87,16 @@ const menuItems: MenuItem[] = [
 ];
 
 const settingsMenu: MenuItem[] = [
-  {
-    name: "Company Settings",
-    icon: FiShoppingCart,
-    path: "/settings/company-settings",
-  },
-  {
-    name: "App Settings",
-    icon: MdOutlineAppSettingsAlt,
-    path: "/settings/app-settings",
-  },
+  // {
+  //   name: "Company Settings",
+  //   icon: FiShoppingCart,
+  //   path: "/settings/company-settings",
+  // },
+  // {
+  //   name: "App Settings",
+  //   icon: MdOutlineAppSettingsAlt,
+  //   path: "/settings/app-settings",
+  // },
   {
     name: "Employee Manage",
     icon: MdManageAccounts,
@@ -228,27 +228,27 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   return (
     <div
       className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${
-        collapsed ? "w-30" : "w-64"
+        collapsed ? "w-18" : "w-64"
       }`}
     >
       {/* STATIC HEADER */}
       <div
         className={`border-b font-bold sticky top-0 bg-white z-20 transition-all duration-300
-          ${collapsed ? "text-center text-xl px-0" : "text-2xl px-6"}
+          ${collapsed ? "text-center" : "text-2xl px-6"}
         `}
       >
         <div className="flex items-center ">
           <img
             src="/favicon.svg"
             alt="QFC Logo"
-            className={`${collapsed ? "w-10 h-10" : "w-20 h-20"}`}
+            className={`${collapsed ? "w-12 h-12 ml-3" : "w-20 h-20"}`}
           />
           {/* {!collapsed && <span className="text-black">Quest</span>} */}
         </div>
       </div>
 
       {/* SCROLLABLE AREA */}
-      <div className="h-[calc(100vh-90px)] overflow-y-auto px-2 pb-10">
+      <div className="h-[calc(100vh-90px)] overflow-y-auto px-1 pb-10">
         {/* MAIN SIDEBAR */}
         {!showSettingsPanel && (
           <nav className="mt-4 space-y-2">
@@ -275,7 +275,7 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                         {!collapsed && <span>{item.name}</span>}
                       </Link>
                     ) : (
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <item.icon className="text-xl" />
                         {!collapsed && <span>{item.name}</span>}
                       </div>
@@ -300,7 +300,11 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                 {item.children && openMenu === item.name && !collapsed && (
                   <div className="ml-10 mt-1 space-y-1">
                     {item.children.map((child) => (
-                      <Link key={child.name} href={child.path} onClick={onNavigate}>
+                      <Link
+                        key={child.name}
+                        href={child.path}
+                        onClick={onNavigate}
+                      >
                         <div
                           className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                             pathname === child.path
@@ -371,7 +375,11 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                   {item.children && openMenu === item.name && !collapsed && (
                     <div className="ml-10 mt-1 space-y-1">
                       {item.children.map((child) => (
-                        <Link key={child.name} href={child.path} onClick={onNavigate}>
+                        <Link
+                          key={child.name}
+                          href={child.path}
+                          onClick={onNavigate}
+                        >
                           <div
                             className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
                               pathname === child.path

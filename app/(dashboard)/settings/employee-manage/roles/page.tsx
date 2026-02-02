@@ -32,8 +32,6 @@ export default function RolesPage() {
   const [columns, setColumns] = useState([
     { key: "name", label: "Role Name", visible: true },
     { key: "description", label: "Description", visible: true },
-    { key: "permissionsCount", label: "Permissions", visible: true },
-    { key: "usersCount", label: "Users", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
@@ -76,20 +74,20 @@ export default function RolesPage() {
   const handleStatusToggle = async (role: Role, newStatus: boolean) => {
     // Optimistic UI update
     setRoles((prev) =>
-      prev.map((r) => (r.id === role.id ? { ...r, is_active: newStatus } : r))
+      prev.map((r) => (r.id === role.id ? { ...r, is_active: newStatus } : r)),
     );
 
     try {
       await updateRoleStatus(role.id, newStatus);
       showSuccess(
-        `Role ${newStatus ? "activated" : "deactivated"} successfully`
+        `Role ${newStatus ? "activated" : "deactivated"} successfully`,
       );
     } catch (error) {
       // Rollback if API fails
       setRoles((prev) =>
         prev.map((r) =>
-          r.id === role.id ? { ...r, is_active: role.is_active } : r
-        )
+          r.id === role.id ? { ...r, is_active: role.is_active } : r,
+        ),
       );
       showError("Failed to update role status");
     }
@@ -104,8 +102,8 @@ export default function RolesPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -115,7 +113,7 @@ export default function RolesPage() {
       onClick: (row) => {
         const roleData = encodeURIComponent(JSON.stringify(row));
         router.push(
-          `/settings/employee-manage/roles/${row.id}?data=${roleData}`
+          `/settings/employee-manage/roles/${row.id}?data=${roleData}`,
         );
       },
     },
@@ -158,29 +156,23 @@ export default function RolesPage() {
           </span>
         );
       }
-      if (col.key === "permissionsCount") {
-        return <span>{row.permissionsCount || 0}</span>;
-      }
-      if (col.key === "usersCount") {
-        return <span>{row.usersCount || 0}</span>;
-      }
 
       // Safe access to role properties
       const value = row[col.key as keyof Role];
-      return <span>{value !== undefined ? String(value) : ""}</span>;
+      return <span>{value !== undefined ? String(value) : "-"}</span>;
     },
   }));
 
   const filteredRoles = roles?.filter((role) =>
     Object.values(role).some((val) =>
-      val.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+      val.toString().toLowerCase().includes(searchValue.toLowerCase()),
+    ),
   );
 
   const totalItems = filteredRoles.length;
   const paginatedRoles = filteredRoles.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const handlePageChange = (page: number) => {

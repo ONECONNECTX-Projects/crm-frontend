@@ -8,6 +8,7 @@ import {
   Role,
 } from "@/app/services/roles/roles.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import InputField from "@/app/common/InputFeild";
 
 interface CreateRoleFormProps {
   mode: "create" | "edit";
@@ -30,6 +31,7 @@ export default function CreateRoleForm({
   const { showSuccess, showError } = useError();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string }>({});
 
   /* ---------- LOAD DATA ON EDIT ---------- */
   useEffect(() => {
@@ -45,22 +47,24 @@ export default function CreateRoleForm({
     }
   }, [mode, roleData]);
 
-  /* ---------- HANDLE CHANGE ---------- */
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
   /* ---------- SUBMIT ---------- */
   const handleSubmit = async () => {
+    const newErrors: { name?: string } = {};
+
     if (!form.name.trim()) {
-      showError("Please enter a role name");
+      newErrors.name = "Role name is required";
+    } else if (form.name.length < 3) {
+      newErrors.name = "Role name must be at least 3 characters";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
+    setErrors({});
     setSubmitting(true);
+
     try {
       if (mode === "edit" && roleData?.id) {
         await updateRole(roleData.id, form);
@@ -70,9 +74,9 @@ export default function CreateRoleForm({
         showSuccess("Role created successfully");
       }
       onClose();
-    } catch (error) {
-      // Error is handled by global error handler
+    } catch (error: any) {
       console.error("Failed to save role:", error);
+      showError(error?.response?.data?.message || "Server Error");
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +89,10 @@ export default function CreateRoleForm({
         <h2 className="text-base sm:text-lg font-semibold">
           {mode === "edit" ? "Edit Role" : "Create Role"}
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-1"
+        >
           ✕
         </button>
       </div>
@@ -94,31 +101,35 @@ export default function CreateRoleForm({
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
         <div className="space-y-4 sm:space-y-5">
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-              Role Name <span className="text-red-500">*</span>
-            </label>
-            <input
+            <InputField
               type="text"
-              name="name"
+              label="Name"
               value={form.name}
-              onChange={handleChange}
-              placeholder="e.g., Sales Manager"
-              className="w-full rounded-md border border-gray-300 px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
-              autoFocus
+              required
+              maxLength={50}
+              noLeadingSpace
+              placeholder="Enter Name"
+              error={errors.name}
+              onChange={(value) => {
+                setForm((prev) => ({ ...prev, name: value }));
+                if (errors.name) {
+                  setErrors((prev) => ({ ...prev, name: undefined }));
+                }
+              }}
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-              Description
-            </label>
-            <textarea
-              name="description"
+            <InputField
+              label="Description"
+              noLeadingSpace
               value={form.description}
-              onChange={handleChange}
-              placeholder="Brief description of this role"
-              rows={3}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 sm:py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+              onChange={(value) =>
+                setForm((prev) => ({ ...prev, description: value }))
+              }
+              maxLength={500}
+              placeholder="Enter Description"
+              multiline
             />
           </div>
 
@@ -136,10 +147,19 @@ export default function CreateRoleForm({
 
       {/* Footer */}
       <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-gray-50">
-        <Button variant="outline" onClick={onClose} disabled={submitting} className="w-full sm:w-auto">
+        <Button
+          variant="outline"
+          onClick={onClose}
+          disabled={submitting}
+          className="w-full sm:w-auto"
+        >
           Cancel
         </Button>
-        <Button onClick={handleSubmit} disabled={submitting} className="w-full sm:w-auto">
+        <Button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full sm:w-auto"
+        >
           {submitting
             ? mode === "edit"
               ? "Updating..."

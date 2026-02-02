@@ -16,7 +16,10 @@ interface HeaderProps {
   showMenuButton?: boolean;
 }
 
-export default function Header({ onMenuClick, showMenuButton = false }: HeaderProps) {
+export default function Header({
+  onMenuClick,
+  showMenuButton = false,
+}: HeaderProps) {
   const [isFull, setIsFull] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
@@ -73,7 +76,7 @@ export default function Header({ onMenuClick, showMenuButton = false }: HeaderPr
   return (
     <>
       {/* HEADER */}
-      <header className="w-full h-14 sm:h-16 bg-white border-b flex items-center justify-between px-3 sm:px-4 relative">
+      <header className="w-full h-20 sm:h-20 bg-white border-b flex items-center justify-between px-3 sm:px-4 relative">
         {/* LEFT - Mobile Menu Button */}
         <div className="flex items-center">
           {showMenuButton && (

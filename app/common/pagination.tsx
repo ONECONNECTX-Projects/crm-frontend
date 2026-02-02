@@ -51,7 +51,6 @@ export default function Pagination({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t mt-6">
-
       {/* LEFT: Page Size Dropdown */}
       <div className="flex items-center gap-2 order-2 sm:order-1">
         <select
@@ -71,7 +70,6 @@ export default function Pagination({
 
       {/* RIGHT: Pagination */}
       <div className="flex items-center gap-1 sm:gap-3 order-1 sm:order-2">
-
         {/* Prev */}
         <button
           disabled={currentPage === 1}
@@ -85,7 +83,9 @@ export default function Pagination({
         <div className="flex items-center gap-1 sm:gap-2">
           {pages.map((p, i) =>
             p === "..." ? (
-              <span key={i} className="text-gray-400 px-1 sm:px-2 text-sm">...</span>
+              <span key={i} className="text-gray-400 px-1 sm:px-2 text-sm">
+                ...
+              </span>
             ) : (
               <button
                 key={p}
@@ -98,7 +98,7 @@ export default function Pagination({
               >
                 {p}
               </button>
-            )
+            ),
           )}
         </div>
 

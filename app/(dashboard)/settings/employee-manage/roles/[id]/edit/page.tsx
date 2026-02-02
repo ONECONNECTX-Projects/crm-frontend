@@ -12,7 +12,6 @@ export default function EditRolePage() {
     <div className="min-h-screen bg-white rounded-lg sm:rounded-xl">
       <CreateRoleForm
         mode="edit"
-        roleId={roleId}
         onClose={() => router.push("/settings/employee-manage/roles")}
       />
     </div>
