@@ -6,7 +6,7 @@ import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
-import TeamView from "./View/page";
+import TeamView from "./View/TeamView";
 import CreateTeamForm from "./Create/page";
 import {
   getAllProjectTeam,

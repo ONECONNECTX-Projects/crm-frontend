@@ -7,7 +7,7 @@ import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
 import SlideOver from "@/app/common/slideOver";
 import InputField from "@/app/common/InputFeild";
-import AnnouncementForm from "./create/page";
+import AnnouncementForm from "./create/Form";
 import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 interface Announcement {

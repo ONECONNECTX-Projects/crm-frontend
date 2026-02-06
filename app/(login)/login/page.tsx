@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import LoginPage from "../login";
 
 export default function Login() {
@@ -62,7 +63,9 @@ export default function Login() {
 
       {/* RIGHT SECTION — LOGIN FORM */}
       <div className="w-full min-h-screen md:w-1/2 ">
-        <LoginPage />
+        <Suspense fallback={<div className="p-8">Loading...</div>}>
+          <LoginPage />
+        </Suspense>
       </div>
     </div>
   );
