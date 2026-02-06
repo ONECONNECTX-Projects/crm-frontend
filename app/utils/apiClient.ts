@@ -1,7 +1,7 @@
 // API Client with token management and expiration check
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://crm-quest.oneconnectx.com/api/";
 const AUTH_TOKEN_KEY = "auth-token";
 
 // Error handler callback - can be set globally
