@@ -25,18 +25,6 @@ import {
   deleteAttachment,
 } from "@/app/services/attachment/attachement.service";
 import { useError } from "@/app/providers/ErrorProvider";
-import { getFileUrl } from "@/app/services/File/file.service";
-
-// const API_BASE_URL =
-//   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/";
-// const UPLOAD_BASE_URL = API_BASE_URL.replace("/api/", "");
-
-// // Helper to get full URL for uploads
-// const getFileUrl = (url: string) => {
-//   if (!url) return "";
-//   if (url.startsWith("http")) return url;
-//   return `${UPLOAD_BASE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
-// };
 
 export default function AttachmentViewPage() {
   const router = useRouter();
@@ -95,7 +83,7 @@ export default function AttachmentViewPage() {
     if (attachment?.file_url) {
       // Create a temporary anchor to trigger download
       const link = document.createElement("a");
-      link.href = getFileUrl(attachment.file_url);
+      link.href = attachment.file_url;
       link.download = attachment.file_name || "download";
       link.target = "_blank";
       document.body.appendChild(link);
@@ -229,7 +217,7 @@ export default function AttachmentViewPage() {
                     onClick={() => setShowFullPreview(true)}
                   >
                     <img
-                      src={getFileUrl(attachment.file_url)}
+                      src={attachment.file_url}
                       alt={attachment.file_name}
                       className="w-full h-48 object-contain rounded-xl border border-gray-200 bg-white"
                       onError={(e) => {
@@ -320,7 +308,7 @@ export default function AttachmentViewPage() {
                   onClick={() => setShowFullPreview(true)}
                 >
                   <img
-                    src={getFileUrl(attachment.file_url)}
+                    src={attachment.file_url}
                     alt={attachment.file_name}
                     className="w-full max-h-[400px] object-contain rounded-lg border border-gray-200 bg-gray-50"
                   />
@@ -485,7 +473,7 @@ export default function AttachmentViewPage() {
 
             {/* Image */}
             <img
-              src={getFileUrl(attachment.file_url)}
+              src={attachment.file_url}
               alt={attachment.file_name}
               className="max-w-full max-h-[85vh] object-contain rounded-lg"
             />

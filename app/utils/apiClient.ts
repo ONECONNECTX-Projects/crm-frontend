@@ -1,7 +1,8 @@
 // API Client with token management and expiration check
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "https://crm-quest.oneconnectx.com/api/";
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://crm-quest.oneconnectx.com/api/";
 const AUTH_TOKEN_KEY = "auth-token";
 
 // Error handler callback - can be set globally
@@ -47,7 +48,7 @@ function decodeToken(token: string) {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (error) {
@@ -105,7 +106,7 @@ interface ApiClientOptions extends RequestInit {
 
 export async function apiClient<T = unknown>(
   endpoint: string,
-  options: ApiClientOptions = {}
+  options: ApiClientOptions = {},
 ): Promise<ApiResponse<T>> {
   const {
     skipAuth = false,

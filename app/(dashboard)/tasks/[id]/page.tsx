@@ -18,7 +18,6 @@ import { getAllActiveTaskStatus } from "@/app/services/task-status/task-status.s
 import { getAllActivePriority } from "@/app/services/priority/priority.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
-import { getFileUrl } from "@/app/services/File/file.service";
 
 /* ---------------- Page ---------------- */
 export default function TaskViewPage() {
@@ -382,7 +381,7 @@ export default function TaskViewPage() {
                             key={file.id}
                             onClick={() =>
                               handleAttachmentClick(
-                                getFileUrl(file.file_url),
+                                file.file_url,
                                 file.file_name,
                                 file.file_type,
                               )
@@ -391,7 +390,7 @@ export default function TaskViewPage() {
                           >
                             {isImageFile(file.file_type) ? (
                               <img
-                                src={getFileUrl(file.file_url)}
+                                src={file.file_url}
                                 alt={file.file_name}
                                 className="w-8 h-8 object-cover rounded"
                               />

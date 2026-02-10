@@ -14,7 +14,6 @@ import { getAllActiveTicketStatus } from "@/app/services/ticket-status/ticket-st
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
 import StatusBadge from "@/app/common/StatusBadge";
-import { getFileUrl } from "@/app/services/File/file.service";
 
 const priorityColorMap: Record<
   string,
@@ -261,7 +260,7 @@ export default function TicketViewPage() {
                 {ticket.attachments.map((attachment) => (
                   <a
                     key={attachment.id}
-                    href={getFileUrl(attachment.file_url)}
+                    href={attachment.file_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 px-3 py-2 border rounded-md text-sm text-brand-500 hover:bg-brand-50"
@@ -307,7 +306,7 @@ export default function TicketViewPage() {
                         {reply.attachments.map((attachment) => (
                           <a
                             key={attachment.id}
-                            href={getFileUrl(attachment.file_url)}
+                            href={attachment.file_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 px-2 py-1 bg-white border rounded text-xs text-brand-500 hover:bg-brand-50"
