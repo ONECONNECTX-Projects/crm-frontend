@@ -15,6 +15,7 @@ import {
 } from "@/app/services/project-teams/project-teams.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import StatusBadge from "@/app/common/StatusBadge";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function TeamsPage() {
   const { showSuccess, showError } = useError();
@@ -60,8 +61,8 @@ export default function TeamsPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -77,6 +78,30 @@ export default function TeamsPage() {
         showError("Failed to delete team");
       }
     }
+  };
+
+  const teamExtractors: Record<
+    string,
+    (row: ProjectTeam & { sNo?: number }) => string
+  > = {
+    sNo: (row) => String(row.sNo || "-"),
+    owner: (row) => row.name || "-",
+    project: (row) => row.project?.name || "-",
+    members: (row) => {
+      if (!row.members || row.members.length === 0) {
+        return "-";
+      }
+      return row.members.map((m) => m.name).join(", ");
+    },
+    status: (row) => (row.is_active ? "Active" : "Inactive"),
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "teams", teamExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Teams", teamExtractors);
   };
 
   /* Table Actions */
@@ -99,14 +124,14 @@ export default function TeamsPage() {
   const filtered = teams.filter((t) =>
     `${t.id} ${t.name} ${t.project?.name || ""}`
       .toLowerCase()
-      .includes(searchValue.toLowerCase())
+      .includes(searchValue.toLowerCase()),
   );
 
   /* Pagination Logic */
   const totalItems = filtered.length;
   const paginatedData = filtered.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   /* DataTable Columns */
@@ -206,6 +231,8 @@ export default function TeamsPage() {
         }}
         searchPlaceholder="Search teams..."
         columns={columns}
+        onDownloadExcel={handleDownloadExcel}
+        onPrintPDF={handlePrintPDF}
         onColumnToggle={handleColumnToggle}
       />
 
@@ -231,7 +258,10 @@ export default function TeamsPage() {
 
       {/* Create Team */}
       <SlideOver open={openCreate} onClose={handleCloseCreate}>
-        <CreateTeamForm onClose={handleCloseCreate} onSuccess={handleFormSuccess} />
+        <CreateTeamForm
+          onClose={handleCloseCreate}
+          onSuccess={handleFormSuccess}
+        />
       </SlideOver>
 
       {/* View Team */}

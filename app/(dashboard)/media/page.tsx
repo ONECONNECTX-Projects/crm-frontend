@@ -9,7 +9,6 @@ import {
   Image as ImageIcon,
   Trash2,
   Edit2,
-  Plus,
   X,
   Download,
   FileText,
@@ -24,11 +23,9 @@ import {
   deleteMedia,
   renameMedia,
   createFolder,
-  uploadFolder,
 } from "@/app/services/media/media.service";
 import { useError } from "@/app/providers/ErrorProvider";
-import { api, getAuthToken } from "@/app/utils/apiClient";
-import { getFileUrl } from "@/app/services/File/file.service";
+import { api } from "@/app/utils/apiClient";
 
 export default function MediaPage() {
   const { showSuccess, showError } = useError();
@@ -272,7 +269,7 @@ export default function MediaPage() {
     if (item?.path) {
       // Create a temporary anchor to trigger download
       const link = document.createElement("a");
-      link.href = getFileUrl(item.path);
+      link.href = item.path;
       link.download = item.path || "download";
       link.target = "_blank";
       document.body.appendChild(link);

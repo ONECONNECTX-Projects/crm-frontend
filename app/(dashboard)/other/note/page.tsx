@@ -6,8 +6,6 @@ import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
-import StatusBadge from "@/app/common/StatusBadge";
-import NoteForm from "./create/page";
 import {
   deleteNote,
   getAllNote,
@@ -15,6 +13,7 @@ import {
 } from "@/app/services/notes/notes.service";
 import CreateNote from "./create/page";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function NotePage() {
   const [searchValue, setSearchValue] = useState("");
@@ -160,6 +159,28 @@ export default function NotePage() {
     currentPage * pageSize,
   );
 
+  const noteExtractors: Record<
+    string,
+    (row: Notes & { sNo?: number }) => string
+  > = {
+    sNo: (row) => String(row.sNo || "-"),
+    owner: (row) => row.owner?.name || "-",
+    company: (row) => row.company?.name || "-",
+    contact: (row) => row.contact?.name || "-",
+    opportunity: (row) => row.opportunity?.name || "-",
+    quote: (row) => row.quote?.name || "-",
+    createdAt: (row) =>
+      row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "notes", noteExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Notes", noteExtractors);
+  };
+
   const handleDelete = async (notes: Notes) => {
     if (window.confirm(`Are you sure you want to delete "${notes.title}"?`)) {
       try {
@@ -192,6 +213,8 @@ export default function NotePage() {
           setCurrentPage(1);
         }}
         columns={columns}
+        onDownloadExcel={handleDownloadExcel}
+        onPrintPDF={handlePrintPDF}
         onColumnToggle={handleColumnToggle}
       />
 
