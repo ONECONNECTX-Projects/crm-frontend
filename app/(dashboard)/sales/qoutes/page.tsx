@@ -6,7 +6,6 @@ import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
-import StatusBadge from "@/app/common/StatusBadge";
 import {
   deleteQuote,
   getAllQuote,
@@ -14,6 +13,8 @@ import {
 } from "@/app/services/quote/quote.service";
 import { useError } from "@/app/providers/ErrorProvider";
 import CreateQuote from "./Create/page";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
+import { create } from "domain";
 
 export default function QuotePage() {
   const { showSuccess, showError } = useError();
@@ -79,6 +80,33 @@ export default function QuotePage() {
   useEffect(() => {
     fetchQuote();
   }, []);
+
+  const quoteExtractors: Record<
+    string,
+    (row: Quote & { sNo?: number }) => string
+  > = {
+    sNo: (row) => String(row.sNo || "-"),
+    owner: (row) => row.owner?.name || "-",
+    company: (row) => row.company?.name || "-",
+    contact: (row) => (row.contact ? `${row.contact.name}` : "-"),
+    stage: (row) => row.stage?.name || "-",
+    opportunity: (row) => row.stage?.name || "-",
+    quote_date: (row) =>
+      row.quote_date ? new Date(row.quote_date).toLocaleDateString() : "-",
+    expiry_date: (row) =>
+      row.expiry_date ? new Date(row.expiry_date).toLocaleDateString() : "-",
+    createdAt: (row) =>
+      row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+    amount: (row) => `$${parseInt(row.total_amount || "0").toLocaleString()}`,
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "quotes", quoteExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Quotes", quoteExtractors);
+  };
 
   const actions: TableAction<Quote>[] = [
     {
@@ -166,22 +194,26 @@ export default function QuotePage() {
         case "quote_date": {
           return (
             <span>
-              {new Date(row.quote_date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+              {row.quote_date
+                ? new Date(row?.quote_date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "-"}
             </span>
           );
         }
         case "expiry_date": {
           return (
             <span>
-              {new Date(row.expiry_date).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })}
+              {row.expiry_date
+                ? new Date(row?.expiry_date).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : "-"}
             </span>
           );
         }
@@ -238,6 +270,8 @@ export default function QuotePage() {
           setCurrentPage(1);
         }}
         columns={columns}
+        onDownloadExcel={handleDownloadExcel}
+        onPrintPDF={handlePrintPDF}
         onColumnToggle={handleColumnToggle}
       />
 

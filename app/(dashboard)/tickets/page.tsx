@@ -11,6 +11,7 @@ import TicketForm from "./create/page";
 import { useRouter } from "next/navigation";
 import { getAllTicket, Ticket } from "@/app/services/tickets/tickets.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 const priorityColorMap: Record<
   string,
@@ -109,8 +110,8 @@ export default function TicketPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -124,13 +125,13 @@ export default function TicketPage() {
   const filtered = tickets.filter((ticket) =>
     `${ticket.id} ${ticket.subject} ${ticket.customer?.name || ""} ${ticket.status?.name || ""}`
       .toLowerCase()
-      .includes(searchValue.toLowerCase())
+      .includes(searchValue.toLowerCase()),
   );
 
   const totalItems = filtered.length;
   const paginatedData = filtered.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const handleCreateClick = () => {
@@ -200,6 +201,27 @@ export default function TicketPage() {
       },
     }));
 
+  const ticketExtractors: Record<
+    string,
+    (row: Ticket & { sNo?: number }) => string
+  > = {
+    sNo: (row) => String(row.sNo || "-"),
+    id: (row) => `TKT-${String(row.id).padStart(4, "0")}`,
+    subject: (row) => row.subject || "-",
+    customer: (row) => row.customer?.name || "-",
+    category: (row) => row.category?.name || "-",
+    priority: (row) => row.priority?.name || "-",
+    status: (row) => row.status?.name || "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "tickets", ticketExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Tickets", ticketExtractors);
+  };
+
   return (
     <div className="bg-white rounded-xl p-6 space-y-6">
       <PageHeader
@@ -215,6 +237,8 @@ export default function TicketPage() {
           setCurrentPage(1);
         }}
         columns={columns}
+        onDownloadExcel={handleDownloadExcel}
+        onPrintPDF={handlePrintPDF}
         onColumnToggle={handleColumnToggle}
       />
 

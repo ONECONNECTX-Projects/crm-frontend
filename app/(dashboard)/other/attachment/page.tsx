@@ -15,6 +15,7 @@ import {
   getAllAttachments,
 } from "@/app/services/attachment/attachement.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 export default function AttachmentPage() {
   const router = useRouter();
@@ -85,6 +86,29 @@ export default function AttachmentPage() {
     currentPage * pageSize,
   );
 
+  const attachmentExtractors: Record<
+    string,
+    (row: Attachment & { sNo?: number }) => string
+  > = {
+    sNo: (row) => String(row.sNo || "-"),
+    owner: (row) => row.owner?.name || "-",
+    company: (row) => row.company?.name || "-",
+    contact: (row) => row.contact?.name || "-",
+    opportunity: (row) => row.opportunity?.name || "-",
+    quote: (row) => row.quote?.name || "-",
+
+    createdAt: (row) =>
+      row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "-",
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "attachments", attachmentExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Attachments", attachmentExtractors);
+  };
+
   const handleDelete = async (attachment: Attachment) => {
     if (
       window.confirm(
@@ -129,7 +153,9 @@ export default function AttachmentPage() {
       visible: columns.find((c) => c.key === "owner")?.visible,
       render: (row) => (
         <div>
-          <div className="font-medium text-gray-900">{row.owner?.name || "-"}</div>
+          <div className="font-medium text-gray-900">
+            {row.owner?.name || "-"}
+          </div>
         </div>
       ),
     },
@@ -195,6 +221,8 @@ export default function AttachmentPage() {
           setCurrentPage(1);
         }}
         columns={columns}
+        onDownloadExcel={handleDownloadExcel}
+        onPrintPDF={handlePrintPDF}
         onColumnToggle={handleColumnToggle}
       />
 
