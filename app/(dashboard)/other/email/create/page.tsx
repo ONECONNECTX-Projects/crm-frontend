@@ -1,7 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { X, ChevronDown, Plus, Paperclip, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { useError } from "@/app/providers/ErrorProvider";
+import {
+  SendEmailPayload,
+  sendEmail,
+} from "@/app/services/email-config/email.service";
+import { getAllActiveCompany } from "@/app/services/company/company.service";
+import { getAllActiveContacts } from "@/app/services/contact/contact.service";
+import { getAllActiveOpportunity } from "@/app/services/opportunity/opportunity.service";
+import { getAllActiveQuotes } from "@/app/services/quote/quote.service";
+import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 
 type Mode = "create" | "edit" | "view";
 
@@ -9,17 +19,83 @@ interface EmailFormProps {
   mode?: Mode;
   email?: any;
   onClose?: () => void;
+  onSuccess?: () => void;
 }
 
 export default function EmailForm({
   mode = "create",
   email,
   onClose,
+  onSuccess,
 }: EmailFormProps) {
+  const { showSuccess, showError } = useError();
   const [showCC, setShowCC] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [sending, setSending] = useState(false);
+
+  const [form, setForm] = useState({
+    to_email: "",
+    subject: "",
+    body: "",
+    cc: "",
+    bcc: "",
+    contact_id: "",
+    company_id: "",
+    opportunity_id: "",
+    quote_id: "",
+  });
+
+  const [companies, setCompanies] = useState<OptionDropDownModel[]>([]);
+  const [contacts, setContacts] = useState<OptionDropDownModel[]>([]);
+  const [opportunities, setOpportunities] = useState<OptionDropDownModel[]>([]);
+  const [quotes, setQuotes] = useState<OptionDropDownModel[]>([]);
 
   const isView = mode === "view";
+
+  useEffect(() => {
+    fetchDropdowns();
+  }, []);
+
+  useEffect(() => {
+    if (email && mode === "edit") {
+      setForm({
+        to_email: email.to_email || email.to || "",
+        subject: email.subject || "",
+        body: email.body || "",
+        cc: email.cc || "",
+        bcc: email.bcc || "",
+        contact_id: email.contact_id?.toString() || "",
+        company_id: email.company_id?.toString() || "",
+        opportunity_id: email.opportunity_id?.toString() || "",
+        quote_id: email.quote_id?.toString() || "",
+      });
+      if (email.cc || email.bcc) setShowCC(true);
+    }
+  }, [email, mode]);
+
+  const fetchDropdowns = async () => {
+    try {
+      const [companyRes, contactRes, opportunityRes, quoteRes] =
+        await Promise.all([
+          getAllActiveCompany(),
+          getAllActiveContacts(),
+          getAllActiveOpportunity(),
+          getAllActiveQuotes(),
+        ]);
+      if (companyRes.data) setCompanies(companyRes.data);
+      if (contactRes.data) setContacts(contactRes.data);
+      if (opportunityRes.data) setOpportunities(opportunityRes.data);
+      if (quoteRes.data) setQuotes(quoteRes.data);
+    } catch {
+      // Global error handler will show toast
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -28,6 +104,31 @@ export default function EmailForm({
 
   const removeFile = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.to_email || !form.subject) {
+      showError("To and Subject are required");
+      return;
+    }
+
+    try {
+      setSending(true);
+      const payload: SendEmailPayload = {
+        ...form,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      };
+      const response = await sendEmail(payload);
+      if (response.isSuccess) {
+        showSuccess("Email sent successfully");
+        onSuccess?.();
+        onClose?.();
+      }
+    } catch {
+      showError("Failed to send email");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -49,6 +150,9 @@ export default function EmailForm({
           <span className="text-red-500">*</span> To
         </label>
         <input
+          name="to_email"
+          value={form.to_email}
+          onChange={handleChange}
           disabled={isView}
           placeholder="Receiver Email"
           className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
@@ -61,6 +165,9 @@ export default function EmailForm({
           <span className="text-red-500">*</span> Subject
         </label>
         <input
+          name="subject"
+          value={form.subject}
+          onChange={handleChange}
           disabled={isView}
           placeholder="Subject"
           className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
@@ -84,11 +191,17 @@ export default function EmailForm({
         {showCC && (
           <div className="bg-gray-50 border rounded-md p-4 mt-3 space-y-3">
             <input
+              name="cc"
+              value={form.cc}
+              onChange={handleChange}
               disabled={isView}
               placeholder="CC"
               className="w-full border rounded-md px-3 py-2 text-sm"
             />
             <input
+              name="bcc"
+              value={form.bcc}
+              onChange={handleChange}
               disabled={isView}
               placeholder="BCC"
               className="w-full border rounded-md px-3 py-2 text-sm"
@@ -113,42 +226,98 @@ export default function EmailForm({
         </div>
 
         <textarea
+          name="body"
+          value={form.body}
+          onChange={handleChange}
           disabled={isView}
           rows={6}
           className="w-full border border-t-0 rounded-b-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
       </div>
 
-      {/* Owner */}
+      {/* Company */}
       <div className="mt-5">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Email owner
+          Company
         </label>
         <select
+          name="company_id"
+          value={form.company_id}
+          onChange={handleChange}
           disabled={isView}
           className="w-full border rounded-md px-3 py-2 text-sm"
         >
-          <option>John Doe</option>
+          <option value="">Select company</option>
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* Relations */}
-      {["Company", "Contact", "Opportunity", "Quote"].map((label) => (
-        <div key={label} className="mt-5">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-            {label}
-            {!isView && (
-              <Plus size={14} className="text-brand-500 cursor-pointer" />
-            )}
-          </label>
-          <select
-            disabled={isView}
-            className="w-full border rounded-md px-3 py-2 text-sm"
-          >
-            <option>Select {label.toLowerCase()}</option>
-          </select>
-        </div>
-      ))}
+      {/* Contact */}
+      <div className="mt-5">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Contact
+        </label>
+        <select
+          name="contact_id"
+          value={form.contact_id}
+          onChange={handleChange}
+          disabled={isView}
+          className="w-full border rounded-md px-3 py-2 text-sm"
+        >
+          <option value="">Select contact</option>
+          {contacts.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Opportunity */}
+      <div className="mt-5">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Opportunity
+        </label>
+        <select
+          name="opportunity_id"
+          value={form.opportunity_id}
+          onChange={handleChange}
+          disabled={isView}
+          className="w-full border rounded-md px-3 py-2 text-sm"
+        >
+          <option value="">Select opportunity</option>
+          {opportunities.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Quote */}
+      <div className="mt-5">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Quote
+        </label>
+        <select
+          name="quote_id"
+          value={form.quote_id}
+          onChange={handleChange}
+          disabled={isView}
+          className="w-full border rounded-md px-3 py-2 text-sm"
+        >
+          <option value="">Select quote</option>
+          {quotes.map((q) => (
+            <option key={q.id} value={q.id}>
+              {q.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Attachments */}
       <div className="mt-6">
@@ -193,8 +362,12 @@ export default function EmailForm({
       {/* Actions */}
       {!isView && (
         <div className="flex gap-4 mt-8">
-          <button className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-md text-sm">
-            {mode === "create" ? "Create" : "Update"}
+          <button
+            onClick={handleSubmit}
+            disabled={sending}
+            className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-md text-sm disabled:opacity-50"
+          >
+            {sending ? "Sending..." : mode === "create" ? "Send" : "Update"}
           </button>
 
           <button
