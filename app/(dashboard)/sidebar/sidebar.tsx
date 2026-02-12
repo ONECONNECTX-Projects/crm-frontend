@@ -92,11 +92,11 @@ const settingsMenu: MenuItem[] = [
   //   icon: FiShoppingCart,
   //   path: "/settings/company-settings",
   // },
-  // {
-  //   name: "App Settings",
-  //   icon: MdOutlineAppSettingsAlt,
-  //   path: "/settings/app-settings",
-  // },
+  {
+    name: "App Settings",
+    icon: MdOutlineAppSettingsAlt,
+    path: "/settings/app-settings",
+  },
   {
     name: "Employee Manage",
     icon: MdManageAccounts,
