@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
@@ -8,6 +8,11 @@ import SlideOver from "@/app/common/slideOver";
 import Pagination from "@/app/common/pagination";
 import StatusBadge from "@/app/common/StatusBadge";
 import EmailForm from "./create/page";
+import {
+  Email as EmailModel,
+  getAllEmails,
+} from "@/app/services/email-config/email.service";
+import { downloadExcel, printPDF } from "@/app/utils/exportUtils";
 
 interface Email {
   id: number;
@@ -19,79 +24,6 @@ interface Email {
   relatedTo: string;
   hasAttachment: boolean;
 }
-
-const emails: Email[] = [
-  {
-    id: 1,
-    subject: "Follow-up on our meeting",
-    from: "sales@company.com",
-    to: "client@acme.com",
-    date: "2025-01-20",
-    status: "sent",
-    relatedTo: "Acme Corporation",
-    hasAttachment: true,
-  },
-  {
-    id: 2,
-    subject: "Proposal for new project",
-    from: "sales@company.com",
-    to: "contact@techsolutions.com",
-    date: "2025-01-19",
-    status: "sent",
-    relatedTo: "Tech Solutions Inc",
-    hasAttachment: true,
-  },
-  {
-    id: 3,
-    subject: "Payment reminder",
-    from: "billing@company.com",
-    to: "finance@global.com",
-    date: "2025-01-18",
-    status: "sent",
-    relatedTo: "Global Enterprises",
-    hasAttachment: false,
-  },
-  {
-    id: 4,
-    subject: "Monthly newsletter",
-    from: "marketing@company.com",
-    to: "subscribers@list.com",
-    date: "2025-01-22",
-    status: "scheduled",
-    relatedTo: "Marketing Campaign",
-    hasAttachment: false,
-  },
-  {
-    id: 5,
-    subject: "Quote details",
-    from: "sales@company.com",
-    to: "procurement@startup.com",
-    date: "2025-01-17",
-    status: "draft",
-    relatedTo: "Startup Ventures",
-    hasAttachment: true,
-  },
-  {
-    id: 6,
-    subject: "Welcome email",
-    from: "support@company.com",
-    to: "newuser@enterprise.com",
-    date: "2025-01-16",
-    status: "failed",
-    relatedTo: "Enterprise Systems",
-    hasAttachment: false,
-  },
-  {
-    id: 7,
-    subject: "Product update announcement",
-    from: "marketing@company.com",
-    to: "clients@list.com",
-    date: "2025-01-15",
-    status: "sent",
-    relatedTo: "Product Launch",
-    hasAttachment: true,
-  },
-];
 
 const statusColorMap = {
   sent: {
@@ -122,8 +54,10 @@ export default function EmailPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [selectedEmail, setSelectedEmail] = useState<EmailModel | null>(null);
   const [columns, setColumns] = useState<
     { key: keyof Email; label: string; visible: boolean }[]
   >([
@@ -136,40 +70,62 @@ export default function EmailPage() {
     { key: "hasAttachment", label: "Attachment", visible: true },
   ]);
 
+  useEffect(() => {
+    fetchEmails();
+  }, []);
+
+  const fetchEmails = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllEmails();
+      if (response.isSuccess && response.data) {
+        const list = Array.isArray(response.data)
+          ? response.data
+          : [response.data];
+        setEmails(
+          list.map((e: EmailModel) => ({
+            id: e.id,
+            subject: e.subject || "",
+            from: e.from_email || "",
+            to: e.to_email || "",
+            date: e.createdAt?.split("T")[0] || "",
+            status: e.status || "sent",
+            relatedTo:
+              e.company?.name ||
+              (e.contact
+                ? `${e.contact.first_name} ${e.contact.last_name}`
+                : "-"),
+            hasAttachment: e.has_attachment || false,
+          })),
+        );
+      }
+    } catch {
+      // Global error handler will show toast
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
-  const actions: TableAction<Email>[] = [
-    {
-      label: "Edit",
-      onClick: (row) => {
-        setSelectedEmail(row);
-        setMode("edit");
-        setOpenCreate(true);
-      },
-    },
-    {
-      label: "Delete",
-      variant: "destructive",
-      onClick: (row) => console.log("Delete email", row),
-    },
-  ];
+  const actions: TableAction<Email>[] = [];
 
   const filtered = emails.filter((email) =>
     `${email.subject} ${email.from} ${email.to} ${email.relatedTo}`
       .toLowerCase()
-      .includes(searchValue.toLowerCase())
+      .includes(searchValue.toLowerCase()),
   );
 
   const totalItems = filtered.length;
   const paginatedData = filtered.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const tableColumns: TableColumn<Email>[] = columns
@@ -203,6 +159,24 @@ export default function EmailPage() {
       },
     }));
 
+  const emailExtractors: Record<string, (row: Email) => string> = {
+    subject: (row) => row.subject || "-",
+    from: (row) => row.from || "-",
+    to: (row) => row.to || "-",
+    date: (row) => row.date || "-",
+    status: (row) => row.status || "-",
+    relatedTo: (row) => row.relatedTo || "-",
+    hasAttachment: (row) => (row.hasAttachment ? "Yes" : "No"),
+  };
+
+  const handleDownloadExcel = () => {
+    downloadExcel(filtered, columns, "emails", emailExtractors);
+  };
+
+  const handlePrintPDF = () => {
+    printPDF(filtered, columns, "Emails", emailExtractors);
+  };
+
   return (
     <div className="bg-white rounded-xl p-6 space-y-6">
       <PageHeader
@@ -223,14 +197,22 @@ export default function EmailPage() {
         }}
         columns={columns}
         onColumnToggle={handleColumnToggle}
+        onPrintPDF={handlePrintPDF}
+        onDownloadExcel={handleDownloadExcel}
       />
 
-      <DataTable
-        columns={tableColumns}
-        data={paginatedData}
-        actions={actions}
-        emptyMessage="No emails found."
-      />
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+        </div>
+      ) : (
+        <DataTable
+          columns={tableColumns}
+          data={paginatedData}
+          actions={actions}
+          emptyMessage="No emails found."
+        />
+      )}
 
       <Pagination
         currentPage={currentPage}
@@ -248,6 +230,7 @@ export default function EmailPage() {
           mode={mode || "create"}
           email={selectedEmail}
           onClose={() => setOpenCreate(false)}
+          onSuccess={() => fetchEmails()}
         />
       </SlideOver>
     </div>
