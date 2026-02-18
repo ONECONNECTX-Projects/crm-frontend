@@ -115,8 +115,8 @@ const settingsMenu: MenuItem[] = [
         name: "Roles & Permissions",
         path: "/settings/employee-manage/roles",
       },
-      { name: "Annoucement", path: "/settings/employee-manage/announcement" },
-      { name: "Awards", path: "/settings/employee-manage/awards" },
+      // { name: "Annoucement", path: "/settings/employee-manage/announcement" },
+      // { name: "Awards", path: "/settings/employee-manage/awards" },
     ],
   },
   {
