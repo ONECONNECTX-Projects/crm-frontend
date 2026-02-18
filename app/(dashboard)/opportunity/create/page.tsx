@@ -150,9 +150,15 @@ export default function CreateOpportunity({
 
   const validateStep1 = () => {
     if (!formData.name.trim()) {
-      showError("Opportunity name is required");
+      showError("Opportunity Name is required");
       return false;
     }
+
+    if (!formData.owner_id) {
+      showError("Owner is required");
+      return false;
+    }
+
     return true;
   };
 
@@ -190,7 +196,10 @@ export default function CreateOpportunity({
         <h2 className="text-base sm:text-lg font-semibold">
           {mode === "edit" ? "Edit Opportunity" : "Create Opportunity"}
         </h2>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700 p-1">
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-1"
+        >
           <X size={20} />
         </button>
       </div>
@@ -216,7 +225,9 @@ export default function CreateOpportunity({
                   }`}
                 >
                   <span className="hidden sm:inline">{step.title}</span>
-                  <span className="sm:hidden">{step.id === 1 ? "Info" : "Details"}</span>
+                  <span className="sm:hidden">
+                    {step.id === 1 ? "Info" : "Details"}
+                  </span>
                 </span>
               </div>
               {index < steps.length - 1 && (
@@ -234,14 +245,17 @@ export default function CreateOpportunity({
         {currentStep === 1 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
             <InputField
-              label="Name *"
+              label="Name"
               value={formData.name}
+              required={true}
+              noLeadingSpace
               onChange={(v) => setFormData({ ...formData, name: v })}
               placeholder="Enter Opportunity Name"
             />
             <SelectDropdown
               label="Owner"
               value={formData.owner_id}
+              required={true}
               onChange={(v) => setFormData({ ...formData, owner_id: v })}
               options={owners.map((source) => ({
                 label: source.name,
@@ -369,13 +383,26 @@ export default function CreateOpportunity({
           Previous
         </Button>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <Button variant="ghost" onClick={onClose} className="w-full sm:w-auto order-2 sm:order-1">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
             Cancel
           </Button>
           {currentStep < steps.length ? (
-            <Button onClick={handleNext} className="w-full sm:w-auto order-1 sm:order-2">Next</Button>
+            <Button
+              onClick={handleNext}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
+              Next
+            </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={submitting} className="w-full sm:w-auto order-1 sm:order-2">
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
               {submitting
                 ? "Saving..."
                 : mode === "edit"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X, ChevronDown, Paperclip, Trash2 } from "lucide-react";
 import { useError } from "@/app/providers/ErrorProvider";
 import {
@@ -12,6 +12,8 @@ import { getAllActiveContacts } from "@/app/services/contact/contact.service";
 import { getAllActiveOpportunity } from "@/app/services/opportunity/opportunity.service";
 import { getAllActiveQuotes } from "@/app/services/quote/quote.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
 
 type Mode = "create" | "edit" | "view";
 
@@ -49,7 +51,27 @@ export default function EmailForm({
   const [contacts, setContacts] = useState<OptionDropDownModel[]>([]);
   const [opportunities, setOpportunities] = useState<OptionDropDownModel[]>([]);
   const [quotes, setQuotes] = useState<OptionDropDownModel[]>([]);
+  const [errors, setErrors] = useState<{
+    to_email?: string;
+    subject?: string;
+    body?: string;
+  }>({});
+  const editorRef = useRef<HTMLDivElement>(null);
 
+  const applyStyle = (style: "bold" | "italic" | "underline") => {
+    if (!editorRef.current) return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    document.execCommand(style);
+  };
+
+  const applyFormat = (tag: "h1" | "h2") => {
+    if (!editorRef.current) return;
+
+    document.execCommand("formatBlock", false, tag);
+  };
   const isView = mode === "view";
 
   useEffect(() => {
@@ -91,10 +113,11 @@ export default function EmailForm({
     }
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (name: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleFiles = (files: FileList | null) => {
@@ -105,12 +128,31 @@ export default function EmailForm({
   const removeFile = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
-
   const handleSubmit = async () => {
-    if (!form.to_email || !form.subject) {
-      showError("To and Subject are required");
+    const newErrors: typeof errors = {};
+
+    if (!form.to_email.trim()) {
+      newErrors.to_email = "To email is required";
+    }
+
+    if (!form.subject.trim()) {
+      newErrors.subject = "Subject is required";
+    }
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = form.body;
+    const plainText = tempDiv.textContent || tempDiv.innerText || "";
+
+    if (!plainText.trim()) {
+      newErrors.body = "Body is required";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({}); // clear errors if valid
 
     try {
       setSending(true);
@@ -118,7 +160,9 @@ export default function EmailForm({
         ...form,
         attachments: attachments.length > 0 ? attachments : undefined,
       };
+
       const response = await sendEmail(payload);
+
       if (response.isSuccess) {
         showSuccess("Email sent successfully");
         onSuccess?.();
@@ -146,31 +190,29 @@ export default function EmailForm({
 
       {/* To */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          <span className="text-red-500">*</span> To
-        </label>
-        <input
-          name="to_email"
+        <InputField
+          label="To"
+          error={errors.to_email}
           value={form.to_email}
-          onChange={handleChange}
+          onChange={(value) => handleChange("to_email", value)}
           disabled={isView}
           placeholder="Receiver Email"
-          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
+          noLeadingSpace
+          required
         />
       </div>
 
       {/* Subject */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          <span className="text-red-500">*</span> Subject
-        </label>
-        <input
-          name="subject"
+        <InputField
+          label="Subject"
           value={form.subject}
-          onChange={handleChange}
+          onChange={(value) => handleChange("subject", value)}
           disabled={isView}
+          noLeadingSpace
+          required
+          error={errors.subject}
           placeholder="Subject"
-          className="w-full border rounded-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
         />
       </div>
 
@@ -190,21 +232,21 @@ export default function EmailForm({
 
         {showCC && (
           <div className="bg-gray-50 border rounded-md p-4 mt-3 space-y-3">
-            <input
-              name="cc"
+            <InputField
+              label="cc"
               value={form.cc}
-              onChange={handleChange}
+              onChange={(value) => handleChange("cc", value)}
               disabled={isView}
               placeholder="CC"
-              className="w-full border rounded-md px-3 py-2 text-sm"
+              noLeadingSpace
             />
-            <input
-              name="bcc"
+            <InputField
+              label="bcc"
               value={form.bcc}
-              onChange={handleChange}
+              noLeadingSpace
+              onChange={(value) => handleChange("bcc", value)}
               disabled={isView}
               placeholder="BCC"
-              className="w-full border rounded-md px-3 py-2 text-sm"
             />
           </div>
         )}
@@ -212,111 +254,118 @@ export default function EmailForm({
 
       {/* Body */}
       <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Body
-        </label>
+        {/* Toolbar */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Body
+          </label>
 
-        <div className="border rounded-t-md px-3 py-2 text-sm text-gray-600 flex gap-4 bg-gray-50">
-          <span className="font-semibold">H1</span>
-          <span className="font-semibold">H2</span>
-          <span>Sans Serif</span>
-          <span className="font-bold">B</span>
-          <span className="italic">I</span>
-          <span className="underline">U</span>
+          {/* Toolbar */}
+          <div className="border rounded-t-md px-3 py-2 text-sm text-gray-600 flex gap-4 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => applyFormat("h1")}
+              className="font-semibold"
+            >
+              H1
+            </button>
+
+            <button
+              type="button"
+              onClick={() => applyFormat("h2")}
+              className="font-semibold"
+            >
+              H2
+            </button>
+
+            <button type="button" onClick={() => applyStyle("bold")}>
+              <span className="font-bold">B</span>
+            </button>
+
+            <button type="button" onClick={() => applyStyle("italic")}>
+              <span className="italic">I</span>
+            </button>
+
+            <button type="button" onClick={() => applyStyle("underline")}>
+              <span className="underline">U</span>
+            </button>
+          </div>
         </div>
 
-        <textarea
-          name="body"
-          value={form.body}
-          onChange={handleChange}
-          disabled={isView}
-          rows={6}
-          className="w-full border border-t-0 rounded-b-md px-3 py-2 text-sm focus:ring-1 focus:ring-brand-500 focus:outline-none"
+        {/* Editable Area */}
+        <div
+          ref={editorRef}
+          contentEditable={!isView}
+          suppressContentEditableWarning
+          className={`border border-t-0 rounded-b-md px-3 py-2 min-h-[150px] focus:outline-none ${
+            errors.body ? "border-red-500" : ""
+          }`}
+          onInput={(e) => {
+            const html = e.currentTarget.innerHTML;
+            handleChange("body", html);
+
+            if (errors.body) {
+              setErrors((prev) => ({ ...prev, body: undefined }));
+            }
+          }}
         />
       </div>
 
       {/* Company */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Company
-        </label>
-        <select
-          name="company_id"
+        <SelectDropdown
+          label="Company"
+          options={companies.map((source) => ({
+            label: source.name,
+            value: source.id,
+          }))}
           value={form.company_id}
-          onChange={handleChange}
+          onChange={(value) => handleChange("company_id", value)}
           disabled={isView}
-          className="w-full border rounded-md px-3 py-2 text-sm"
-        >
-          <option value="">Select company</option>
-          {companies.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        ></SelectDropdown>
       </div>
 
       {/* Contact */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Contact
-        </label>
-        <select
-          name="contact_id"
+        <SelectDropdown
+          label="Contact"
+          options={contacts.map((source) => ({
+            label: source.name,
+            value: source.id,
+          }))}
           value={form.contact_id}
-          onChange={handleChange}
+          onChange={(value) => handleChange("contact_id", value)}
           disabled={isView}
-          className="w-full border rounded-md px-3 py-2 text-sm"
-        >
-          <option value="">Select contact</option>
-          {contacts.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        ></SelectDropdown>
       </div>
 
       {/* Opportunity */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Opportunity
-        </label>
-        <select
-          name="opportunity_id"
+        <SelectDropdown
+          label="Opportunity"
           value={form.opportunity_id}
-          onChange={handleChange}
+          options={opportunities.map((source) => ({
+            label: source.name,
+            value: source.id,
+          }))}
+          onChange={(value) => handleChange("opportunity_id", value)}
           disabled={isView}
           className="w-full border rounded-md px-3 py-2 text-sm"
-        >
-          <option value="">Select opportunity</option>
-          {opportunities.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name}
-            </option>
-          ))}
-        </select>
+        ></SelectDropdown>
       </div>
 
       {/* Quote */}
       <div className="mt-5">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Quote
-        </label>
-        <select
-          name="quote_id"
+        <SelectDropdown
+          label="Quote"
           value={form.quote_id}
-          onChange={handleChange}
+          options={quotes.map((source) => ({
+            label: source.name,
+            value: source.id,
+          }))}
+          onChange={(value) => handleChange("quote_id", value)}
           disabled={isView}
-          className="w-full border rounded-md px-3 py-2 text-sm"
-        >
-          <option value="">Select quote</option>
-          {quotes.map((q) => (
-            <option key={q.id} value={q.id}>
-              {q.name}
-            </option>
-          ))}
-        </select>
+        ></SelectDropdown>
       </div>
 
       {/* Attachments */}
