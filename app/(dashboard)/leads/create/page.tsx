@@ -5,6 +5,8 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InputField from "@/app/common/InputFeild";
 import SelectDropdown from "@/app/common/dropdown";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import { getAllActiveLeadStatuses } from "@/app/services/lead-status/lead-status.service";
 import { getAllActiveLeadSources } from "@/app/services/lead-source/lead-source.service";
 import { getAllActiveUsers } from "@/app/services/user/user.service";
@@ -40,7 +42,7 @@ export default function CreateLeadForm({
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
+  const [errors, setErrors] = useState<Record<string, string>>({});
   //model
   const [openLeadSourceModal, setOpenLeadSourceModal] = useState(false);
   const [openLeadStatusModal, setOpenLeadStatusModal] = useState(false);
@@ -55,6 +57,7 @@ export default function CreateLeadForm({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    country_code: "+91",
     phone: "",
     lead_owner_id: "",
     lead_status_id: "",
@@ -69,6 +72,7 @@ export default function CreateLeadForm({
       setFormData({
         name: data.name || "",
         email: data.email || "",
+        country_code: data.country_code || "+91",
         phone: data.phone || "",
         lead_owner_id: data.lead_owner_id?.toString() || "",
         lead_status_id: data.lead_status_id?.toString() || "",
@@ -80,6 +84,7 @@ export default function CreateLeadForm({
       setFormData({
         name: "",
         email: "",
+        country_code: "+91",
         phone: "",
         lead_owner_id: "",
         lead_status_id: "",
@@ -117,24 +122,65 @@ export default function CreateLeadForm({
     fetchDropdownData();
   }, []);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+
+    if (!formData.lead_value.trim()) {
+      newErrors.lead_value = "Lead value is required";
+    } else if (Number(formData.lead_value) < 0) {
+      newErrors.lead_value = "Lead value cannot be negative";
+    }
+    if (!formData.lead_owner_id) {
+      newErrors.lead_owner_id = "Lead owner is required";
+    }
+
+    if (!formData.lead_status_id) {
+      newErrors.lead_status_id = "Lead status is required";
+    }
+
+    if (!formData.lead_source_id) {
+      newErrors.lead_source_id = "Lead source is required";
+    }
+
+    if (!formData.priority_id) {
+      newErrors.priority_id = "Priority is required";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name.trim()) {
-      showError("Name is required");
-      return;
-    }
+    if (!validateForm()) return;
 
     setSubmitting(true);
     try {
       const leadData: Lead = {
         name: formData.name,
         email: formData.email,
+        country_code: formData.country_code,
         phone: formData.phone,
-        lead_owner_id: parseInt(formData.lead_owner_id) || 0,
-        lead_source_id: parseInt(formData.lead_source_id) || 0,
-        lead_status_id: parseInt(formData.lead_status_id) || 0,
-        priority_id: parseInt(formData.priority_id) || 0,
+        lead_owner_id: parseInt(formData.lead_owner_id),
+        lead_source_id: parseInt(formData.lead_source_id),
+        lead_status_id: parseInt(formData.lead_status_id),
+        priority_id: parseInt(formData.priority_id),
         lead_value: formData.lead_value,
       };
 
@@ -147,11 +193,8 @@ export default function CreateLeadForm({
       }
 
       onSuccess?.();
-    } catch (error) {
-      console.error("Failed to save lead:", error);
-      showError(
-        mode === "edit" ? "Failed to update lead" : "Failed to create lead",
-      );
+    } catch {
+      // Error toast is already shown by the global error handler in apiClient
     } finally {
       setSubmitting(false);
     }
@@ -181,9 +224,14 @@ export default function CreateLeadForm({
           <div>
             <InputField
               type="text"
-              label="Name *"
+              label="Name"
+              required
               value={formData.name}
-              onChange={(v) => setFormData({ ...formData, name: v })}
+              error={errors.name}
+              onChange={(v) => {
+                setFormData({ ...formData, name: v });
+                setErrors({ ...errors, name: "" });
+              }}
               placeholder="Enter Lead Name"
             />
           </div>
@@ -193,30 +241,71 @@ export default function CreateLeadForm({
             <InputField
               type="email"
               label="Email"
+              required
               value={formData.email}
-              onChange={(v) => setFormData({ ...formData, email: v })}
+              error={errors.email}
+              onChange={(v) => {
+                setFormData({ ...formData, email: v });
+                setErrors({ ...errors, email: "" });
+              }}
               placeholder="Enter Email Address"
             />
           </div>
 
-          {/* PHONE */}
+          {/* PHONE WITH COUNTRY CODE */}
           <div>
-            <InputField
-              type="text"
-              label="Phone Number"
-              value={formData.phone}
-              onChange={(v) => setFormData({ ...formData, phone: v })}
-              placeholder="Enter Phone Number"
+            <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">
+              Phone Number
+            </label>
+            <PhoneInput
+              country={"in"}
+              value={formData.country_code.replace("+", "") + formData.phone}
+              onChange={(value, countryData: { dialCode?: string }) => {
+                const dialCode = countryData?.dialCode || "91";
+                const phoneNumber = value.slice(dialCode.length);
+                setFormData({
+                  ...formData,
+                  country_code: `+${dialCode}`,
+                  phone: phoneNumber,
+                });
+                setErrors({ ...errors, phone: "" });
+              }}
+              enableSearch
+              searchPlaceholder="Search country..."
+              inputStyle={{
+                width: "100%",
+                height: "44px",
+                fontSize: "14px",
+                borderRadius: "8px",
+                borderColor: errors.phone ? "#ef4444" : "#d1d5db",
+              }}
+              buttonStyle={{
+                borderRadius: "8px 0 0 8px",
+                borderColor: errors.phone ? "#ef4444" : "#d1d5db",
+              }}
+              searchStyle={{
+                fontSize: "14px",
+              }}
             />
+            {errors.phone && (
+              <p className="text-red-500 text-xs sm:text-sm mt-1">
+                {errors.phone}
+              </p>
+            )}
           </div>
 
           {/* LEAD VALUE */}
           <div>
             <InputField
-              type="text"
+              type="number"
               label="Lead Value"
+              required={true}
               value={formData.lead_value}
-              onChange={(v) => setFormData({ ...formData, lead_value: v })}
+              error={errors.lead_value}
+              onChange={(v) => {
+                setFormData({ ...formData, lead_value: v });
+                setErrors({ ...errors, lead_value: "" });
+              }}
               placeholder="Enter Lead Value"
             />
           </div>
@@ -226,7 +315,12 @@ export default function CreateLeadForm({
             <SelectDropdown
               label="Lead Owner"
               value={formData.lead_owner_id}
-              onChange={(v) => setFormData({ ...formData, lead_owner_id: v })}
+              error={errors.lead_owner_id}
+              required
+              onChange={(v) => {
+                setFormData({ ...formData, lead_owner_id: v });
+                setErrors({ ...errors, lead_owner_id: "" });
+              }}
               options={users.map((user) => ({
                 label: user.name,
                 value: user.id,
@@ -240,7 +334,12 @@ export default function CreateLeadForm({
             <SelectDropdown
               label="Priority"
               value={formData.priority_id}
-              onChange={(v) => setFormData({ ...formData, priority_id: v })}
+              error={errors.priority_id}
+              required
+              onChange={(v) => {
+                setFormData({ ...formData, priority_id: v });
+                setErrors({ ...errors, priority_id: "" });
+              }}
               options={priorities.map((priority) => ({
                 label: priority.name,
                 value: priority.id,
@@ -255,7 +354,12 @@ export default function CreateLeadForm({
             <SelectDropdown
               label="Lead Status"
               value={formData.lead_status_id}
-              onChange={(v) => setFormData({ ...formData, lead_status_id: v })}
+              error={errors.lead_status_id}
+              required
+              onChange={(v) => {
+                setFormData({ ...formData, lead_status_id: v });
+                setErrors({ ...errors, lead_status_id: "" });
+              }}
               options={leadStatuses.map((status) => ({
                 label: status.name,
                 value: status.id,
@@ -270,7 +374,12 @@ export default function CreateLeadForm({
             <SelectDropdown
               label="Lead Source"
               value={formData.lead_source_id}
-              onChange={(v) => setFormData({ ...formData, lead_source_id: v })}
+              error={errors.lead_source_id}
+              required
+              onChange={(v) => {
+                setFormData({ ...formData, lead_source_id: v });
+                setErrors({ ...errors, lead_source_id: "" });
+              }}
               options={leadSources.map((source) => ({
                 label: source.name,
                 value: source.id,
@@ -297,7 +406,7 @@ export default function CreateLeadForm({
       </form>
 
       {/* CSV IMPORT BLOCK - only show in create mode */}
-      {mode === "create" && (
+      {/* {mode === "create" && (
         <div className="mt-8 border rounded-xl p-5">
           <h3 className="text-lg font-semibold mb-3">Import From CSV</h3>
 
@@ -309,7 +418,6 @@ export default function CreateLeadForm({
             Demo CSV
           </button>
 
-          {/* File Input */}
           <div className="flex items-center justify-center gap-3 border p-3 rounded-md">
             <input
               type="file"
@@ -318,7 +426,6 @@ export default function CreateLeadForm({
             />
           </div>
 
-          {/* Import button */}
           <button
             disabled={!csvFile}
             className={`w-full mt-4 py-2 rounded-md font-medium ${
@@ -330,7 +437,7 @@ export default function CreateLeadForm({
             Import From CSV
           </button>
         </div>
-      )}
+      )} */}
 
       {openLeadSourceModal && (
         <Dialog
