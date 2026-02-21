@@ -15,6 +15,7 @@ export interface ContactInfo {
   first_name: string;
   last_name: string;
   email: string;
+  country_code: string;
   phone: string;
   birthday: string;
   job_title: string;
@@ -54,6 +55,7 @@ export interface Contact {
   first_name: string;
   last_name: string;
   email: string;
+  country_code?: string;
   phone: string;
   birthday: string;
   job_title: string;

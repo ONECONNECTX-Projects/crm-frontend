@@ -6,6 +6,7 @@ import { Priority } from "../priority/priority.service";
 export interface Lead {
   name: string;
   email: string;
+  country_code?: string;
   phone: string;
   lead_owner_id: number;
   lead_source_id: number;
@@ -18,6 +19,7 @@ export interface Leads {
   id: number;
   name: string;
   email: string;
+  country_code?: string;
   phone: string;
   lead_owner_id: number;
   lead_source_id: number;

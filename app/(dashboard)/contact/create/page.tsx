@@ -24,6 +24,8 @@ import CreateContactSourceForm from "../../settings/contact-setup/contact-source
 import CreateContactStageForm from "../../settings/contact-setup/contact-stage/create/page";
 import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
 import SelectDropdown from "@/app/common/dropdown";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import SlideOver from "@/app/common/slideOver";
 import CreateCompanyForm from "../../company/create/page";
 import { getAllActiveCompany } from "@/app/services/company/company.service";
@@ -40,6 +42,7 @@ const initialContactInfo: ContactInfo = {
   first_name: "",
   last_name: "",
   email: "",
+  country_code: "+91",
   phone: "",
   birthday: "",
   job_title: "",
@@ -130,7 +133,10 @@ export default function CreateContactForm({
 
   useEffect(() => {
     if (mode === "edit" && data) {
-      setContactInfo({ ...data });
+      setContactInfo({
+        ...data,
+        country_code: data.country_code || "+91",
+      });
       if (data.address) setAddress({ ...data.address });
     }
   }, [mode, data]);
@@ -161,6 +167,9 @@ export default function CreateContactForm({
         errors.email = "Email is required";
       } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
         errors.email = "Invalid email address";
+      }
+      if (!contactInfo.birthday?.trim()) {
+        errors.birthday = "Birthday is required";
       }
       if (contactInfo.phone && contactInfo.phone.trim().length !== 10) {
         errors.phone = "Phone must be exactly 10 digits";
@@ -210,8 +219,8 @@ export default function CreateContactForm({
       }
       onSuccess?.();
       onClose();
-    } catch (error: any) {
-      showError(error?.response?.data?.messages);
+    } catch {
+      // Error toast is already shown by the global error handler in apiClient
     } finally {
       setSubmitting(false);
     }
@@ -303,26 +312,56 @@ export default function CreateContactForm({
                 noLeadingSpace
                 placeholder="Email address"
               />
-              <InputField
-                label="Phone"
-                error={fieldErrors.phone}
-                value={contactInfo.phone}
-                maxLength={10}
-                onChange={(v) => {
-                  const val = v.replace(/\D/g, "");
-                  setContactInfo({ ...contactInfo, phone: val });
-                  if (val.length === 10)
-                    setFieldErrors((p) => ({ ...p, phone: "" }));
-                }}
-                noLeadingSpace
-                placeholder="10-digit number"
-              />
+              <div>
+                <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">
+                  Phone
+                </label>
+                <PhoneInput
+                  country={"in"}
+                  value={(contactInfo.country_code || "+91").replace("+", "") + contactInfo.phone}
+                  onChange={(value, countryData: { dialCode?: string }) => {
+                    const dialCode = countryData?.dialCode || "91";
+                    const phoneNumber = value.slice(dialCode.length);
+                    setContactInfo({
+                      ...contactInfo,
+                      country_code: `+${dialCode}`,
+                      phone: phoneNumber,
+                    });
+                    if (phoneNumber.length === 10)
+                      setFieldErrors((p) => ({ ...p, phone: "" }));
+                  }}
+                  enableSearch
+                  searchPlaceholder="Search country..."
+                  inputStyle={{
+                    width: "100%",
+                    height: "44px",
+                    fontSize: "14px",
+                    borderRadius: "8px",
+                    borderColor: fieldErrors.phone ? "#ef4444" : "#d1d5db",
+                  }}
+                  buttonStyle={{
+                    borderRadius: "8px 0 0 8px",
+                    borderColor: fieldErrors.phone ? "#ef4444" : "#d1d5db",
+                  }}
+                  searchStyle={{
+                    fontSize: "14px",
+                  }}
+                />
+                {fieldErrors.phone && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">
+                    {fieldErrors.phone}
+                  </p>
+                )}
+              </div>
               <InputField
                 label="Birthday"
+                required
+                error={fieldErrors.birthday}
                 value={contactInfo.birthday}
-                onChange={(v) =>
-                  setContactInfo({ ...contactInfo, birthday: v })
-                }
+                onChange={(v) => {
+                  setContactInfo({ ...contactInfo, birthday: v });
+                  if (v.trim()) setFieldErrors((p) => ({ ...p, birthday: "" }));
+                }}
                 type="date"
               />
               <InputField
