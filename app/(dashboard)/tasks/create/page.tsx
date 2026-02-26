@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Calendar } from "lucide-react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   createTask,
   updateTask,
@@ -17,16 +18,42 @@ import { getAllActiveTaskType } from "@/app/services/task-type/task-type.service
 import { getAllActiveTaskStatus } from "@/app/services/task-status/task-status.service";
 import { getAllActivePriority } from "@/app/services/priority/priority.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
+import { useError } from "@/app/providers/ErrorProvider";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
+import DateInput from "@/app/common/CommonDate";
+import SlideOver from "@/app/common/slideOver";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+
+// SlideOver create forms
+import CreateCompanyForm from "../../company/create/page";
+import CreateContactForm from "../../contact/create/page";
+import CreateOpportunity from "../../opportunity/create/page";
+import CreateQuote from "../../sales/qoutes/Create/page";
+
+// Dialog popup create forms
+import CreateTaskTypeForm from "../../settings/task-setup/task-type/create/page";
+import CreateTaskStatusForm from "../../settings/task-setup/task-status/create/page";
+import CreatePriorityForm from "../../settings/priority/create/page";
 
 interface CreateTaskProps {
   onClose: () => void;
+  onSuccess?: () => void;
   taskId?: number | null;
   defaultContactId?: number;
   defaultCompanyId?: number;
   defaultOpportunityId?: number;
 }
 
-export default function CreateTask({ onClose, taskId, defaultContactId, defaultCompanyId, defaultOpportunityId }: CreateTaskProps) {
+export default function CreateTask({
+  onClose,
+  onSuccess,
+  taskId,
+  defaultContactId,
+  defaultCompanyId,
+  defaultOpportunityId,
+}: CreateTaskProps) {
+  const { showSuccess, showError } = useError();
   const isEditMode = !!taskId;
   const [loading, setLoading] = useState(false);
   const [fetchingTask, setFetchingTask] = useState(false);
@@ -53,6 +80,17 @@ export default function CreateTask({ onClose, taskId, defaultContactId, defaultC
   const [taskTypes, setTaskTypes] = useState<OptionDropDownModel[]>([]);
   const [taskStatuses, setTaskStatuses] = useState<OptionDropDownModel[]>([]);
   const [priorities, setPriorities] = useState<OptionDropDownModel[]>([]);
+
+  // SlideOver states
+  const [openCompanySlider, setOpenCompanySlider] = useState(false);
+  const [openContactSlider, setOpenContactSlider] = useState(false);
+  const [openOpportunitySlider, setOpenOpportunitySlider] = useState(false);
+  const [openQuoteSlider, setOpenQuoteSlider] = useState(false);
+
+  // Dialog states
+  const [openTaskTypeModal, setOpenTaskTypeModal] = useState(false);
+  const [openTaskStatusModal, setOpenTaskStatusModal] = useState(false);
+  const [openPriorityModal, setOpenPriorityModal] = useState(false);
 
   // Fetch all dropdown data
   useEffect(() => {
@@ -128,19 +166,9 @@ export default function CreateTask({ onClose, taskId, defaultContactId, defaultC
     fetchTaskData();
   }, [taskId]);
 
-  const handleInputChange = (
-    field: keyof TaskPayload,
-    value: string | number | Date
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      alert("Task name is required");
+      showError("Task name is required");
       return;
     }
 
@@ -150,21 +178,24 @@ export default function CreateTask({ onClose, taskId, defaultContactId, defaultC
       if (isEditMode && taskId) {
         const response = await updateTask(taskId, formData);
         if (response.isSuccess) {
+          showSuccess("Task updated successfully");
+          onSuccess?.();
           onClose();
         } else {
-          alert("Failed to update task");
+          showError("Failed to update task");
         }
       } else {
         const response = await createTask(formData);
         if (response.isSuccess) {
+          showSuccess("Task created successfully");
+          onSuccess?.();
           onClose();
         } else {
-          alert("Failed to create task");
+          showError("Failed to create task");
         }
       }
     } catch (error) {
-      console.error("Error saving task:", error);
-      alert(`Failed to ${isEditMode ? "update" : "create"} task`);
+      showError(`Failed to ${isEditMode ? "update" : "create"} task`);
     } finally {
       setLoading(false);
     }
@@ -172,256 +203,309 @@ export default function CreateTask({ onClose, taskId, defaultContactId, defaultC
 
   if (fetchingTask) {
     return (
-      <div className="p-6 flex justify-center items-center min-h-[400px]">
+      <div className="h-full flex justify-center items-center bg-white">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b pb-4 mb-6">
-        <div className="flex items-center gap-2">
-          <button onClick={onClose}>
-            <X size={18} />
-          </button>
-          <h2 className="text-lg font-semibold">
-            {isEditMode ? "Edit Task" : "Create Task"}
-          </h2>
-        </div>
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-semibold">
+          {isEditMode ? "Edit Task" : "Create Task"}
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-1 rounded-full transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      {/* Form */}
-      <div className="space-y-6">
-        {/* Task Name */}
-        <Input
-          label="* Task name"
-          placeholder="Example name"
-          value={formData.name}
-          onChange={(value) => handleInputChange("name", value)}
-        />
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5">
+          <div className="md:col-span-2">
+            <InputField
+              label="Task Name"
+              required
+              value={formData.name}
+              onChange={(v) => setFormData({ ...formData, name: v })}
+              noLeadingSpace
+              placeholder="Enter task name"
+            />
+          </div>
 
-        {/* Assignee + Company */}
-        <div className="grid grid-cols-2 gap-6">
-          <Select
+          <SelectDropdown
             label="Assignee"
-            options={users}
             value={formData.assignee_id}
-            onChange={(value) =>
-              handleInputChange("assignee_id", Number(value))
+            onChange={(v) =>
+              setFormData({ ...formData, assignee_id: v ? Number(v) : 0 })
             }
+            options={users.map((u) => ({ label: u.name, value: u.id }))}
+            placeholder="Select Assignee"
           />
-          <Select
+          <SelectDropdown
             label="Company"
-            plus
-            options={companies}
             value={formData.company_id}
-            onChange={(value) => handleInputChange("company_id", Number(value))}
+            onChange={(v) =>
+              setFormData({ ...formData, company_id: v ? Number(v) : 0 })
+            }
+            options={companies.map((c) => ({ label: c.name, value: c.id }))}
+            onAddClick={() => setOpenCompanySlider(true)}
+            placeholder="Select Company"
           />
-        </div>
-
-        {/* Contact */}
-        <Select
-          label="Contact"
-          plus
-          options={contacts}
-          value={formData.contact_id}
-          onChange={(value) => handleInputChange("contact_id", Number(value))}
-        />
-
-        {/* Opportunity + Quote */}
-        <div className="grid grid-cols-2 gap-6">
-          <Select
+          <SelectDropdown
+            label="Contact"
+            value={formData.contact_id}
+            onChange={(v) =>
+              setFormData({ ...formData, contact_id: v ? Number(v) : 0 })
+            }
+            options={contacts.map((c) => ({ label: c.name, value: c.id }))}
+            onAddClick={() => setOpenContactSlider(true)}
+            placeholder="Select Contact"
+          />
+          <SelectDropdown
             label="Opportunity"
-            plus
-            options={opportunities}
             value={formData.opportunity_id}
-            onChange={(value) =>
-              handleInputChange("opportunity_id", Number(value))
+            onChange={(v) =>
+              setFormData({ ...formData, opportunity_id: v ? Number(v) : 0 })
             }
+            options={opportunities.map((o) => ({
+              label: o.name,
+              value: o.id,
+            }))}
+            onAddClick={() => setOpenOpportunitySlider(true)}
+            placeholder="Select Opportunity"
           />
-          <Select
+          <SelectDropdown
             label="Quote"
-            plus
-            options={quotes}
             value={formData.Task_id}
-            onChange={(value) => handleInputChange("Task_id", Number(value))}
+            onChange={(v) =>
+              setFormData({ ...formData, Task_id: v ? Number(v) : 0 })
+            }
+            options={quotes.map((q) => ({ label: q.name, value: q.id }))}
+            onAddClick={() => setOpenQuoteSlider(true)}
+            placeholder="Select Quote"
           />
-        </div>
-
-        {/* Task Type + Priority */}
-        <div className="grid grid-cols-2 gap-6">
-          <Select
+          <SelectDropdown
             label="Task Type"
-            plus
-            options={taskTypes}
             value={formData.task_type_id}
-            onChange={(value) =>
-              handleInputChange("task_type_id", Number(value))
+            onChange={(v) =>
+              setFormData({ ...formData, task_type_id: v ? Number(v) : 0 })
             }
+            options={taskTypes.map((t) => ({ label: t.name, value: t.id }))}
+            onAddClick={() => setOpenTaskTypeModal(true)}
+            placeholder="Select Task Type"
           />
-          <Select
+          <SelectDropdown
             label="Task Priority"
-            plus
-            options={priorities}
             value={formData.task_priority_id}
-            onChange={(value) =>
-              handleInputChange("task_priority_id", Number(value))
+            onChange={(v) =>
+              setFormData({
+                ...formData,
+                task_priority_id: v ? Number(v) : 0,
+              })
             }
+            options={priorities.map((p) => ({ label: p.name, value: p.id }))}
+            onAddClick={() => setOpenPriorityModal(true)}
+            placeholder="Select Priority"
           />
-        </div>
-
-        {/* Task Status */}
-        <Select
-          label="Task Status"
-          plus
-          options={taskStatuses}
-          value={formData.task_status_id}
-          onChange={(value) =>
-            handleInputChange("task_status_id", Number(value))
-          }
-        />
-
-        {/* Due Date */}
-        <DateInput
-          label="Due date"
-          value={
-            formData.due_date instanceof Date
-              ? formData.due_date.toISOString().split("T")[0]
-              : ""
-          }
-          onChange={(value) => handleInputChange("due_date", new Date(value))}
-        />
-
-        {/* Description */}
-        <div>
-          <label className="text-sm font-medium">Description</label>
-          <textarea
-            rows={4}
-            placeholder="Descriptions"
-            className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
-            value={formData.description}
-            onChange={(e) => handleInputChange("description", e.target.value)}
+          <SelectDropdown
+            label="Task Status"
+            value={formData.task_status_id}
+            onChange={(v) =>
+              setFormData({ ...formData, task_status_id: v ? Number(v) : 0 })
+            }
+            options={taskStatuses.map((s) => ({ label: s.name, value: s.id }))}
+            onAddClick={() => setOpenTaskStatusModal(true)}
+            placeholder="Select Status"
           />
-        </div>
-
-        {/* Submit */}
-        <div className="flex justify-center pt-4">
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className={`px-16 py-2.5 rounded-md text-sm font-medium text-white ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-brand-500 hover:bg-brand-600"
-            }`}
-          >
-            {loading
-              ? isEditMode
-                ? "Updating..."
-                : "Creating..."
-              : isEditMode
-                ? "Update"
-                : "Create"}
-          </button>
+          <DateInput
+            label="Due Date"
+            value={
+              formData.due_date instanceof Date
+                ? formData.due_date.toISOString().split("T")[0]
+                : ""
+            }
+            onChange={(v) => setFormData({ ...formData, due_date: new Date(v) })}
+          />
+          <div className="md:col-span-2">
+            <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              rows={4}
+              placeholder="Description"
+              className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 border-gray-300"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
+            />
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
 
-/* ---------- Reusable Fields ---------- */
-
-function Input({
-  label,
-  placeholder,
-  value,
-  onChange,
-}: {
-  label: string;
-  placeholder?: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">
-        <span className="text-red-500">*</span> {label.replace("* ", "")}
-      </label>
-      <input
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
-      />
-    </div>
-  );
-}
-
-function DateInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <div className="relative mt-1">
-        <input
-          type="date"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full border rounded-md px-3 py-2 text-sm pr-10"
-        />
-        <Calendar
-          size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-        />
+      {/* Footer */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-white">
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full sm:w-auto sm:min-w-[120px]"
+        >
+          {loading
+            ? "Saving..."
+            : isEditMode
+              ? "Update Task"
+              : "Create Task"}
+        </Button>
       </div>
-    </div>
-  );
-}
 
-function Select({
-  label,
-  options,
-  plus,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: OptionDropDownModel[];
-  plus?: boolean;
-  value: number;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <div>
-      <label className="flex items-center gap-2 text-sm font-medium">
-        {label}
-        {plus && (
-          <span className="bg-brand-500 text-white rounded p-[2px]">
-            <Plus size={12} />
-          </span>
-        )}
-      </label>
-      <select
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 border rounded-md px-3 py-2 text-sm"
-      >
-        <option value="">Select {label}</option>
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
+      {/* Company SlideOver */}
+      {openCompanySlider && (
+        <SlideOver
+          open={openCompanySlider}
+          onClose={() => setOpenCompanySlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateCompanyForm
+            mode="create"
+            onClose={() => setOpenCompanySlider(false)}
+            onSuccess={async () => {
+              setOpenCompanySlider(false);
+              const res = await getAllActiveCompany();
+              setCompanies(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Contact SlideOver */}
+      {openContactSlider && (
+        <SlideOver
+          open={openContactSlider}
+          onClose={() => setOpenContactSlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateContactForm
+            mode="create"
+            onClose={() => setOpenContactSlider(false)}
+            onSuccess={async () => {
+              setOpenContactSlider(false);
+              const res = await getAllActiveContacts();
+              setContacts(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Opportunity SlideOver */}
+      {openOpportunitySlider && (
+        <SlideOver
+          open={openOpportunitySlider}
+          onClose={() => setOpenOpportunitySlider(false)}
+          width="sm:w-[70vw] lg:w-[40vw]"
+        >
+          <CreateOpportunity
+            mode="create"
+            onClose={() => setOpenOpportunitySlider(false)}
+            onSuccess={async () => {
+              setOpenOpportunitySlider(false);
+              const res = await getAllActiveOpportunity();
+              setOpportunities(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Quote SlideOver */}
+      {openQuoteSlider && (
+        <SlideOver
+          open={openQuoteSlider}
+          onClose={() => setOpenQuoteSlider(false)}
+          width="sm:w-[70vw] lg:w-[40vw]"
+        >
+          <CreateQuote
+            onClose={() => setOpenQuoteSlider(false)}
+            onSuccess={async () => {
+              setOpenQuoteSlider(false);
+              const res = await getAllActiveQuotes();
+              setQuotes(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Task Type Dialog */}
+      {openTaskTypeModal && (
+        <Dialog open={openTaskTypeModal} onOpenChange={setOpenTaskTypeModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader />
+            <CreateTaskTypeForm
+              mode="create"
+              onClose={() => setOpenTaskTypeModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenTaskTypeModal(false);
+                const res = await getAllActiveTaskType();
+                setTaskTypes(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Task Status Dialog */}
+      {openTaskStatusModal && (
+        <Dialog
+          open={openTaskStatusModal}
+          onOpenChange={setOpenTaskStatusModal}
+        >
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader />
+            <CreateTaskStatusForm
+              mode="create"
+              onClose={() => setOpenTaskStatusModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenTaskStatusModal(false);
+                const res = await getAllActiveTaskStatus();
+                setTaskStatuses(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Priority Dialog */}
+      {openPriorityModal && (
+        <Dialog open={openPriorityModal} onOpenChange={setOpenPriorityModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader />
+            <CreatePriorityForm
+              mode="create"
+              onClose={() => setOpenPriorityModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenPriorityModal(false);
+                const res = await getAllActivePriority();
+                setPriorities(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

@@ -21,8 +21,7 @@ import { getAllActiveContacts } from "@/app/services/contact/contact.service";
 import { getAllActiveOpportunitySources } from "@/app/services/opportunity-source/opportunity-source.service";
 import { getAllActiveOpportunityStages } from "@/app/services/opportunity-stage/opportunity-stage.service";
 import { getAllActiveOpportunityTypes } from "@/app/services/opportunity-types/opportunity-types.service";
-import { Dialog, DialogContent } from "@radix-ui/react-dialog";
-import { DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
 import CreateOpportunitySourceForm from "../../settings/opportunity-setup/opportunity-source/create/page";
 import CreateOpportunityStageForm from "../../settings/opportunity-setup/opportunity-stage/create/page";
 import CreateOpportunityTypeForm from "../../settings/opportunity-setup/opportunity-type/create/page";
@@ -416,17 +415,16 @@ export default function CreateOpportunity({
       {openOpportunitiesSource && (
         <Dialog
           open={openOpportunitiesSource}
-          onOpenChange={() => setOpenOpportunitySource(false)}
+          onOpenChange={setOpenOpportunitySource}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateOpportunitySourceForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenOpportunitySource(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenOpportunitySource(false);
-
                 const res = await getAllActiveOpportunitySources();
                 setOpportunitySource(res.data || []);
               }}
@@ -438,17 +436,16 @@ export default function CreateOpportunity({
       {openOpportunitiesStage && (
         <Dialog
           open={openOpportunitiesStage}
-          onOpenChange={() => setOpenOpportunityStage(false)}
+          onOpenChange={setOpenOpportunityStage}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateOpportunityStageForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenOpportunityStage(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenOpportunityStage(false);
-
                 const res = await getAllActiveOpportunityStages();
                 setOpportunityStage(res.data || []);
               }}
@@ -460,17 +457,16 @@ export default function CreateOpportunity({
       {openOpportunitiesType && (
         <Dialog
           open={openOpportunitiesType}
-          onOpenChange={() => setOpenOpportunityType(false)}
+          onOpenChange={setOpenOpportunityType}
         >
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
             <DialogHeader />
             <CreateOpportunityTypeForm
-              mode={mode}
-              onClose={onClose}
+              mode="create"
+              onClose={() => setOpenOpportunityType(false)}
               popUp={true}
               onSuccess={async () => {
                 setOpenOpportunityType(false);
-
                 const res = await getAllActiveOpportunityTypes();
                 setOpportunityType(res.data || []);
               }}
@@ -486,11 +482,10 @@ export default function CreateOpportunity({
           width="sm:w-[70vw] lg:w-[40vw]"
         >
           <CreateCompanyForm
-            mode={mode}
+            mode="create"
             onClose={() => setOpenCompanies(false)}
             onSuccess={async () => {
               setOpenCompanies(false);
-
               const res = await getAllActiveCompany();
               setCompanies(res.data || []);
             }}
@@ -500,16 +495,15 @@ export default function CreateOpportunity({
 
       {openContacts && (
         <SlideOver
-          open={openCompanies}
+          open={openContacts}
           onClose={() => setOpenContact(false)}
           width="sm:w-[70vw] lg:w-[40vw]"
         >
           <CreateContactForm
-            mode={mode}
+            mode="create"
             onClose={() => setOpenContact(false)}
             onSuccess={async () => {
               setOpenContact(false);
-
               const res = await getAllActiveContacts();
               setContact(res.data || []);
             }}
