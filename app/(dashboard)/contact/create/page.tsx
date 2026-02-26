@@ -29,6 +29,7 @@ import "react-phone-input-2/lib/style.css";
 import SlideOver from "@/app/common/slideOver";
 import CreateCompanyForm from "../../company/create/page";
 import { getAllActiveCompany } from "@/app/services/company/company.service";
+import CreateDepartmentForm from "../../settings/employee-manage/departments/create/page";
 
 interface CreateContactFormProps {
   mode: "create" | "edit";
@@ -256,7 +257,9 @@ export default function CreateContactForm({
                   className={`ml-1.5 sm:ml-2 text-xs sm:text-sm font-semibold ${currentStep >= step.id ? "text-brand-500" : "text-gray-400"}`}
                 >
                   <span className="hidden xs:inline">{step.title}</span>
-                  <span className="xs:hidden">{step.id === 1 ? "Info" : "Address"}</span>
+                  <span className="xs:hidden">
+                    {step.id === 1 ? "Info" : "Address"}
+                  </span>
                 </span>
               </div>
               {index < steps.length - 1 && (
@@ -318,7 +321,10 @@ export default function CreateContactForm({
                 </label>
                 <PhoneInput
                   country={"in"}
-                  value={(contactInfo.country_code || "+91").replace("+", "") + contactInfo.phone}
+                  value={
+                    (contactInfo.country_code || "+91").replace("+", "") +
+                    contactInfo.phone
+                  }
                   onChange={(value, countryData: { dialCode?: string }) => {
                     const dialCode = countryData?.dialCode || "91";
                     const phoneNumber = value.slice(dialCode.length);
@@ -502,11 +508,21 @@ export default function CreateContactForm({
           Previous
         </Button>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <Button variant="ghost" onClick={onClose} disabled={submitting} className="w-full sm:w-auto order-2 sm:order-1">
+          <Button
+            variant="ghost"
+            onClick={onClose}
+            disabled={submitting}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
             Cancel
           </Button>
           {currentStep < steps.length ? (
-            <Button onClick={handleNext} className="w-full sm:w-auto order-1 sm:order-2">Next</Button>
+            <Button
+              onClick={handleNext}
+              className="w-full sm:w-auto order-1 sm:order-2"
+            >
+              Next
+            </Button>
           ) : (
             <Button
               onClick={handleSubmit}
@@ -524,6 +540,27 @@ export default function CreateContactForm({
       </div>
 
       {/* Helper Dialogs/Sliders Logic */}
+      {openDepartmentModal && (
+        <Dialog
+          open={openDepartmentModal}
+          onOpenChange={setOpenDepartmentModal}
+        >
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <DialogHeader />
+            <CreateDepartmentForm
+              mode="create"
+              onClose={() => setOpenDepartmentModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenDepartmentModal(false);
+                const res = await getAllActiveDepartment();
+                setDepartments(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
       {openContactSourceModal && (
         <Dialog
           open={openContactSourceModal}

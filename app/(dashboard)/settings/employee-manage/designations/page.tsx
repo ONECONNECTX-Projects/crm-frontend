@@ -85,26 +85,26 @@ export default function DesignationsPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
   const handleStatusToggle = async (
     designation: Designation,
-    newStatus: boolean
+    newStatus: boolean,
   ) => {
     // Optimistic UI update
     setDesignations((prev) =>
       prev.map((r) =>
-        r.id === designation.id ? { ...r, is_active: newStatus } : r
-      )
+        r.id === designation.id ? { ...r, is_active: newStatus } : r,
+      ),
     );
 
     try {
       await updateDesignationStatus(designation.id || 0, newStatus);
       showSuccess(
-        `Designation ${newStatus ? "activated" : "deactivated"} successfully`
+        `Designation ${newStatus ? "activated" : "deactivated"} successfully`,
       );
     } catch (error) {
       // Rollback if API fails
@@ -112,8 +112,8 @@ export default function DesignationsPage() {
         prev.map((r) =>
           r.id === designation.id
             ? { ...r, is_active: designation.is_active }
-            : r
-        )
+            : r,
+        ),
       );
       showError("Failed to update Designation status");
     }
@@ -122,12 +122,12 @@ export default function DesignationsPage() {
      Table Actions
   ========================== */
   const tableActions: TableAction<Designation>[] = [
-    {
-      label: "View Details",
-      onClick: (row) => {
-        router.push(`/settings/employee-manage/designations/${row.id}`);
-      },
-    },
+    // {
+    //   label: "View Details",
+    //   onClick: (row) => {
+    //     router.push(`/settings/employee-manage/designations/${row.id}`);
+    //   },
+    // },
     {
       label: "Edit",
       onClick: (row) => {
@@ -181,15 +181,15 @@ export default function DesignationsPage() {
   ========================== */
   const filteredDesignations = designations.filter((designation) =>
     Object.values(designation).some((val) =>
-      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase()),
+    ),
   );
 
   const totalItems = filteredDesignations.length;
 
   const paginatedDesignations = filteredDesignations.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const extractors: Record<string, (row: Designation) => string> = {

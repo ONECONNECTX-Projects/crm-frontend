@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Trash2, Plus, Calendar, X } from "lucide-react";
+import { Trash2, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   createQuote,
   updateQuote,
@@ -19,6 +20,10 @@ import { useError } from "@/app/providers/ErrorProvider";
 import { getAllActiveCompany } from "@/app/services/company/company.service";
 import { getAllActiveOpportunity } from "@/app/services/opportunity/opportunity.service";
 import { getAllActiveQuoteStages } from "@/app/services/quote-stage-setup/quote-stage-setup.service";
+import SelectDropdown from "@/app/common/dropdown";
+import SlideOver from "@/app/common/slideOver";
+import CreateContactForm from "@/app/(dashboard)/contact/create/page";
+import CreateCompanyForm from "@/app/(dashboard)/company/create/page";
 
 interface ProductRow {
   id: number;
@@ -37,7 +42,14 @@ interface CreateQuoteProps {
   defaultOpportunityId?: number;
 }
 
-const CreateQuote = ({ editId, onClose, onSuccess, defaultContactId, defaultCompanyId, defaultOpportunityId }: CreateQuoteProps) => {
+const CreateQuote = ({
+  editId,
+  onClose,
+  onSuccess,
+  defaultContactId,
+  defaultCompanyId,
+  defaultOpportunityId,
+}: CreateQuoteProps) => {
   const { showSuccess, showError } = useError();
   const isEditMode = !!editId;
 
@@ -69,6 +81,10 @@ const CreateQuote = ({ editId, onClose, onSuccess, defaultContactId, defaultComp
 
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
+
+  // Slider states
+  const [openCompanySlider, setOpenCompanySlider] = useState(false);
+  const [openContactSlider, setOpenContactSlider] = useState(false);
 
   useEffect(() => {
     const fetchDropdownData = async () => {
@@ -254,279 +270,336 @@ const CreateQuote = ({ editId, onClose, onSuccess, defaultContactId, defaultComp
   };
 
   if (fetchingData)
-    return <div className="p-6 text-center">Loading quote data...</div>;
+    return (
+      <div className="h-full flex items-center justify-center bg-white text-center">
+        Loading quote data...
+      </div>
+    );
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm">
-      <div className="flex justify-between items-center mb-6 border-b pb-4">
-        <h1 className="text-xl font-semibold flex items-center gap-2">
-          <X
-            className="w-5 h-5 text-gray-400 cursor-pointer"
-            onClick={onClose}
-          />
+    <div className="h-full flex flex-col bg-white">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
+        <h2 className="text-base sm:text-lg font-semibold">
           {isEditMode ? "Edit Quote" : "Create Quote"}
-        </h1>
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-1 rounded-full transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            <span className="text-red-500">*</span> Quote name
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2 outline-none"
-            placeholder="Enter quote name"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Quote Owner</label>
-          <select
-            name="owner_id"
-            value={formData.owner_id}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2 bg-gray-50"
-          >
-            <option value={0}>Select Owner</option>
-            {owners.map((o) => (
-              <option key={o.id} value={o.id}>
-                {o.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Quote date</label>
-          <input
-            type="date"
-            name="quote_date"
-            value={formData.quote_date}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Expiration date
-          </label>
-          <input
-            type="date"
-            name="expiration_date"
-            value={formData.expiration_date}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Company{" "}
-            <span className="bg-brand-500 text-white px-1 rounded text-xs">
-              +
-            </span>
-          </label>
-          <select
-            name="company_id"
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-4 sm:gap-y-5 mb-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              <span className="text-red-500">*</span> Quote name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2 outline-none"
+              placeholder="Enter quote name"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Quote Owner
+            </label>
+            <select
+              name="owner_id"
+              value={formData.owner_id}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2 bg-gray-50"
+            >
+              <option value={0}>Select Owner</option>
+              {owners.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Quote date</label>
+            <input
+              type="date"
+              name="quote_date"
+              value={formData.quote_date}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Expiration date
+            </label>
+            <input
+              type="date"
+              name="expiration_date"
+              value={formData.expiration_date}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2"
+            />
+          </div>
+          <SelectDropdown
+            label="Company"
             value={formData.company_id}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          >
-            <option value={0}>Select company Name</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Opportunity</label>
-          <select
-            name="opportunity_id"
-            value={formData.opportunity_id}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          >
-            <option value={0}>Select opportunity</option>
-            {opportunities.map((opp) => (
-              <option key={opp.id} value={opp.id}>
-                {opp.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            <span className="text-red-500">*</span> Contact{" "}
-            <span className="bg-brand-500 text-white px-1 rounded text-xs">
-              +
-            </span>
-          </label>
-          <select
-            name="contact_id"
+            onChange={(v) =>
+              setFormData((prev) => ({
+                ...prev,
+                company_id: v ? parseInt(v) : 0,
+              }))
+            }
+            options={companies.map((c) => ({ label: c.name, value: c.id }))}
+            onAddClick={() => setOpenCompanySlider(true)}
+            placeholder="Select company Name"
+          />
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Opportunity
+            </label>
+            <select
+              name="opportunity_id"
+              value={formData.opportunity_id}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2"
+            >
+              <option value={0}>Select opportunity</option>
+              {opportunities.map((opp) => (
+                <option key={opp.id} value={opp.id}>
+                  {opp.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <SelectDropdown
+            label="Contact"
+            required
             value={formData.contact_id}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          >
-            <option value={0}>Select contact name</option>
-            {contacts.map((con) => (
-              <option key={con.id} value={con.id}>
-                {con.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Quote stage</label>
-          <select
-            name="quote_stage_id"
-            value={formData.quote_stage_id}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2"
-          >
-            <option value={0}>Select stage</option>
-            {quoteStages.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="space-y-4 mb-8">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Terms and conditions
-          </label>
-          <input
-            type="text"
-            name="terms"
-            value={formData.terms}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2 text-sm"
-            placeholder="Terms"
+            onChange={(v) =>
+              setFormData((prev) => ({
+                ...prev,
+                contact_id: v ? parseInt(v) : 0,
+              }))
+            }
+            options={contacts.map((con) => ({
+              label: con.name,
+              value: con.id,
+            }))}
+            onAddClick={() => setOpenContactSlider(true)}
+            placeholder="Select contact name"
           />
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Quote stage
+            </label>
+            <select
+              name="quote_stage_id"
+              value={formData.quote_stage_id}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2"
+            >
+              <option value={0}>Select stage</option>
+              {quoteStages.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            className="w-full border rounded p-2 h-20 text-sm"
-            placeholder="description"
-          />
-        </div>
-      </div>
 
-      <div className="overflow-x-auto mb-4">
-        <table className="w-full text-left text-sm border-collapse">
-          <thead>
-            <tr className="border-b text-gray-600">
-              <th className="py-2 font-medium">SL</th>
-              <th className="py-2 font-medium w-1/4">Product</th>
-              <th className="py-2 font-medium">Quantity</th>
-              <th className="py-2 font-medium">Price</th>
-              <th className="py-2 font-medium">Discount</th>
-              <th className="py-2 font-medium">Total</th>
-              <th className="py-2 font-medium text-center">Delete</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((p, index) => (
-              <tr key={p.id} className="border-b last:border-0">
-                <td className="py-4">{index + 1}</td>
-                <td>
-                  <select
-                    value={p.product_id}
-                    onChange={(e) =>
-                      updateProduct(
-                        p.id,
-                        "product_id",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    className="w-full border rounded p-2 mr-2 bg-white"
-                  >
-                    <option value={0}>Select Product</option>
-                    {productOptions.map((prod) => (
-                      <option key={prod.id} value={prod.id}>
-                        {prod.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={p.qty}
-                    onChange={(e) => updateProduct(p.id, "qty", e.target.value)}
-                    className="w-24 border rounded p-2"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={p.price}
-                    onChange={(e) =>
-                      updateProduct(p.id, "price", e.target.value)
-                    }
-                    className="w-28 border rounded p-2 bg-gray-50"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    value={p.discount}
-                    onChange={(e) =>
-                      updateProduct(p.id, "discount", e.target.value)
-                    }
-                    className="w-28 border rounded p-2 bg-gray-50"
-                  />
-                </td>
-                <td className="font-medium">
-                  {(p.qty * p.price - p.discount).toFixed(2)}
-                </td>
-                <td className="text-center">
-                  <button
-                    onClick={() => removeProduct(p.id)}
-                    className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </td>
+        <div className="space-y-4 mb-8">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Terms and conditions
+            </label>
+            <input
+              type="text"
+              name="terms"
+              value={formData.terms}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2 text-sm"
+              placeholder="Terms"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              className="w-full border rounded p-2 h-20 text-sm"
+              placeholder="description"
+            />
+          </div>
+        </div>
+
+        <div className="overflow-x-auto mb-4">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr className="border-b text-gray-600">
+                <th className="py-2 font-medium">SL</th>
+                <th className="py-2 font-medium w-1/4">Product</th>
+                <th className="py-2 font-medium">Quantity</th>
+                <th className="py-2 font-medium">Price</th>
+                <th className="py-2 font-medium">Discount</th>
+                <th className="py-2 font-medium">Total</th>
+                <th className="py-2 font-medium text-center">Delete</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products.map((p, index) => (
+                <tr key={p.id} className="border-b last:border-0">
+                  <td className="py-4">{index + 1}</td>
+                  <td>
+                    <select
+                      value={p.product_id}
+                      onChange={(e) =>
+                        updateProduct(
+                          p.id,
+                          "product_id",
+                          parseInt(e.target.value),
+                        )
+                      }
+                      className="w-full border rounded p-2 mr-2 bg-white"
+                    >
+                      <option value={0}>Select Product</option>
+                      {productOptions.map((prod) => (
+                        <option key={prod.id} value={prod.id}>
+                          {prod.name}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={p.qty}
+                      onChange={(e) =>
+                        updateProduct(p.id, "qty", e.target.value)
+                      }
+                      className="w-24 border rounded p-2"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={p.price}
+                      onChange={(e) =>
+                        updateProduct(p.id, "price", e.target.value)
+                      }
+                      className="w-28 border rounded p-2 bg-gray-50"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="number"
+                      value={p.discount}
+                      onChange={(e) =>
+                        updateProduct(p.id, "discount", e.target.value)
+                      }
+                      className="w-28 border rounded p-2 bg-gray-50"
+                    />
+                  </td>
+                  <td className="font-medium">
+                    {(p.qty * p.price - p.discount).toFixed(2)}
+                  </td>
+                  <td className="text-center">
+                    <button
+                      onClick={() => removeProduct(p.id)}
+                      className="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <button
+          onClick={addProduct}
+          className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 flex justify-center items-center gap-2 hover:bg-gray-50 mb-6"
+        >
+          <Plus className="w-4 h-4" /> Add Product
+        </button>
+
+        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+          <span className="font-bold text-lg">Total:</span>
+          <span className="font-bold text-lg">{calculateTotal()}</span>
+        </div>
       </div>
 
-      <button
-        onClick={addProduct}
-        className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 flex justify-center items-center gap-2 hover:bg-gray-50 mb-6"
-      >
-        <Plus className="w-4 h-4" /> Add Product
-      </button>
-
-      <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-        <span className="font-bold text-lg">Total:</span>
-        <span className="font-bold text-lg">{calculateTotal()}</span>
+      {/* Footer */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t bg-white">
+        <Button
+          variant="ghost"
+          onClick={onClose}
+          disabled={loading}
+          className="w-full sm:w-auto"
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="w-full sm:w-auto sm:min-w-[120px]"
+        >
+          {loading
+            ? "Saving..."
+            : isEditMode
+              ? "Update Quotation"
+              : "Create Quotation"}
+        </Button>
       </div>
 
-      <button
-        onClick={handleSubmit}
-        disabled={loading}
-        className="w-full mt-6 bg-brand-500 text-white font-semibold py-3 rounded-md hover:bg-brand-600 transition disabled:opacity-50"
-      >
-        {loading
-          ? "Saving..."
-          : isEditMode
-            ? "Update Quotation"
-            : "Create Quotation"}
-      </button>
+      {/* Company SlideOver */}
+      {openCompanySlider && (
+        <SlideOver
+          open={openCompanySlider}
+          onClose={() => setOpenCompanySlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateCompanyForm
+            mode="create"
+            onClose={() => setOpenCompanySlider(false)}
+            onSuccess={async () => {
+              setOpenCompanySlider(false);
+              const res = await getAllActiveCompany();
+              setCompanies(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Contact SlideOver */}
+      {openContactSlider && (
+        <SlideOver
+          open={openContactSlider}
+          onClose={() => setOpenContactSlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateContactForm
+            mode="create"
+            onClose={() => setOpenContactSlider(false)}
+            onSuccess={async () => {
+              setOpenContactSlider(false);
+              const res = await getAllActiveContacts();
+              setContacts(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
     </div>
   );
 };
