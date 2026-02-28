@@ -114,9 +114,6 @@ export default function CreateTeamForm({ onClose, onSuccess }: Props) {
         <div>
           <label className="text-sm font-medium flex items-center gap-2">
             <span className="text-red-500">*</span> Project Name
-            <span className="bg-brand-500 text-white rounded p-1">
-              <Plus size={12} />
-            </span>
           </label>
 
           <select

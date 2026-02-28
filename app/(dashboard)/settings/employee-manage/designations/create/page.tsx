@@ -102,7 +102,7 @@ export default function CreateDesignationForm({
           />
         </div>
 
-        {mode === "create" && (
+        {/* {mode === "create" && (
           <div className="border-t pt-6 space-y-4">
             <div className="bg-brand-50 border border-brand-200 rounded-md p-4">
               <p className="text-sm text-brand-600">
@@ -134,7 +134,7 @@ export default function CreateDesignationForm({
               Download Sample CSV
             </Button>
           </div>
-        )}
+        )} */}
       </div>
 
       {/* Footer */}

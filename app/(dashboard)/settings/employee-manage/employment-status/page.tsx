@@ -28,7 +28,7 @@ export default function EmploymentStatusPage() {
   const [openCreate, setOpenCreate] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingStatus, setEditingStatus] = useState<EmploymentStatus | null>(
-    null
+    null,
   );
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,19 +62,19 @@ export default function EmploymentStatusPage() {
 
   const handleStatusToggle = async (
     employmentStatus: EmploymentStatus,
-    newStatus: boolean
+    newStatus: boolean,
   ) => {
     // Optimistic UI update
     setStatuses((prev) =>
       prev.map((r) =>
-        r.id === employmentStatus.id ? { ...r, is_active: newStatus } : r
-      )
+        r.id === employmentStatus.id ? { ...r, is_active: newStatus } : r,
+      ),
     );
 
     try {
       await updateEmploymentStatusStatus(employmentStatus.id || 0, newStatus);
       showSuccess(
-        `Employment Status ${newStatus ? "activated" : "deactivated"} successfully`
+        `Employment Status ${newStatus ? "activated" : "deactivated"} successfully`,
       );
     } catch (error) {
       // Rollback if API fails
@@ -82,8 +82,8 @@ export default function EmploymentStatusPage() {
         prev.map((r) =>
           r.id === employmentStatus.id
             ? { ...r, is_active: employmentStatus.is_active }
-            : r
-        )
+            : r,
+        ),
       );
       showError("Failed to update Employment status");
     }
@@ -115,8 +115,8 @@ export default function EmploymentStatusPage() {
   const handleColumnToggle = (key: string) => {
     setColumns((prev) =>
       prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -124,12 +124,12 @@ export default function EmploymentStatusPage() {
      Table Actions
   ========================== */
   const tableActions: TableAction<EmploymentStatus>[] = [
-    {
-      label: "View Details",
-      onClick: (row) => {
-        router.push(`/settings/employee-manage/employment-status/${row.id}`);
-      },
-    },
+    // {
+    //   label: "View Details",
+    //   onClick: (row) => {
+    //     router.push(`/settings/employee-manage/employment-status/${row.id}`);
+    //   },
+    // },
     {
       label: "Edit",
       onClick: (row) => {
@@ -183,15 +183,15 @@ export default function EmploymentStatusPage() {
   ========================== */
   const filteredStatuses = statuses.filter((status) =>
     Object.values(status).some((val) =>
-      val?.toString().toLowerCase().includes(searchValue.toLowerCase())
-    )
+      val?.toString().toLowerCase().includes(searchValue.toLowerCase()),
+    ),
   );
 
   const totalItems = filteredStatuses.length;
 
   const paginatedStatuses = filteredStatuses.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    currentPage * pageSize,
   );
 
   const extractors: Record<string, (row: EmploymentStatus) => string> = {

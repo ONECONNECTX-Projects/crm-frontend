@@ -14,6 +14,11 @@ import { getAllActiveQuotes } from "@/app/services/quote/quote.service";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
 import SelectDropdown from "@/app/common/dropdown";
+import SlideOver from "@/app/common/slideOver";
+import CreateCompanyForm from "@/app/(dashboard)/company/create/page";
+import CreateContactForm from "@/app/(dashboard)/contact/create/page";
+import CreateOpportunity from "@/app/(dashboard)/opportunity/create/page";
+import CreateQuote from "@/app/(dashboard)/sales/qoutes/Create/page";
 
 interface CreateAttachmentFormProps {
   onClose: () => void;
@@ -35,9 +40,15 @@ export default function CreateAttachmentForm({
 
   // Form state
   const [ownerId, setOwnerId] = useState("");
-  const [companyId, setCompanyId] = useState(defaultCompanyId ? String(defaultCompanyId) : "");
-  const [contactId, setContactId] = useState(defaultContactId ? String(defaultContactId) : "");
-  const [opportunityId, setOpportunityId] = useState(defaultOpportunityId ? String(defaultOpportunityId) : "");
+  const [companyId, setCompanyId] = useState(
+    defaultCompanyId ? String(defaultCompanyId) : "",
+  );
+  const [contactId, setContactId] = useState(
+    defaultContactId ? String(defaultContactId) : "",
+  );
+  const [opportunityId, setOpportunityId] = useState(
+    defaultOpportunityId ? String(defaultOpportunityId) : "",
+  );
   const [quoteId, setQuoteId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -49,6 +60,12 @@ export default function CreateAttachmentForm({
   const [contacts, setContacts] = useState<OptionDropDownModel[]>([]);
   const [opportunities, setOpportunities] = useState<OptionDropDownModel[]>([]);
   const [quotes, setQuotes] = useState<OptionDropDownModel[]>([]);
+
+  // SlideOver states
+  const [openCompanySlider, setOpenCompanySlider] = useState(false);
+  const [openContactSlider, setOpenContactSlider] = useState(false);
+  const [openOpportunitySlider, setOpenOpportunitySlider] = useState(false);
+  const [openQuoteSlider, setOpenQuoteSlider] = useState(false);
 
   // Fetch dropdown data
   useEffect(() => {
@@ -261,7 +278,7 @@ export default function CreateAttachmentForm({
               options={toOptions(companies)}
               placeholder="Select company"
               onChange={(value) => setCompanyId(value)}
-              onAddClick={() => console.log("Add company")}
+              onAddClick={() => setOpenCompanySlider(true)}
             />
 
             {/* Contact */}
@@ -271,7 +288,7 @@ export default function CreateAttachmentForm({
               options={toOptions(contacts)}
               placeholder="Select contact"
               onChange={(value) => setContactId(value)}
-              onAddClick={() => console.log("Add contact")}
+              onAddClick={() => setOpenContactSlider(true)}
             />
 
             {/* Opportunity */}
@@ -281,7 +298,7 @@ export default function CreateAttachmentForm({
               options={toOptions(opportunities)}
               placeholder="Select opportunity"
               onChange={(value) => setOpportunityId(value)}
-              onAddClick={() => console.log("Add opportunity")}
+              onAddClick={() => setOpenOpportunitySlider(true)}
             />
 
             {/* Quote */}
@@ -291,7 +308,7 @@ export default function CreateAttachmentForm({
               options={toOptions(quotes)}
               placeholder="Select quote"
               onChange={(value) => setQuoteId(value)}
-              onAddClick={() => console.log("Add quote")}
+              onAddClick={() => setOpenQuoteSlider(true)}
             />
           </div>
         </div>
@@ -317,6 +334,81 @@ export default function CreateAttachmentForm({
           )}
         </button>
       </div>
+
+      {/* Company SlideOver */}
+      {openCompanySlider && (
+        <SlideOver
+          open={openCompanySlider}
+          onClose={() => setOpenCompanySlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateCompanyForm
+            mode="create"
+            onClose={() => setOpenCompanySlider(false)}
+            onSuccess={async () => {
+              setOpenCompanySlider(false);
+              const res = await getAllActiveCompany();
+              setCompanies(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Contact SlideOver */}
+      {openContactSlider && (
+        <SlideOver
+          open={openContactSlider}
+          onClose={() => setOpenContactSlider(false)}
+          width="max-w-2xl"
+        >
+          <CreateContactForm
+            mode="create"
+            onClose={() => setOpenContactSlider(false)}
+            onSuccess={async () => {
+              setOpenContactSlider(false);
+              const res = await getAllActiveContacts();
+              setContacts(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Opportunity SlideOver */}
+      {openOpportunitySlider && (
+        <SlideOver
+          open={openOpportunitySlider}
+          onClose={() => setOpenOpportunitySlider(false)}
+          width="sm:w-[70vw] lg:w-[40vw]"
+        >
+          <CreateOpportunity
+            mode="create"
+            onClose={() => setOpenOpportunitySlider(false)}
+            onSuccess={async () => {
+              setOpenOpportunitySlider(false);
+              const res = await getAllActiveOpportunity();
+              setOpportunities(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
+
+      {/* Quote SlideOver */}
+      {openQuoteSlider && (
+        <SlideOver
+          open={openQuoteSlider}
+          onClose={() => setOpenQuoteSlider(false)}
+          width="sm:w-[70vw] lg:w-[40vw]"
+        >
+          <CreateQuote
+            onClose={() => setOpenQuoteSlider(false)}
+            onSuccess={async () => {
+              setOpenQuoteSlider(false);
+              const res = await getAllActiveQuotes();
+              setQuotes(res.data || []);
+            }}
+          />
+        </SlideOver>
+      )}
     </div>
   );
 }
