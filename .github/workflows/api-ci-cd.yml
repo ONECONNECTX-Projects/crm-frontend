@@ -156,4 +156,6 @@ jobs:
             docker run -d --name crm-frontend --restart unless-stopped \
               --network questnet -p 3000:3000 \
               -e NODE_ENV=production \
+              -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
+              -e NEXT_PUBLIC_API_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
               "$IMAGE"
