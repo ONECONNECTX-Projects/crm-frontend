@@ -118,11 +118,15 @@ jobs:
                 command -v pm2 >/dev/null 2>&1 && pm2 delete crm-frontend || true
               fi
 
-              # Stop/remove any containers publishing the port (force remove)
-              docker ps --filter "publish=$PORT" -q | xargs -r docker rm -f || true
-              docker ps -a --filter "publish=$PORT" -q | xargs -r docker rm -f || true
-              # Remove by name (safety net)
-              docker ps -a --filter "name=crm-frontend" -q | xargs -r docker rm -f || true
+              # Stop/remove containers mapped to the port (force remove)
+              docker ps --format '{{.ID}} {{.Ports}}' | awk -v p=\":$PORT\" '$2 ~ p {print $1}' \
+                | xargs -r docker rm -f || true
+              docker ps -a --format '{{.ID}} {{.Ports}}' | awk -v p=\":$PORT\" '$2 ~ p {print $1}' \
+                | xargs -r docker rm -f || true
+              # Remove by label or name (safety nets)
+              docker ps -aq -f label=app=crm-frontend | xargs -r docker rm -f || true
+              docker ps -aq -f name=crm-frontend | xargs -r docker rm -f || true
+              sleep 1
 
               # Kill processes by lsof
               sudo lsof -t -i:$PORT -sTCP:LISTEN 2>/dev/null | xargs -r sudo kill -9 || true
@@ -134,11 +138,15 @@ jobs:
                 | sed -n 's/.*pid=\([0-9]\+\).*/\1/p' | sort -u \
                 | xargs -r sudo kill -9 || true
 
-              # Last resort: kill docker-proxy if still present
-              sudo pkill -f 'docker-proxy.*-host-port '"$PORT" 2>/dev/null || sudo pkill -9 docker-proxy 2>/dev/null || true
+              # Last resorts: kill docker-proxy instances bound to this port
+              sudo pgrep -f docker-proxy | while read -r pid; do \
+                sudo tr '\0' ' ' < /proc/$pid/cmdline | grep -q -- "-host-port $PORT" && sudo kill -9 "$pid" || true; \
+              done
+              sudo pkill -f 'docker-proxy.*-host-port '"$PORT" 2>/dev/null || true
+              sleep 1
 
-              # Wait up to 20s for the port to clear
-              for i in $(seq 1 20); do
+              # Wait up to 30s for the port to clear
+              for i in $(seq 1 30); do
                 sudo ss -ltn 2>/dev/null | grep -q ":$PORT " && sleep 1 || break
               done
               log_port
@@ -159,6 +167,7 @@ jobs:
 
             docker run -d --name crm-frontend --restart unless-stopped \
               --network questnet -p 3000:3000 \
+              --label app=crm-frontend \
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
               -e NEXT_PUBLIC_API_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
