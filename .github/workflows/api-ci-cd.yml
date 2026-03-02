@@ -100,7 +100,7 @@ jobs:
 
             log_port() {
               echo "==== Port $PORT listeners (before/after) ===="
-              sudo ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p'
+              sudo ss -ltnp 2>/dev/null | grep -E ":$PORT( |$)" || true
               echo "============================================="
             }
 
@@ -134,9 +134,12 @@ jobs:
               sudo fuser -k -n tcp $PORT 2>/dev/null || true
 
               # Kill processes by ss (docker-proxy, node, etc.)
-              sudo ss -ltnp 2>/dev/null | awk -v p=":$PORT " '$4 ~ p {print $0}' \
-                | sed -n 's/.*pid=\([0-9]\+\).*/\1/p' | sort -u \
-                | xargs -r sudo kill -9 || true
+              PIDS=$(sudo ss -ltnp 2>/dev/null | grep -E ":$PORT( |$)" \
+                | sed -n 's/.*pid=\([0-9]\+\).*/\1/p' | sort -u)
+              if [ -n "$PIDS" ]; then
+                echo "Killing PIDs bound to :$PORT => $PIDS"
+                echo "$PIDS" | xargs -r sudo kill -9 || true
+              fi
 
               # Last resorts: kill docker-proxy instances bound to this port
               sudo pgrep -f docker-proxy | while read -r pid; do \
@@ -147,7 +150,7 @@ jobs:
 
               # Wait up to 30s for the port to clear
               for i in $(seq 1 30); do
-                sudo ss -ltn 2>/dev/null | grep -q ":$PORT " && sleep 1 || break
+                sudo ss -ltn 2>/dev/null | grep -Eq ":$PORT( |$)" && sleep 1 || break
               done
               log_port
               set -e
