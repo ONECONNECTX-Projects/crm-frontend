@@ -5,7 +5,6 @@ on:
     branches: ['main']
   workflow_dispatch:
 
-# Prevent overlapping deploys on the same branch
 concurrency:
   group: frontend-${{ github.ref }}
   cancel-in-progress: true
@@ -71,7 +70,6 @@ jobs:
 
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-            # Pull commit image; fall back to latest
             docker pull "$REPO:$SHA" || docker pull "$REPO:latest"
             if docker image inspect "$REPO:$SHA" >/dev/null 2>&1; then
               IMAGE="$REPO:$SHA"
@@ -79,36 +77,33 @@ jobs:
               IMAGE="$REPO:latest"
             fi
 
-            # Ensure the shared network exists
             docker network create questnet >/dev/null 2>&1 || true
 
-            # Free port 3000 if occupied (PM2 or another container)
+            # Only detect, don't fail the job if freeing the port hits issues
             if command -v ss >/dev/null 2>&1 && ss -ltn '( sport = :3000 )' | grep -q ':3000'; then
               echo "Port 3000 is occupied; attempting to free it"
-
-              # Stop PM2 app if present
+              set +e
               if command -v pm2 >/dev/null 2>&1; then
                 pm2 delete crm-frontend || true
               else
-                export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                nvm use 22 >/dev/null 2>&1 || true
+                # Try loading nvm → pm2
+                if [ -z "${NVM_DIR:-}" ]; then export NVM_DIR="$HOME/.nvm"; fi
+                [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 22 >/dev/null 2>&1 || true
                 command -v pm2 >/dev/null 2>&1 && pm2 delete crm-frontend || true
               fi
-
-              # Stop containers publishing 3000
-              docker ps --filter 'publish=3000' -q | xargs -r docker stop || true
-              docker ps -a --filter 'publish=3000' -q | xargs -r docker rm || true
-
-              # Last resort kill any process on 3000
-              command -v fuser >/dev/null 2>&1 && sudo fuser -k 3000/tcp || true
+              docker ps --filter publish=3000 -q | xargs -r docker stop || true
+              docker ps -a --filter publish=3000 -q | xargs -r docker rm || true
+              if command -v lsof >/dev/null 2>&1; then
+                sudo lsof -t -i:3000 -sTCP:LISTEN 2>/dev/null | xargs -r sudo kill -9 || true
+              elif command -v fuser >/dev/null 2>&1; then
+                sudo fuser -k 3000/tcp || true
+              fi
+              set -e
             fi
 
-            # Stop/remove previous container
             docker stop crm-frontend >/dev/null 2>&1 || true
             docker rm crm-frontend >/dev/null 2>&1 || true
 
-            # Run the new container
             docker run -d --name crm-frontend --restart unless-stopped \
               --network questnet -p 3000:3000 \
               -e NODE_ENV=production \
