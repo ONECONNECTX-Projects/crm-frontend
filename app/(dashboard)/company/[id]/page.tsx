@@ -14,6 +14,7 @@ import {
   getQuoteByCompanyId,
   getAttachmentByCompanyId,
   getContactByCompanyId,
+  getProjectByCompanyId,
 } from "@/app/services/company/company.service";
 import { Contact } from "@/app/services/contact/contact.service";
 import { Opportunity } from "@/app/services/opportunity/opportunity.service";
@@ -32,10 +33,14 @@ import CreateTask from "../../tasks/create/page";
 import CreateNote from "../../other/note/create/page";
 import CreateQuote from "../../sales/qoutes/Create/page";
 import CreateAttachmentForm from "../../other/attachment/create/page";
+import { Project } from "@/app/services/project/project.service";
+import StatusBadge from "@/app/common/StatusBadge";
+import CreateProjectForm from "../../projects/project/create/page";
 
 const tabs = [
   "Company Information",
   "Opportunities",
+  "Project",
   "Tasks",
   "Notes",
   "Attachments",
@@ -60,6 +65,7 @@ export default function CompanyViewPage() {
   const [notes, setNotes] = useState<Notes[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [projects, setProject] = useState<Project[]>([]);
 
   // Loading and loaded tabs states
   const [tabLoading, setTabLoading] = useState(false);
@@ -72,6 +78,7 @@ export default function CompanyViewPage() {
   const [openCreateNote, setOpenCreateNote] = useState(false);
   const [openCreateQuote, setOpenCreateQuote] = useState(false);
   const [openCreateAttachment, setOpenCreateAttachment] = useState(false);
+  const [openCreateProject, setOpenCreateProject] = useState(false);
 
   useEffect(() => {
     if (!companyId) return;
@@ -116,6 +123,10 @@ export default function CompanyViewPage() {
           case "Quotes":
             const quotesRes = await getQuoteByCompanyId(companyId);
             setQuotes(quotesRes.data || []);
+            break;
+          case "Project":
+            const projectRes = await getProjectByCompanyId(companyId);
+            setProject(projectRes.data || []);
             break;
           case "Attachments":
             const attachRes = await getAttachmentByCompanyId(companyId);
@@ -173,6 +184,11 @@ export default function CompanyViewPage() {
         return {
           label: "Create Opportunity",
           onClick: () => setOpenCreateOpportunity(true),
+        };
+      case "Project":
+        return {
+          label: "Create Project",
+          onClick: () => setOpenCreateProject(true),
         };
       case "Tasks":
         return { label: "Create Task", onClick: () => setOpenCreateTask(true) };
@@ -319,6 +335,89 @@ export default function CompanyViewPage() {
     },
   ];
 
+  const projectColumns: TableColumn<Project>[] = [
+    {
+      key: "id",
+      label: "ID",
+      visible: true,
+      render: (row) => (
+        <span className="font-medium text-gray-900">#{row.id}</span>
+      ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      visible: true,
+      render: (row) => (
+        <div className="font-medium text-gray-900 truncate max-w-[220px]">
+          {row.name}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      label: "Contact",
+      visible: true,
+      render: (row) => (
+        <span className="text-gray-700">{row.contact?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "value",
+      label: "Value",
+      visible: true,
+      render: (row) => (
+        <span className="font-semibold text-green-600">
+          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      visible: true,
+      render: (row) => (
+        <span className="text-gray-700">{row.priority?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "company",
+      label: "Company",
+      visible: true,
+      render: (row) => (
+        <span className="text-gray-700">{row.company?.name || "-"}</span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Project Status",
+      visible: true,
+      render: (row) => (
+        <StatusBadge status={row.status?.name?.toLowerCase() || "new"} />
+      ),
+    },
+    {
+      key: "start_date",
+      label: "Start Date",
+      visible: true,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.start_date ? new Date(row.start_date).toLocaleDateString() : "-"}
+        </span>
+      ),
+    },
+    {
+      key: "deadline",
+      label: "Deadline",
+      visible: true,
+      render: (row) => (
+        <span className="text-gray-600">
+          {row.deadline ? new Date(row.deadline).toLocaleDateString() : "-"}
+        </span>
+      ),
+    },
+  ];
+
   const attachmentColumns: TableColumn<Attachment>[] = [
     { key: "file_name", label: "File Name", visible: true },
     { key: "file_type", label: "Type", visible: true },
@@ -362,6 +461,14 @@ export default function CompanyViewPage() {
             columns={opportunityColumns}
             data={opportunities}
             emptyMessage="No opportunities found"
+          />
+        );
+      case "Project":
+        return (
+          <DataTable
+            columns={projectColumns}
+            data={projects}
+            emptyMessage="No Project found"
           />
         );
       case "Tasks":
@@ -454,7 +561,9 @@ export default function CompanyViewPage() {
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-brand-500 text-white flex items-center justify-center text-lg sm:text-xl font-semibold">
               {company.name?.[0]?.toUpperCase() || "?"}
             </div>
-            <h2 className="mt-3 font-semibold text-sm sm:text-base">{company.name}</h2>
+            <h2 className="mt-3 font-semibold text-sm sm:text-base">
+              {company.name}
+            </h2>
             <p className="text-xs sm:text-sm text-gray-500">
               {company.company_type?.name || "-"}
             </p>
@@ -575,7 +684,9 @@ export default function CompanyViewPage() {
           ) : (
             <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <h3 className="font-medium text-sm sm:text-base">{activeTab}</h3>
+                <h3 className="font-medium text-sm sm:text-base">
+                  {activeTab}
+                </h3>
                 {createButtonConfig && (
                   <button
                     onClick={createButtonConfig.onClick}
@@ -672,6 +783,22 @@ export default function CompanyViewPage() {
         />
       </SlideOver>
 
+      {/* Create Project SlideOver */}
+      <SlideOver
+        open={openCreateProject}
+        onClose={() => setOpenCreateProject(false)}
+        width="max-w-3xl"
+      >
+        <CreateProjectForm
+          onClose={() => setOpenCreateProject(false)}
+          onSuccess={() => {
+            setOpenCreateProject(false);
+            handleCreateSuccess("Project");
+          }}
+          defaultCompanyId={companyId}
+        />
+      </SlideOver>
+
       {/* Create Quote SlideOver */}
       <SlideOver
         open={openCreateQuote}
@@ -719,7 +846,9 @@ function Section({
   return (
     <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm">
       <h3 className="font-medium mb-3 sm:mb-4 text-sm sm:text-base">{title}</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+        {children}
+      </div>
     </div>
   );
 }

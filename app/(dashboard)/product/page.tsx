@@ -31,7 +31,7 @@ export default function ProductsPage() {
     { key: "id", label: "ID", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "rate", label: "Rate", visible: true },
-    { key: "unit", label: "Unit", visible: true },
+    { key: "unit", label: "Quantities", visible: true },
     {
       key: "category",
       label: "Category",

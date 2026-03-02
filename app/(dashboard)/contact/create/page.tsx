@@ -169,9 +169,6 @@ export default function CreateContactForm({
       } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
         errors.email = "Invalid email address";
       }
-      if (!contactInfo.birthday?.trim()) {
-        errors.birthday = "Birthday is required";
-      }
       if (contactInfo.phone && contactInfo.phone.trim().length !== 10) {
         errors.phone = "Phone must be exactly 10 digits";
       }
@@ -361,7 +358,6 @@ export default function CreateContactForm({
               </div>
               <InputField
                 label="Birthday"
-                required
                 error={fieldErrors.birthday}
                 value={contactInfo.birthday}
                 onChange={(v) => {

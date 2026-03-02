@@ -189,7 +189,7 @@ export default function AttachmentPage() {
       visible: columns.find((c) => c.key === "quote")?.visible,
       render: (row) => (
         <StatusBadge
-          status={row.quote?.name?.toLowerCase() || "new"}
+          status={row.quote?.name?.toLowerCase() || "-"}
           variant="lead"
         />
       ),

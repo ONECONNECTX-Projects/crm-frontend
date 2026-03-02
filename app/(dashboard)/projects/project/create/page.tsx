@@ -14,51 +14,63 @@ import { getAllActivePriority } from "@/app/services/priority/priority.service";
 import { getAllActiveProjectStatus } from "@/app/services/project-status/project-status";
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
+import { getAllActiveCompany } from "@/app/services/company/company.service";
 
 interface CreateProjectFormProps {
   onClose: () => void;
   onSuccess: () => void;
+  defaultCompanyId?: number;
   editingProject?: Project | null;
 }
 
 export default function CreateProjectForm({
   onClose,
   onSuccess,
+  defaultCompanyId,
   editingProject,
 }: CreateProjectFormProps) {
   const { showSuccess, showError } = useError();
   const isEditMode = !!editingProject;
-
   const [form, setForm] = useState({
-    name: "",
-    manager_id: "",
-    contact_id: "",
-    project_status_id: "",
-    priority_id: "",
-    project_value: "",
-    start_date: "",
-    deadline: "",
-    description: "",
+    name: editingProject?.name || "",
+    manager_id: editingProject?.manager_id?.toString() || "",
+    contact_id: editingProject?.contact_id?.toString() || "",
+    project_status_id: editingProject?.project_status_id?.toString() || "",
+    priority_id: editingProject?.priority_id?.toString() || "",
+    company_id: defaultCompanyId
+      ? String(defaultCompanyId)
+      : String(editingProject?.company_id),
+
+    project_value: editingProject?.project_value || "",
+    start_date: editingProject?.start_date
+      ? new Date(editingProject?.start_date).toISOString().split("T")[0]
+      : "",
+    deadline: editingProject?.deadline
+      ? new Date(editingProject?.deadline).toISOString().split("T")[0]
+      : "",
+    description: editingProject?.description || "",
   });
 
   const [loading, setLoading] = useState(false);
   const [contacts, setContacts] = useState<OptionDropDownModel[]>([]);
   const [managers, setManagers] = useState<{ id: number; name: string }[]>([]);
   const [priorities, setPriorities] = useState<OptionDropDownModel[]>([]);
+  const [companies, setCompanies] = useState<OptionDropDownModel[]>([]);
   const [projectStatuses, setProjectStatuses] = useState<OptionDropDownModel[]>(
-    []
+    [],
   );
 
   // Fetch dropdown data
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
-        const [contactsRes, staffRes, prioritiesRes, statusesRes] =
+        const [contactsRes, staffRes, prioritiesRes, statusesRes, companyRes] =
           await Promise.all([
             getAllActiveContacts(),
             getAllStaff(),
             getAllActivePriority(),
             getAllActiveProjectStatus(),
+            getAllActiveCompany(),
           ]);
 
         setContacts(contactsRes.data || []);
@@ -68,10 +80,11 @@ export default function CreateProjectForm({
           staffList.map((s: Staff) => ({
             id: s.user_id,
             name: s.user?.name || "",
-          }))
+          })),
         );
         setPriorities(prioritiesRes.data || []);
         setProjectStatuses(statusesRes.data || []);
+        setCompanies(companyRes.data || []);
       } catch (error) {
         console.error("Failed to fetch dropdown data:", error);
       }
@@ -79,27 +92,6 @@ export default function CreateProjectForm({
 
     fetchDropdownData();
   }, []);
-
-  // Populate form when editing
-  useEffect(() => {
-    if (editingProject) {
-      setForm({
-        name: editingProject.name || "",
-        manager_id: editingProject.manager_id?.toString() || "",
-        contact_id: editingProject.contact_id?.toString() || "",
-        project_status_id: editingProject.project_status_id?.toString() || "",
-        priority_id: editingProject.priority_id?.toString() || "",
-        project_value: editingProject.project_value || "",
-        start_date: editingProject.start_date
-          ? new Date(editingProject.start_date).toISOString().split("T")[0]
-          : "",
-        deadline: editingProject.deadline
-          ? new Date(editingProject.deadline).toISOString().split("T")[0]
-          : "",
-        description: editingProject.description || "",
-      });
-    }
-  }, [editingProject]);
 
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -119,6 +111,7 @@ export default function CreateProjectForm({
         contact_id: parseInt(form.contact_id) || 0,
         project_status_id: parseInt(form.project_status_id) || 0,
         priority_id: parseInt(form.priority_id) || 0,
+        company_id: parseInt(form.company_id) || 0,
         project_value: parseFloat(form.project_value) || 0,
         start_date: form.start_date ? new Date(form.start_date) : new Date(),
         deadline: form.deadline ? new Date(form.deadline) : new Date(),
@@ -138,7 +131,7 @@ export default function CreateProjectForm({
     } catch (error) {
       console.error("Failed to save project:", error);
       showError(
-        isEditMode ? "Failed to update project" : "Failed to create project"
+        isEditMode ? "Failed to update project" : "Failed to create project",
       );
     } finally {
       setLoading(false);
@@ -194,6 +187,13 @@ export default function CreateProjectForm({
           onChange={(v) => handleChange("priority_id", v)}
         />
 
+        <Select
+          label="Company"
+          value={form.company_id}
+          options={companies}
+          onChange={(v) => handleChange("company_id", v)}
+        />
+
         <Input
           label="Project Value"
           placeholder="Enter value"
@@ -237,8 +237,8 @@ export default function CreateProjectForm({
             ? "Updating..."
             : "Creating..."
           : isEditMode
-          ? "Update Project"
-          : "Add Project"}
+            ? "Update Project"
+            : "Add Project"}
       </button>
     </div>
   );

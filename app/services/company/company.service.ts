@@ -6,6 +6,7 @@ import { Notes } from "../notes/notes.service";
 import { Attachment } from "../attachment/attachement.service";
 import { Quote } from "../quote/quote.service";
 import { Contact } from "../contact/contact.service";
+import { Project } from "../project/project.service";
 // Company info for create/update
 export interface CompanyInfo {
   name: string;
@@ -173,4 +174,12 @@ export async function getContactByCompanyId(
 ): Promise<ApiResponse<Contact[]>> {
   const response = await api.get(`companies/getContactByCompanyId/${id}`);
   return response as unknown as ApiResponse<Contact[]>;
+}
+
+//Project
+export async function getProjectByCompanyId(
+  id: number,
+): Promise<ApiResponse<Project[]>> {
+  const response = await api.get(`companies/getProjectByCompanyId/${id}`);
+  return response as unknown as ApiResponse<Project[]>;
 }

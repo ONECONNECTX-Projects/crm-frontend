@@ -166,7 +166,7 @@ export default function CreateProductForm({
         {/* Row 2 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium mb-1">Unit</label>
+            <label className="block text-sm font-medium mb-1">Quantities</label>
             <input
               type="number"
               name="unit"
