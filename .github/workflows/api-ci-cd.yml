@@ -156,17 +156,24 @@ jobs:
               set -e
             }
 
-            if sudo ss -ltn 2>/dev/null | grep -q ":$PORT "; then
+            # Always stop/remove named container first
+            docker stop crm-frontend >/dev/null 2>&1 || true
+            docker rm -f crm-frontend >/dev/null 2>&1 || true
+            sleep 2
+
+            if sudo ss -ltn 2>/dev/null | grep -Eq ":$PORT( |$)"; then
               echo "Port $PORT is occupied; attempting cleanup"
               ( free_port ) || true
-              if sudo ss -ltn 2>/dev/null | grep -q ":$PORT "; then
-                echo "Port $PORT still occupied after cleanup"
-                exit 1
+              if sudo ss -ltn 2>/dev/null | grep -Eq ":$PORT( |$)"; then
+                echo "Port $PORT still occupied after cleanup; attempting Docker restart"
+                sudo systemctl restart docker || true
+                sleep 3
+                if sudo ss -ltn 2>/dev/null | grep -Eq ":$PORT( |$)"; then
+                  echo "Port $PORT still occupied after Docker restart"
+                  exit 1
+                fi
               fi
             fi
-
-            docker stop crm-frontend >/dev/null 2>&1 || true
-            docker rm crm-frontend >/dev/null 2>&1 || true
 
             docker run -d --name crm-frontend --restart unless-stopped \
               --network questnet -p 3000:3000 \
