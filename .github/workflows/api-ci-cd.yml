@@ -67,15 +67,18 @@ jobs:
 
             REPO="${{ secrets.DOCKERHUB_USERNAME }}/crm-frontend"
             SHA="${{ github.sha }}"
+            PORT=3000
+
+            # Ensure tools for port/process management
+            sudo apt-get update -y >/dev/null 2>&1 || true
+            sudo apt-get install -y lsof psmisc >/dev/null 2>&1 || true
 
             df -h /
-            echo "Checking free space and cleaning if needed"
 
+            # Disk cleanup if low space
             FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
             THRESHOLD_KB=$((2*1024*1024)) # 2GB
-
             if [ "$FREE_KB" -lt "$THRESHOLD_KB" ]; then
-              echo "Low disk space detected. Running cleanup..."
               docker ps -a --filter "name=crm-frontend" -q | xargs -r docker rm -f || true
               docker images "$REPO" --format '{{.Repository}}:{{.Tag}}' | grep -v -E ":($SHA|latest)$" | xargs -r docker rmi -f || true
               docker image prune -af || true
@@ -95,10 +98,18 @@ jobs:
 
             docker network create questnet >/dev/null 2>&1 || true
 
-            PORT=3000
-            if command -v ss >/dev/null 2>&1 && ss -ltn | grep -q ":$PORT "; then
-              echo "Port $PORT is occupied; freeing it"
+            log_port() {
+              echo "==== Port $PORT listeners (before/after) ===="
+              sudo ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p'
+              echo "============================================="
+            }
+
+            free_port() {
               set +e
+              echo "Freeing port $PORT"
+              log_port
+
+              # Stop PM2 app if present
               if command -v pm2 >/dev/null 2>&1; then
                 pm2 delete crm-frontend || true
               else
@@ -106,14 +117,37 @@ jobs:
                 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 22 >/dev/null 2>&1 || true
                 command -v pm2 >/dev/null 2>&1 && pm2 delete crm-frontend || true
               fi
+
+              # Stop/remove any containers publishing the port
               docker ps --filter "publish=$PORT" -q | xargs -r docker stop || true
               docker ps -a --filter "publish=$PORT" -q | xargs -r docker rm || true
-              if command -v lsof >/dev/null 2>&1; then
-                lsof -ti:$PORT -sTCP:LISTEN 2>/dev/null | xargs -r kill -9 || true
-              elif command -v fuser >/dev/null 2>&1; then
-                fuser -k 3000/tcp || true
-              fi
+
+              # Kill processes by lsof
+              sudo lsof -t -i:$PORT -sTCP:LISTEN 2>/dev/null | xargs -r sudo kill -9 || true
+
+              # Kill processes by ss (docker-proxy, node, etc.)
+              sudo ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p {print $0}' \
+                | sed -n 's/.*pid=$[0-9]\+$.*/\1/p' | sort -u \
+                | xargs -r sudo kill -9 || true
+
+              # Last resort: kill docker-proxy if still present
+              sudo pkill -9 docker-proxy 2>/dev/null || true
+
+              # Wait up to 10s for the port to clear
+              for i in $(seq 1 10); do
+                sudo ss -ltn 2>/dev/null | grep -q ":$PORT " && sleep 1 || break
+              done
+              log_port
               set -e
+            }
+
+            if sudo ss -ltn 2>/dev/null | grep -q ":$PORT "; then
+              echo "Port $PORT is occupied; attempting cleanup"
+              ( free_port ) || true
+              if sudo ss -ltn 2>/dev/null | grep -q ":$PORT "; then
+                echo "Port $PORT still occupied after cleanup"
+                exit 1
+              fi
             fi
 
             docker stop crm-frontend >/dev/null 2>&1 || true
