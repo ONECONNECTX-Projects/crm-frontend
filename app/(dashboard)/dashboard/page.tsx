@@ -65,7 +65,7 @@ export default function Dashboard() {
     <div className="p-6 space-y-6  bg-white min-h-screen">
       <div>
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
-          Dashboard
+          Dashboardd
         </h1>
         <p className="text-sm sm:text-base text-gray-500">
           Track your business metrics and performance
@@ -157,7 +157,7 @@ export default function Dashboard() {
             className="sm:!h-[250px]"
           >
             {data?.ticketStatusDistribution &&
-            data.ticketStatusDistribution.some((item) => item.value > 0) ? (
+              data.ticketStatusDistribution.some((item) => item.value > 0) ? (
               <PieChart>
                 <Tooltip />
                 <Pie
