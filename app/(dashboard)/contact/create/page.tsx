@@ -25,7 +25,6 @@ import CreateContactStageForm from "../../settings/contact-setup/contact-stage/c
 import CreateIndustryForm from "../../settings/company-setup/industry/create/page";
 import SelectDropdown from "@/app/common/dropdown";
 import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
 import SlideOver from "@/app/common/slideOver";
 import CreateCompanyForm from "../../company/create/page";
 import { getAllActiveCompany } from "@/app/services/company/company.service";

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import InputField from "@/app/common/InputFeild";
 import SelectDropdown from "@/app/common/dropdown";
 import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
 import { getAllActiveLeadStatuses } from "@/app/services/lead-status/lead-status.service";
 import { getAllActiveLeadSources } from "@/app/services/lead-source/lead-source.service";
 import { getAllActiveUsers } from "@/app/services/user/user.service";

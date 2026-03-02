@@ -330,7 +330,9 @@ export default function CreateTask({
                 ? formData.due_date.toISOString().split("T")[0]
                 : ""
             }
-            onChange={(v) => setFormData({ ...formData, due_date: new Date(v) })}
+            onChange={(v) =>
+              v ? setFormData({ ...formData, due_date: new Date(v) }) : undefined
+            }
           />
           <div className="md:col-span-2">
             <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">

@@ -278,16 +278,20 @@ export default function CreateOpportunity({
             <DateInput
               label="Start Date"
               value={formData.start_date.toISOString().split("T")[0]}
-              onChange={(v) =>
-                setFormData({ ...formData, start_date: new Date(v) })
-              }
+              onChange={(v) => {
+                if (v) {
+                  setFormData({ ...formData, start_date: new Date(v) });
+                }
+              }}
             />
             <DateInput
               label="Close Date"
               value={formData.close_date.toISOString().split("T")[0]}
-              onChange={(v) =>
-                setFormData({ ...formData, close_date: new Date(v) })
-              }
+              onChange={(v) => {
+                if (v) {
+                  setFormData({ ...formData, close_date: new Date(v) });
+                }
+              }}
             />
           </div>
         )}
