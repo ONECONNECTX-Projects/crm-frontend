@@ -68,6 +68,22 @@ jobs:
             REPO="${{ secrets.DOCKERHUB_USERNAME }}/crm-frontend"
             SHA="${{ github.sha }}"
 
+            df -h /
+            echo "Checking free space and cleaning if needed"
+
+            FREE_KB=$(df -Pk / | awk 'NR==2 {print $4}')
+            THRESHOLD_KB=$((2*1024*1024)) # 2GB
+
+            if [ "$FREE_KB" -lt "$THRESHOLD_KB" ]; then
+              echo "Low disk space detected. Running cleanup..."
+              docker ps -a --filter "name=crm-frontend" -q | xargs -r docker rm -f || true
+              docker images "$REPO" --format '{{.Repository}}:{{.Tag}}' | grep -v -E ":($SHA|latest)$" | xargs -r docker rmi -f || true
+              docker image prune -af || true
+              docker builder prune -af || true
+              docker container prune -f || true
+              df -h /
+            fi
+
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
             docker pull "$REPO:$SHA" || docker pull "$REPO:latest"
@@ -92,11 +108,11 @@ jobs:
               fi
               docker ps --filter "publish=$PORT" -q | xargs -r docker stop || true
               docker ps -a --filter "publish=$PORT" -q | xargs -r docker rm || true
-              PIDS="$(lsof -ti:$PORT -sTCP:LISTEN 2>/dev/null || true)"
-              if [ -z "$PIDS" ] && command -v ss >/dev/null 2>&1; then
-                PIDS="$(ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p && /LISTEN/ {sub(/.*pid=/,"",$NF); sub(/,.*/,"",$NF); print $NF}')"
+              if command -v lsof >/dev/null 2>&1; then
+                lsof -ti:$PORT -sTCP:LISTEN 2>/dev/null | xargs -r kill -9 || true
+              elif command -v fuser >/dev/null 2>&1; then
+                fuser -k 3000/tcp || true
               fi
-              for pid in $PIDS; do kill -9 "$pid" || true; done
               set -e
             fi
 
