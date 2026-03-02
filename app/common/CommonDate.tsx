@@ -1,11 +1,9 @@
 "use client";
 
-import { useRef } from "react";
-
 interface DateInputProps {
   label?: string;
-  value: string;
-  onChange: (value: string) => void;
+  value?: string | null; // accept null safely
+  onChange: (value: string | null) => void;
   min?: string;
   max?: string;
   error?: string;
@@ -21,18 +19,6 @@ export default function DateInput({
   error,
   disabled = false,
 }: DateInputProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const openCalendar = () => {
-    // Chrome / Edge support
-    if (inputRef.current?.showPicker) {
-      inputRef.current.showPicker();
-    } else {
-      // Fallback for other browsers
-      inputRef.current?.focus();
-    }
-  };
-
   return (
     <div className="w-full">
       {label && (
@@ -40,16 +26,13 @@ export default function DateInput({
       )}
 
       <input
-        ref={inputRef}
         type="date"
-        value={value}
+        value={value || ""} // safe fallback
         min={min}
         max={max}
         disabled={disabled}
-        onClick={openCalendar}
-        onFocus={openCalendar}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 cursor-pointer ${
+        onChange={(e) => onChange(e.target.value ? e.target.value : null)}
+        className={`w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
           error
             ? "border-red-500 focus:ring-red-400"
             : "border-gray-300 focus:ring-brand-500"

@@ -42,6 +42,7 @@ export default function ProjectsPage() {
     { key: "contact", label: "Contact", visible: true },
     { key: "value", label: "Value", visible: true },
     { key: "priority", label: "Priority", visible: true },
+    { key: "company", label: "Company", visible: true },
     { key: "status", label: "Project Status", visible: true },
     { key: "startDate", label: "Start Date", visible: true },
     { key: "deadline", label: "Deadline", visible: true },
@@ -138,6 +139,14 @@ export default function ProjectsPage() {
       ),
     },
     {
+      key: "company",
+      label: "Company",
+      visible: columns.find((c) => c.key === "company")?.visible,
+      render: (row) => (
+        <span className="text-gray-700">{row.company?.name || "-"}</span>
+      ),
+    },
+    {
       key: "status",
       label: "Project Status",
       visible: columns.find((c) => c.key === "status")?.visible,
@@ -199,11 +208,14 @@ export default function ProjectsPage() {
   // Custom extractors for nested objects
   const projectExtractors: Record<string, (row: Project) => string> = {
     contact: (row) => row.contact?.name || "-",
-    value: (row) => `₹${parseFloat(row.project_value || "0").toLocaleString("en-IN")}`,
+    value: (row) =>
+      `₹${parseFloat(row.project_value || "0").toLocaleString("en-IN")}`,
     priority: (row) => row.priority?.name || "-",
     status: (row) => row.status?.name || "-",
-    startDate: (row) => row.start_date ? new Date(row.start_date).toLocaleDateString() : "-",
-    deadline: (row) => row.deadline ? new Date(row.deadline).toLocaleDateString() : "-",
+    startDate: (row) =>
+      row.start_date ? new Date(row.start_date).toLocaleDateString() : "-",
+    deadline: (row) =>
+      row.deadline ? new Date(row.deadline).toLocaleDateString() : "-",
   };
 
   const handleDownloadExcel = () => {

@@ -7,6 +7,7 @@ export interface ProjectPayload {
   contact_id: number;
   project_status_id: number;
   priority_id: number;
+  company_id: number;
   project_value: number;
   start_date: Date;
   deadline: Date;
@@ -20,6 +21,7 @@ export interface Project {
   contact_id: number;
   project_status_id: number;
   priority_id: number;
+  company_id: number;
   project_value: string;
   start_date: Date;
   deadline: Date;
@@ -32,6 +34,7 @@ export interface Project {
   contact: OptionDropDownModel;
   status: OptionDropDownModel;
   priority: OptionDropDownModel;
+  company: OptionDropDownModel;
 }
 
 // Get all Projects

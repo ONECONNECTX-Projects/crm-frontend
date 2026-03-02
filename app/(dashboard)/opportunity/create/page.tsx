@@ -264,6 +264,7 @@ export default function CreateOpportunity({
             />
             <InputField
               label="Amount"
+              type="number"
               value={formData.amount}
               onChange={(v) => setFormData({ ...formData, amount: v })}
               placeholder="Enter Amount"
