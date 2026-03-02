@@ -63,7 +63,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-            set -euo pipefail
+            set -e
 
             REPO="${{ secrets.DOCKERHUB_USERNAME }}/crm-frontend"
             SHA="${{ github.sha }}"
@@ -79,25 +79,24 @@ jobs:
 
             docker network create questnet >/dev/null 2>&1 || true
 
-            # Only detect, don't fail the job if freeing the port hits issues
-            if command -v ss >/dev/null 2>&1 && ss -ltn '( sport = :3000 )' | grep -q ':3000'; then
-              echo "Port 3000 is occupied; attempting to free it"
+            PORT=3000
+            if command -v ss >/dev/null 2>&1 && ss -ltn | grep -q ":$PORT "; then
+              echo "Port $PORT is occupied; freeing it"
               set +e
               if command -v pm2 >/dev/null 2>&1; then
                 pm2 delete crm-frontend || true
               else
-                # Try loading nvm → pm2
                 if [ -z "${NVM_DIR:-}" ]; then export NVM_DIR="$HOME/.nvm"; fi
                 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" && nvm use 22 >/dev/null 2>&1 || true
                 command -v pm2 >/dev/null 2>&1 && pm2 delete crm-frontend || true
               fi
-              docker ps --filter publish=3000 -q | xargs -r docker stop || true
-              docker ps -a --filter publish=3000 -q | xargs -r docker rm || true
-              if command -v lsof >/dev/null 2>&1; then
-                sudo lsof -t -i:3000 -sTCP:LISTEN 2>/dev/null | xargs -r sudo kill -9 || true
-              elif command -v fuser >/dev/null 2>&1; then
-                sudo fuser -k 3000/tcp || true
+              docker ps --filter "publish=$PORT" -q | xargs -r docker stop || true
+              docker ps -a --filter "publish=$PORT" -q | xargs -r docker rm || true
+              PIDS="$(lsof -ti:$PORT -sTCP:LISTEN 2>/dev/null || true)"
+              if [ -z "$PIDS" ] && command -v ss >/dev/null 2>&1; then
+                PIDS="$(ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p && /LISTEN/ {sub(/.*pid=/,"",$NF); sub(/,.*/,"",$NF); print $NF}')"
               fi
+              for pid in $PIDS; do kill -9 "$pid" || true; done
               set -e
             fi
 
