@@ -126,7 +126,7 @@ export default function ProjectsPage() {
       visible: columns.find((c) => c.key === "value")?.visible,
       render: (row) => (
         <span className="font-semibold text-green-600">
-          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+          ${parseFloat(row.project_value || "0").toLocaleString("en-IN")}
         </span>
       ),
     },
