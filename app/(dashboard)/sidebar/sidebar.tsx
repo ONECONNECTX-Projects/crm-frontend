@@ -45,16 +45,16 @@ const menuItems: MenuItem[] = [
   { name: "Contact", icon: RiContactsLine, path: "/contact" },
   { name: "Company", icon: FaRegBuilding, path: "/company" },
   { name: "Products", icon: AiOutlineProduct, path: "/product" },
-  {
-    name: "Sales",
-    icon: FiShoppingCart,
-    children: [
-      // { name: "Invoices", path: "/sales/invoice" },
-      { name: "Quotes", path: "/sales/qoutes" },
-    ],
-  },
+  // {
+  //   name: "Sales",
+  //   icon: FiShoppingCart,
+  //   children: [
+  //     // { name: "Invoices", path: "/sales/invoice" },
+  //     { name: "Quotes", path: "/sales/qoutes" },
+  //   ],
+  // },
   { name: "Opportunity", icon: HiOutlineLightBulb, path: "/opportunity" },
-  { name: "Tasks", icon: GoTasklist, path: "/tasks" },
+  // { name: "Tasks", icon: GoTasklist, path: "/tasks" },
   {
     name: "Projects",
     icon: LiaProjectDiagramSolid,
@@ -227,9 +227,8 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
 
   return (
     <div
-      className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${
-        collapsed ? "w-18" : "w-64"
-      }`}
+      className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${collapsed ? "w-18" : "w-64"
+        }`}
     >
       {/* STATIC HEADER */}
       <div
@@ -306,11 +305,10 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                         onClick={onNavigate}
                       >
                         <div
-                          className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
-                            pathname === child.path
-                              ? "text-brand-500 font-semibold"
-                              : "text-gray-500 hover:text-brand-500"
-                          }`}
+                          className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${pathname === child.path
+                            ? "text-brand-500 font-semibold"
+                            : "text-gray-500 hover:text-brand-500"
+                            }`}
                         >
                           {child.name}
                         </div>
@@ -381,11 +379,10 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                           onClick={onNavigate}
                         >
                           <div
-                            className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
-                              pathname === child.path
-                                ? "text-brand-500 font-semibold"
-                                : "text-gray-500 hover:text-brand-500"
-                            }`}
+                            className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${pathname === child.path
+                              ? "text-brand-500 font-semibold"
+                              : "text-gray-500 hover:text-brand-500"
+                              }`}
                           >
                             {child.name}
                           </div>
