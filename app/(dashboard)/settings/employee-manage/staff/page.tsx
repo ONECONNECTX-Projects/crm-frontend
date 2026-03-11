@@ -31,7 +31,7 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(false);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "Id", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "employee_code", label: "Employee Code", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "email", label: "Email", visible: true },
@@ -102,13 +102,13 @@ export default function StaffPage() {
     printPDF(filteredStaff, columns, "Staff", staffExtractors);
   };
 
-  const tableColumns: TableColumn<Staff>[] = [
+  const tableColumns: TableColumn<Staff & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "Id",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -214,7 +214,12 @@ export default function StaffPage() {
   const safePage = Math.max(1, Math.min(currentPage, totalPages || 1));
 
   const startIndex = (safePage - 1) * pageSize;
-  const paginatedStaff = filteredStaff.slice(startIndex, startIndex + pageSize);
+  const paginatedStaff = filteredStaff
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));

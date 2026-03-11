@@ -35,9 +35,9 @@ export default function EmploymentStatusPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Employment Status", visible: true },
     { key: "status", label: "Status", visible: true },
-
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -148,11 +148,14 @@ export default function EmploymentStatusPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<EmploymentStatus>[] = columns.map((col) => ({
-    key: col.key as keyof EmploymentStatus,
+  const tableColumns: TableColumn<EmploymentStatus & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (EmploymentStatus & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: EmploymentStatus & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -189,10 +192,13 @@ export default function EmploymentStatusPage() {
 
   const totalItems = filteredStatuses.length;
 
-  const paginatedStatuses = filteredStatuses.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedStatuses = filteredStatuses
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   const extractors: Record<string, (row: EmploymentStatus) => string> = {
     status: (row) => (row.is_active ? "Active" : "Inactive"),

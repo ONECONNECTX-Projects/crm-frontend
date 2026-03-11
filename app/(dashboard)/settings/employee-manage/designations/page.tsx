@@ -34,9 +34,9 @@ export default function DesignationsPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Designation Name", visible: true },
     { key: "status", label: "Status", visible: true },
-
     { key: "createdAt", label: "Created Date", visible: true },
   ]);
 
@@ -146,11 +146,14 @@ export default function DesignationsPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<Designation>[] = columns.map((col) => ({
-    key: col.key as keyof Designation,
+  const tableColumns: TableColumn<Designation & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Designation & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Designation & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -187,10 +190,13 @@ export default function DesignationsPage() {
 
   const totalItems = filteredDesignations.length;
 
-  const paginatedDesignations = filteredDesignations.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedDesignations = filteredDesignations
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   const extractors: Record<string, (row: Designation) => string> = {
     status: (row) => (row.is_active ? "Active" : "Inactive"),

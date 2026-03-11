@@ -33,6 +33,7 @@ export default function OpportunityTypesPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "OpportunityType Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
@@ -131,11 +132,14 @@ export default function OpportunityTypesPage() {
     },
   ];
 
-  const tableColumns: TableColumn<OpportunityType>[] = columns.map((col) => ({
-    key: col.key as keyof OpportunityType,
+  const tableColumns: TableColumn<OpportunityType & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (OpportunityType & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: OpportunityType & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -167,10 +171,10 @@ export default function OpportunityTypesPage() {
   );
 
   const totalItems = filteredOpportunityTypes.length;
-  const paginatedOpportunityTypes = filteredOpportunityTypes.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedOpportunityTypes = filteredOpportunityTypes
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -111,6 +111,10 @@ export default function ConvertLeadModal({
       showError("Email is required");
       return;
     }
+    if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
+      showError("Invalid email format");
+      return;
+    }
     if (!formData.owner_id) {
       showError("Owner is required");
       return;

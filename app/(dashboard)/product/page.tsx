@@ -28,7 +28,7 @@ export default function ProductsPage() {
   const [products, setProductList] = useState<Product[]>([]);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "rate", label: "Rate", visible: true },
     { key: "unit", label: "Quantities", visible: true },
@@ -64,22 +64,30 @@ export default function ProductsPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Product>[] = columns.map((col) => ({
-    key: col.key as keyof Product,
-    label: col.label,
-    visible: col.visible,
-    render: (row) => {
-      const value =
-        col.key === "category"
-          ? row.category?.name
-          : row[col.key as keyof Product];
-      return (
-        <span className="truncate block max-w-[300px]">
-          {String(value ?? "")}
-        </span>
-      );
-    },
-  }));
+  const tableColumns: TableColumn<Product & { sNo: number }>[] = columns.map(
+    (col) => ({
+      key: col.key as keyof Product,
+      label: col.label,
+      visible: col.visible,
+      render: (row) => {
+        let value;
+
+        if (col.key === "sNo") {
+          value = row.sNo;
+        } else if (col.key === "category") {
+          value = row.category?.name;
+        } else {
+          value = row[col.key as keyof Product];
+        }
+
+        return (
+          <span className="truncate block max-w-[300px]">
+            {String(value ?? "-")}
+          </span>
+        );
+      },
+    }),
+  );
 
   const fetchProduct = async () => {
     setLoading(true);
@@ -117,10 +125,12 @@ export default function ProductsPage() {
   );
 
   const totalItems = filteredProducts.length;
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedProducts = filteredProducts
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((product, index) => ({
+      ...product,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const handleFormSuccess = () => {
     setOpenCreate(false);
@@ -169,7 +179,7 @@ export default function ProductsPage() {
         {/* Table */}
         <DataTable
           columns={tableColumns}
-          data={paginatedProducts}
+          data={paginatedProducts as (Product & { sNo: number })[]}
           actions={tableActions}
           emptyMessage="No products found."
         />

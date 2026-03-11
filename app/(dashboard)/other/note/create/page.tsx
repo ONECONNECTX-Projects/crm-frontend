@@ -136,8 +136,8 @@ export default function CreateNote({
       }
       onSuccess?.();
       onClose();
-    } catch (error: any) {
-      showError(error?.response?.data?.message || "Failed to save note");
+    } catch (error) {
+      console.error("Failed to save note:", error);
     } finally {
       setSubmitting(false);
     }
@@ -159,14 +159,16 @@ export default function CreateNote({
       <div className="flex-1 overflow-y-auto px-6 py-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
           <InputField
-            label="Title *"
+            label="Title"
+            required
             value={formData.title}
             onChange={(v) => setFormData({ ...formData, title: v })}
             placeholder="Enter Note Title"
           />
 
           <SelectDropdown
-            label="Note Owner *"
+            label="Note Owner"
+            required
             value={formData.owner_id}
             onChange={(v) => setFormData({ ...formData, owner_id: v })}
             options={owners.map((item: OptionDropDownModel) => ({
@@ -223,16 +225,13 @@ export default function CreateNote({
           />
 
           <div className="md:col-span-2">
-            <label className="text-sm font-medium text-gray-700">
-              Description
-            </label>
-            <textarea
-              className="w-full mt-1 border rounded-md p-3 min-h-[120px] text-sm focus:ring-1 focus:ring-brand-500 outline-none"
+            <InputField
+              label="Description"
               placeholder="Enter note details..."
               value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
+              onChange={(v) => setFormData({ ...formData, description: v })}
+              multiline
+              rows={5}
             />
           </div>
         </div>

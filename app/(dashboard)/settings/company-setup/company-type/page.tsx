@@ -32,6 +32,7 @@ export default function CompanyTypesPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "CompanyType Name", visible: true },
     { key: "status", label: "Status", visible: true },
 
@@ -152,11 +153,14 @@ export default function CompanyTypesPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<CompanyType>[] = columns.map((col) => ({
-    key: col.key as keyof CompanyType,
+  const tableColumns: TableColumn<CompanyType & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (CompanyType & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: CompanyType & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -192,10 +196,10 @@ export default function CompanyTypesPage() {
 
   const totalItems = filteredCompanyType.length;
 
-  const paginatedCompanyType = filteredCompanyType.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedCompanyType = filteredCompanyType
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">

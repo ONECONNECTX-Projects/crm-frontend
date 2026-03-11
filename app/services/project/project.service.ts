@@ -3,14 +3,14 @@ import { api, ApiResponse } from "@/app/utils/apiClient";
 
 export interface ProjectPayload {
   name: string;
-  manager_id: number;
-  contact_id: number;
-  project_status_id: number;
-  priority_id: number;
-  company_id: number;
+  manager_id: number | null;
+  contact_id: number | null;
+  project_status_id: number | null;
+  priority_id: number | null;
+  company_id: number | null;
   project_value: number;
   start_date: Date;
-  deadline: Date;
+  deadline: Date | null;
   description: string;
 }
 

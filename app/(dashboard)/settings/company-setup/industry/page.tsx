@@ -31,6 +31,7 @@ export default function IndustrysPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Industry Name", visible: true },
     { key: "status", label: "Status", visible: true },
 
@@ -133,11 +134,14 @@ export default function IndustrysPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<Industry>[] = columns.map((col) => ({
-    key: col.key as keyof Industry,
+  const tableColumns: TableColumn<Industry & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Industry & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Industry & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -173,10 +177,10 @@ export default function IndustrysPage() {
 
   const totalItems = filteredIndustry.length;
 
-  const paginatedIndustry = filteredIndustry.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedIndustry = filteredIndustry
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const extractors: Record<string, (row: Industry) => string> = {
     status: (row) => (row.is_active ? "Active" : "Inactive"),

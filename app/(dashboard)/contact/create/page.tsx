@@ -165,8 +165,8 @@ export default function CreateContactForm({
         errors.last_name = "Last name is required";
       if (!contactInfo.email.trim()) {
         errors.email = "Email is required";
-      } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
-        errors.email = "Invalid email address";
+      } else if (!/^\S+@\S+\.\S+$/.test(contactInfo.email)) {
+        errors.email = "Invalid email format";
       }
       if (contactInfo.phone && contactInfo.phone.trim().length !== 10) {
         errors.phone = "Phone must be exactly 10 digits";

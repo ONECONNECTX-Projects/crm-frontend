@@ -31,6 +31,7 @@ export default function PriorityPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Create Date", visible: true },
@@ -128,11 +129,14 @@ export default function PriorityPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<Priority>[] = columns.map((col) => ({
-    key: col.key as keyof Priority,
+  const tableColumns: TableColumn<Priority & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Priority & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Priority & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -166,10 +170,8 @@ export default function PriorityPage() {
     )
   );
 
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedData = filteredData.slice(startIndex, startIndex + pageSize).map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const extractors: Record<string, (row: Priority) => string> = {
     status: (row) => (row.is_active ? "Active" : "Inactive"),

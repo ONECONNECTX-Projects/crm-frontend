@@ -108,7 +108,7 @@ export default function TasksPage() {
   const [taskStatuses, setTaskStatuses] = useState<OptionDropDownModel[]>([]);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "priority", label: "Priority", visible: true },
     { key: "status", label: "Status", visible: true },
@@ -244,14 +244,22 @@ export default function TasksPage() {
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
 
-  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+  const paginatedTasks = filteredTasks
+    .slice(startIndex, endIndex)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   // Enhance columns with status and priority rendering
-  const enhancedColumns: TableColumn<TaskListItem>[] = columns.map((col) => ({
-    key: col.key as keyof TaskListItem,
+  const enhancedColumns: TableColumn<TaskListItem & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (TaskListItem & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: TaskListItem & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <StatusBadge

@@ -31,6 +31,7 @@ export default function TicketCategoryPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Ticket Category Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
@@ -127,11 +128,14 @@ export default function TicketCategoryPage() {
     },
   ];
 
-  const tableColumns: TableColumn<TicketCategory>[] = columns.map((col) => ({
-    key: col.key as keyof TicketCategory,
+  const tableColumns: TableColumn<TicketCategory & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (TicketCategory & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: TicketCategory & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -163,10 +167,8 @@ export default function TicketCategoryPage() {
   );
 
   const totalItems = filteredTicketCategory.length;
-  const paginatedTicketCategory = filteredTicketCategory.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedTicketCategory = filteredTicketCategory.slice(startIndex, startIndex + pageSize).map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

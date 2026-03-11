@@ -53,6 +53,9 @@ export default function LoginPage() {
     if (!form.email.trim()) {
       newErrors.email = "Email is required";
       isValid = false;
+    } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+      newErrors.email = "Invalid email format";
+      isValid = false;
     }
 
     if (!form.password.trim()) {
