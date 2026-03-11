@@ -63,7 +63,6 @@ export default function CreateDesignationForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save designation:", error);
-      showError("Failed to save designation");
     } finally {
       setSubmitting(false);
     }

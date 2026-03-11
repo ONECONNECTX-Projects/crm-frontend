@@ -63,7 +63,6 @@ export default function CreateTaskStatusForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Task Status:", error);
-      showError("Failed to save Task Status");
     } finally {
       setSubmitting(false);
     }

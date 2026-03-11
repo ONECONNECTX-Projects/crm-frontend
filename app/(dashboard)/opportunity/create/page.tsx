@@ -182,7 +182,7 @@ export default function CreateOpportunity({
       }
       onSuccess?.();
     } catch (error: any) {
-      showError(error?.response?.data?.message || "Failed to save opportunity");
+      console.error("Failed to save opportunity:", error);
     } finally {
       setSubmitting(false);
     }

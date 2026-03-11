@@ -63,7 +63,6 @@ export default function CreateIndustryForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Industry:", error);
-      showError("Failed to save Industry");
     } finally {
       setSubmitting(false);
     }
