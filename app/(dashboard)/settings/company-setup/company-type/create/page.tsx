@@ -63,7 +63,6 @@ export default function CreateCompanyTypeForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Company Type:", error);
-      showError("Failed to save Company Type");
     } finally {
       setSubmitting(false);
     }

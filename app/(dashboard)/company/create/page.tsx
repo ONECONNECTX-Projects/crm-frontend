@@ -187,7 +187,7 @@ export default function CreateCompanyForm({
       }
       onSuccess?.();
     } catch (error: any) {
-      showError(error?.response?.data?.message || "Server Error");
+      console.error("Failed to save company:", error);
     } finally {
       setSubmitting(false);
     }
