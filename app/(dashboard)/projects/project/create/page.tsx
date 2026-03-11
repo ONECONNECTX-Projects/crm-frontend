@@ -23,6 +23,7 @@ interface CreateProjectFormProps {
   onClose: () => void;
   onSuccess: () => void;
   defaultCompanyId?: number;
+  defaultContactId?: number;
   editingProject?: Project | null;
 }
 
@@ -30,6 +31,7 @@ export default function CreateProjectForm({
   onClose,
   onSuccess,
   defaultCompanyId,
+  defaultContactId,
   editingProject,
 }: CreateProjectFormProps) {
   const { showSuccess, showError } = useError();
@@ -37,7 +39,9 @@ export default function CreateProjectForm({
   const [form, setForm] = useState({
     name: editingProject?.name || "",
     manager_id: editingProject?.manager_id?.toString() || "",
-    contact_id: editingProject?.contact_id?.toString() || "",
+    contact_id: defaultContactId
+      ? String(defaultContactId)
+      : editingProject?.contact_id?.toString() || "",
     project_status_id: editingProject?.project_status_id?.toString() || "",
     priority_id: editingProject?.priority_id?.toString() || "",
     company_id: defaultCompanyId

@@ -187,3 +187,12 @@ export async function getTicketByContactId(
   const response = await api.get(`contacts/getTicketByContactId/${id}`);
   return response as unknown as ApiResponse<Ticket[]>;
 }
+
+export async function getProjectByContactId(
+  id: number,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<ApiResponse<any[]>> {
+  const response = await api.get(`contacts/getProjectByContactId/${id}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return response as unknown as ApiResponse<any[]>;
+}

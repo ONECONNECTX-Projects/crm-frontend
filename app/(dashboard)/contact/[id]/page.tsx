@@ -13,6 +13,7 @@ import {
   getQuoteByContactId,
   getAttachmentByContactId,
   getTicketByContactId,
+  getProjectByContactId,
 } from "@/app/services/contact/contact.service";
 import { Opportunity } from "@/app/services/opportunity/opportunity.service";
 import { Task } from "@/app/services/task/task.service";
@@ -20,6 +21,7 @@ import { Notes } from "@/app/services/notes/notes.service";
 import { Quote } from "@/app/services/quote/quote.service";
 import { Attachment } from "@/app/services/attachment/attachement.service";
 import { Ticket } from "@/app/services/tickets/tickets.service";
+import { Project } from "@/app/services/project/project.service";
 import DataTable, { TableColumn } from "@/app/common/DataTable";
 import { useError } from "@/app/providers/ErrorProvider";
 import SlideOver from "@/app/common/slideOver";
@@ -32,9 +34,11 @@ import CreateNote from "../../other/note/create/page";
 import CreateQuote from "../../sales/qoutes/Create/page";
 import CreateAttachmentForm from "../../other/attachment/create/page";
 import TicketForm from "../../tickets/create/page";
+import CreateProject from "../../projects/project/create/page";
 
 const tabs = [
   "Contact Information",
+  "Projects",
   "Opportunities",
   "Tasks",
   "Notes",
@@ -59,6 +63,7 @@ export default function ContactViewPage() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   // Loading states
   const [tabLoading, setTabLoading] = useState(false);
@@ -73,6 +78,7 @@ export default function ContactViewPage() {
   const [openCreateQuote, setOpenCreateQuote] = useState(false);
   const [openCreateAttachment, setOpenCreateAttachment] = useState(false);
   const [openCreateTicket, setOpenCreateTicket] = useState(false);
+  const [openCreateProject, setOpenCreateProject] = useState(false);
 
   useEffect(() => {
     if (!contactId) return;
@@ -98,6 +104,10 @@ export default function ContactViewPage() {
       setTabLoading(true);
       try {
         switch (tab) {
+          case "Projects":
+            const projRes = await getProjectByContactId(contactId);
+            setProjects(projRes.data || []);
+            break;
           case "Opportunities":
             const oppRes = await getOpportunityByContactId(contactId);
             setOpportunities(oppRes.data || []);
@@ -166,6 +176,11 @@ export default function ContactViewPage() {
   // Get create button config based on active tab
   const getCreateButtonConfig = () => {
     switch (activeTab) {
+      case "Projects":
+        return {
+          label: "Create Project",
+          onClick: () => setOpenCreateProject(true),
+        };
       case "Opportunities":
         return {
           label: "Create Opportunity",
@@ -327,6 +342,41 @@ export default function ContactViewPage() {
     },
   ];
 
+  const projectColumns: TableColumn<Project>[] = [
+    { key: "name", label: "Name", visible: true },
+    {
+      key: "manager",
+      label: "Manager",
+      visible: true,
+      render: (row) => row.manager?.name || "-",
+    },
+    {
+      key: "company",
+      label: "Company",
+      visible: true,
+      render: (row) => row.company?.name || "-",
+    },
+    {
+      key: "status",
+      label: "Status",
+      visible: true,
+      render: (row) => row.status?.name || "-",
+    },
+    {
+      key: "priority",
+      label: "Priority",
+      visible: true,
+      render: (row) => row.priority?.name || "-",
+    },
+    {
+      key: "start_date",
+      label: "Start Date",
+      visible: true,
+      render: (row) =>
+        row.start_date ? new Date(row.start_date).toLocaleDateString() : "-",
+    },
+  ];
+
   const ticketColumns: TableColumn<Ticket>[] = [
     { key: "subject", label: "Subject", visible: true },
     { key: "email", label: "Email", visible: true },
@@ -361,6 +411,14 @@ export default function ContactViewPage() {
     }
 
     switch (activeTab) {
+      case "Projects":
+        return (
+          <DataTable
+            columns={projectColumns}
+            data={projects}
+            emptyMessage="No projects found"
+          />
+        );
       case "Opportunities":
         return (
           <DataTable
@@ -610,6 +668,22 @@ export default function ContactViewPage() {
           data={contact}
           onClose={() => setOpenEdit(false)}
           onSuccess={handleEditSuccess}
+        />
+      </SlideOver>
+
+      {/* Create Project SlideOver */}
+      <SlideOver
+        open={openCreateProject}
+        onClose={() => setOpenCreateProject(false)}
+        width="max-w-5xl"
+      >
+        <CreateProject
+          onClose={() => setOpenCreateProject(false)}
+          onSuccess={() => {
+            setOpenCreateProject(false);
+            handleCreateSuccess("Projects");
+          }}
+          defaultContactId={contactId}
         />
       </SlideOver>
 
