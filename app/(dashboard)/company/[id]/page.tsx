@@ -600,7 +600,7 @@ export default function CompanyViewPage() {
         </div>
 
         {/* Right Details */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 min-w-0 space-y-6">
           {activeTab === "Company Information" ? (
             <>
               {/* Basic Info */}
@@ -697,7 +697,9 @@ export default function CompanyViewPage() {
                   </button>
                 )}
               </div>
-              {renderTabContent()}
+              <div className="overflow-x-auto">
+                {renderTabContent()}
+              </div>
             </div>
           )}
         </div>
