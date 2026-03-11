@@ -31,6 +31,7 @@ export default function ProductCategoryPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Product Category Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
@@ -129,11 +130,14 @@ export default function ProductCategoryPage() {
     },
   ];
 
-  const tableColumns: TableColumn<ProductCategory>[] = columns.map((col) => ({
-    key: col.key as keyof ProductCategory,
+  const tableColumns: TableColumn<ProductCategory & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (ProductCategory & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: ProductCategory & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -165,10 +169,8 @@ export default function ProductCategoryPage() {
   );
 
   const totalItems = filteredProductCategory.length;
-  const paginatedProductCategory = filteredProductCategory.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedProductCategory = filteredProductCategory.slice(startIndex, startIndex + pageSize).map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

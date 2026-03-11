@@ -78,7 +78,7 @@ export default function TicketPage() {
   const [columns, setColumns] = useState<
     { key: string; label: string; visible: boolean }[]
   >([
-    { key: "id", label: "Ticket ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "subject", label: "Subject", visible: true },
     { key: "customer", label: "Customer", visible: true },
     { key: "category", label: "Category", visible: true },
@@ -129,22 +129,24 @@ export default function TicketPage() {
   );
 
   const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedData = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const handleCreateClick = () => {
     setOpenForm(true);
   };
 
-  const tableColumns: TableColumn<Ticket>[] = columns
+  const tableColumns: TableColumn<Ticket & { sNo: number }>[] = columns
     .filter((col) => col.visible)
     .map((col) => ({
       key: col.key,
       label: col.label,
       visible: col.visible,
-      render: (row: Ticket) => {
+      render: (row: Ticket & { sNo: number }) => {
         if (col.key === "status") {
           const statusName = row.status?.name?.toLowerCase() || "";
           return (
@@ -179,11 +181,9 @@ export default function TicketPage() {
             </span>
           );
         }
-        if (col.key === "id") {
+        if (col.key === "sNo") {
           return (
-            <span className="truncate block max-w-[200px]">
-              TKT-{String(row.id).padStart(4, "0")}
-            </span>
+            <span className="font-medium text-gray-500">{row.sNo}</span>
           );
         }
         if (col.key === "subject") {

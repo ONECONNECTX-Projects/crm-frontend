@@ -32,6 +32,7 @@ export default function DepartmentsPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Department Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
@@ -126,11 +127,14 @@ export default function DepartmentsPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Department>[] = columns.map((col) => ({
-    key: col.key as keyof Department,
+  const tableColumns: TableColumn<Department & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Department & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Department & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -162,10 +166,13 @@ export default function DepartmentsPage() {
   );
 
   const totalItems = filteredDepartments.length;
-  const paginatedDepartments = filteredDepartments.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedDepartments = filteredDepartments
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

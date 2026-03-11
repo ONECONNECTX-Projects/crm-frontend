@@ -78,7 +78,10 @@ export default function CompanyPage() {
   };
 
   // Custom extractors for nested objects and formatted values
-  const companyExtractors: Record<string, (row: Company & { sNo?: number }) => string> = {
+  const companyExtractors: Record<
+    string,
+    (row: Company & { sNo?: number }) => string
+  > = {
     sNo: (row) => String(row.sNo || "-"),
     owner: (row) => row.owner?.name || "-",
     company_type: (row) => row.company_type?.name || "-",
@@ -124,7 +127,7 @@ export default function CompanyPage() {
   const tableColumns: TableColumn<Company & { sNo: number }>[] = [
     {
       key: "sNo",
-      label: "S.No",
+      label: "Sr.No",
       visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
         <span className="font-medium text-gray-500">{row.sNo}</span>

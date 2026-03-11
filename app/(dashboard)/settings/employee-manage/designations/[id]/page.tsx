@@ -49,7 +49,7 @@ export default function ViewDesignationPage() {
   const [searchValue, setSearchValue] = useState("");
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "User Name", visible: true },
     { key: "role", label: "Role", visible: true },
     { key: "email", label: "email", visible: true },
@@ -110,11 +110,16 @@ export default function ViewDesignationPage() {
     printPDF(filteredEmployees, columns, `Employees - ${designation.name}`);
   };
 
-  const tableColumns: TableColumn<EmployeeRow>[] = columns.map((col) => ({
-    key: col.key as keyof EmployeeRow,
+  const tableColumns: TableColumn<EmployeeRow & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (EmployeeRow & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row: EmployeeRow & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
+      return <span>{(row as any)[col.key]}</span>;
+    },
   }));
 
   return (
@@ -166,7 +171,7 @@ export default function ViewDesignationPage() {
         />
         <DataTable
           columns={tableColumns}
-          data={filteredEmployees}
+          data={filteredEmployees.map((item, index) => ({ ...item, sNo: index + 1 }))}
           emptyMessage="Empty"
         />{" "}
       </div>

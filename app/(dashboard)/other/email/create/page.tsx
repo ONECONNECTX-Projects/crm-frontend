@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { X, ChevronDown, Paperclip, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useError } from "@/app/providers/ErrorProvider";
 import {
   SendEmailPayload,
@@ -60,18 +61,16 @@ export default function EmailForm({
 
   const applyStyle = (style: "bold" | "italic" | "underline") => {
     if (!editorRef.current) return;
-
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
-
     document.execCommand(style);
   };
 
   const applyFormat = (tag: "h1" | "h2") => {
     if (!editorRef.current) return;
-
     document.execCommand("formatBlock", false, tag);
   };
+
   const isView = mode === "view";
 
   useEffect(() => {
@@ -114,10 +113,10 @@ export default function EmailForm({
   };
 
   const handleChange = (name: string, value: string) => {
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
   };
 
   const handleFiles = (files: FileList | null) => {
@@ -128,31 +127,31 @@ export default function EmailForm({
   const removeFile = (index: number) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const toOptions = (list: OptionDropDownModel[]) =>
+    list.map((item) => ({ label: item.name, value: item.id }));
+
   const handleSubmit = async () => {
     const newErrors: typeof errors = {};
 
     if (!form.to_email.trim()) {
       newErrors.to_email = "To email is required";
+    } else if (!/^\S+@\S+\.\S+$/.test(form.to_email)) {
+      newErrors.to_email = "Invalid email format";
     }
-
-    if (!form.subject.trim()) {
-      newErrors.subject = "Subject is required";
-    }
+    if (!form.subject.trim()) newErrors.subject = "Subject is required";
 
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = form.body;
     const plainText = tempDiv.textContent || tempDiv.innerText || "";
-
-    if (!plainText.trim()) {
-      newErrors.body = "Body is required";
-    }
+    if (!plainText.trim()) newErrors.body = "Body is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    setErrors({}); // clear errors if valid
+    setErrors({});
 
     try {
       setSending(true);
@@ -162,269 +161,261 @@ export default function EmailForm({
       };
 
       const response = await sendEmail(payload);
-
       if (response.isSuccess) {
         showSuccess("Email sent successfully");
         onSuccess?.();
         onClose?.();
       }
     } catch {
-      showError("Failed to send email");
+      console.error("Failed to send email");
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <div className="max-w-4xl p-8">
+    <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <X
-          onClick={onClose}
-          className="text-gray-500 hover:text-black cursor-pointer"
-        />
-        <h1 className="text-xl font-semibold">
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <h2 className="text-lg font-semibold">
           {mode === "create" ? "Create Email" : "Edit Email"}
-        </h1>
-      </div>
-
-      {/* To */}
-      <div className="mt-5">
-        <InputField
-          label="To"
-          error={errors.to_email}
-          value={form.to_email}
-          onChange={(value) => handleChange("to_email", value)}
-          disabled={isView}
-          placeholder="Receiver Email"
-          noLeadingSpace
-          required
-        />
-      </div>
-
-      {/* Subject */}
-      <div className="mt-5">
-        <InputField
-          label="Subject"
-          value={form.subject}
-          onChange={(value) => handleChange("subject", value)}
-          disabled={isView}
-          noLeadingSpace
-          required
-          error={errors.subject}
-          placeholder="Subject"
-        />
-      </div>
-
-      {/* CC & BCC */}
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={() => setShowCC(!showCC)}
-          className="flex items-center gap-2 text-sm font-medium text-gray-700"
-        >
-          <ChevronDown
-            size={16}
-            className={`transition-transform ${showCC ? "rotate-180" : ""}`}
-          />
-          CC & BCC
+        </h2>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <X size={20} />
         </button>
-
-        {showCC && (
-          <div className="bg-gray-50 border rounded-md p-4 mt-3 space-y-3">
-            <InputField
-              label="cc"
-              value={form.cc}
-              onChange={(value) => handleChange("cc", value)}
-              disabled={isView}
-              placeholder="CC"
-              noLeadingSpace
-            />
-            <InputField
-              label="bcc"
-              value={form.bcc}
-              noLeadingSpace
-              onChange={(value) => handleChange("bcc", value)}
-              disabled={isView}
-              placeholder="BCC"
-            />
-          </div>
-        )}
       </div>
 
-      {/* Body */}
-      <div className="mt-6">
-        {/* Toolbar */}
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Body
-          </label>
+      {/* Form Body */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+        {/* To & Subject */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <InputField
+            label="To"
+            required
+            error={errors.to_email}
+            value={form.to_email}
+            onChange={(v) => handleChange("to_email", v)}
+            disabled={isView}
+            placeholder="Receiver Email"
+            noLeadingSpace
+          />
 
-          {/* Toolbar */}
-          <div className="border rounded-t-md px-3 py-2 text-sm text-gray-600 flex gap-4 bg-gray-50">
-            <button
-              type="button"
-              onClick={() => applyFormat("h1")}
-              className="font-semibold"
-            >
-              H1
-            </button>
-
-            <button
-              type="button"
-              onClick={() => applyFormat("h2")}
-              className="font-semibold"
-            >
-              H2
-            </button>
-
-            <button type="button" onClick={() => applyStyle("bold")}>
-              <span className="font-bold">B</span>
-            </button>
-
-            <button type="button" onClick={() => applyStyle("italic")}>
-              <span className="italic">I</span>
-            </button>
-
-            <button type="button" onClick={() => applyStyle("underline")}>
-              <span className="underline">U</span>
-            </button>
-          </div>
+          <InputField
+            label="Subject"
+            required
+            value={form.subject}
+            onChange={(v) => handleChange("subject", v)}
+            disabled={isView}
+            noLeadingSpace
+            error={errors.subject}
+            placeholder="Subject"
+          />
         </div>
 
-        {/* Editable Area */}
-        <div
-          ref={editorRef}
-          contentEditable={!isView}
-          suppressContentEditableWarning
-          className={`border border-t-0 rounded-b-md px-3 py-2 min-h-[150px] focus:outline-none ${
-            errors.body ? "border-red-500" : ""
-          }`}
-          onInput={(e) => {
-            const html = e.currentTarget.innerHTML;
-            handleChange("body", html);
-
-            if (errors.body) {
-              setErrors((prev) => ({ ...prev, body: undefined }));
-            }
-          }}
-        />
-      </div>
-
-      {/* Company */}
-      <div className="mt-5">
-        <SelectDropdown
-          label="Company"
-          options={companies.map((source) => ({
-            label: source.name,
-            value: source.id,
-          }))}
-          value={form.company_id}
-          onChange={(value) => handleChange("company_id", value)}
-          disabled={isView}
-        ></SelectDropdown>
-      </div>
-
-      {/* Contact */}
-      <div className="mt-5">
-        <SelectDropdown
-          label="Contact"
-          options={contacts.map((source) => ({
-            label: source.name,
-            value: source.id,
-          }))}
-          value={form.contact_id}
-          onChange={(value) => handleChange("contact_id", value)}
-          disabled={isView}
-        ></SelectDropdown>
-      </div>
-
-      {/* Opportunity */}
-      <div className="mt-5">
-        <SelectDropdown
-          label="Opportunity"
-          value={form.opportunity_id}
-          options={opportunities.map((source) => ({
-            label: source.name,
-            value: source.id,
-          }))}
-          onChange={(value) => handleChange("opportunity_id", value)}
-          disabled={isView}
-          className="w-full border rounded-md px-3 py-2 text-sm"
-        ></SelectDropdown>
-      </div>
-
-      {/* Quote */}
-      <div className="mt-5">
-        <SelectDropdown
-          label="Quote"
-          value={form.quote_id}
-          options={quotes.map((source) => ({
-            label: source.name,
-            value: source.id,
-          }))}
-          onChange={(value) => handleChange("quote_id", value)}
-          disabled={isView}
-        ></SelectDropdown>
-      </div>
-
-      {/* Attachments */}
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Attachments
-        </label>
-
-        {!isView && (
-          <label className="flex items-center gap-2 cursor-pointer text-brand-500 text-sm font-medium">
-            <Paperclip size={16} />
-            Attach files or images
-            <input
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
-          </label>
-        )}
-
-        {attachments.length > 0 && (
-          <div className="mt-3 space-y-2">
-            {attachments.map((file, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-gray-50 border rounded px-3 py-2 text-sm"
-              >
-                <span className="truncate max-w-xs">{file.name}</span>
-                {!isView && (
-                  <Trash2
-                    size={16}
-                    className="text-red-500 cursor-pointer"
-                    onClick={() => removeFile(index)}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      {!isView && (
-        <div className="flex gap-4 mt-8">
+        {/* CC & BCC */}
+        <div>
           <button
+            type="button"
+            onClick={() => setShowCC(!showCC)}
+            className="flex items-center gap-2 text-sm font-medium text-brand-500 hover:text-brand-600"
+          >
+            <ChevronDown
+              size={16}
+              className={`transition-transform ${showCC ? "rotate-180" : ""}`}
+            />
+            CC & BCC
+          </button>
+
+          {showCC && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 mt-3 bg-gray-50 border rounded-lg p-4">
+              <InputField
+                label="CC"
+                value={form.cc}
+                onChange={(v) => handleChange("cc", v)}
+                disabled={isView}
+                placeholder="CC email addresses"
+                noLeadingSpace
+              />
+              <InputField
+                label="BCC"
+                value={form.bcc}
+                noLeadingSpace
+                onChange={(v) => handleChange("bcc", v)}
+                disabled={isView}
+                placeholder="BCC email addresses"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Body - Rich Text Editor */}
+        <div>
+          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-1">
+            Body <span className="text-red-500 ml-1">*</span>
+          </label>
+
+          {/* Editor wrapper */}
+          <div
+            className={`border rounded-lg overflow-hidden ${
+              errors.body ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            {/* Toolbar */}
+            {!isView && (
+              <div className="border-b border-gray-300 px-3 py-2 text-sm text-gray-600 flex items-center gap-1 bg-gray-50">
+                <button
+                  type="button"
+                  onClick={() => applyFormat("h1")}
+                  className="px-2 py-1 rounded hover:bg-gray-200 font-semibold"
+                >
+                  H1
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyFormat("h2")}
+                  className="px-2 py-1 rounded hover:bg-gray-200 font-semibold"
+                >
+                  H2
+                </button>
+                <div className="w-px h-5 bg-gray-300 mx-1" />
+                <button
+                  type="button"
+                  onClick={() => applyStyle("bold")}
+                  className="px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  <span className="font-bold">B</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyStyle("italic")}
+                  className="px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  <span className="italic">I</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyStyle("underline")}
+                  className="px-2 py-1 rounded hover:bg-gray-200"
+                >
+                  <span className="underline">U</span>
+                </button>
+              </div>
+            )}
+
+            {/* Editable Area */}
+            <div
+              ref={editorRef}
+              contentEditable={!isView}
+              suppressContentEditableWarning
+              className="px-3 py-3 min-h-[180px] focus:outline-none text-sm"
+              onInput={(e) => {
+                const html = e.currentTarget.innerHTML;
+                handleChange("body", html);
+              }}
+            />
+          </div>
+          {errors.body && (
+            <p className="text-red-500 text-xs sm:text-sm mt-1">
+              {errors.body}
+            </p>
+          )}
+        </div>
+
+        {/* Dropdowns - 2 column grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+          <SelectDropdown
+            label="Company"
+            options={toOptions(companies)}
+            value={form.company_id}
+            onChange={(v) => handleChange("company_id", v)}
+            disabled={isView}
+            placeholder="Select Company"
+          />
+
+          <SelectDropdown
+            label="Contact"
+            options={toOptions(contacts)}
+            value={form.contact_id}
+            onChange={(v) => handleChange("contact_id", v)}
+            disabled={isView}
+            placeholder="Select Contact"
+          />
+
+          <SelectDropdown
+            label="Opportunity"
+            value={form.opportunity_id}
+            options={toOptions(opportunities)}
+            onChange={(v) => handleChange("opportunity_id", v)}
+            disabled={isView}
+            placeholder="Select Opportunity"
+          />
+
+          <SelectDropdown
+            label="Quote"
+            value={form.quote_id}
+            options={toOptions(quotes)}
+            onChange={(v) => handleChange("quote_id", v)}
+            disabled={isView}
+            placeholder="Select Quote"
+          />
+        </div>
+
+        {/* Attachments */}
+        <div>
+          <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+            Attachments
+          </label>
+
+          {!isView && (
+            <label className="inline-flex items-center gap-2 cursor-pointer text-brand-500 hover:text-brand-600 text-sm font-medium border border-dashed border-brand-300 rounded-lg px-4 py-2 hover:bg-brand-50 transition-colors">
+              <Paperclip size={16} />
+              Attach files or images
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => handleFiles(e.target.files)}
+              />
+            </label>
+          )}
+
+          {attachments.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {attachments.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 border rounded-lg px-3 py-2 text-sm"
+                >
+                  <span className="truncate max-w-xs text-gray-700">
+                    {file.name}
+                  </span>
+                  {!isView && (
+                    <Trash2
+                      size={16}
+                      className="text-red-500 cursor-pointer hover:text-red-600 flex-shrink-0"
+                      onClick={() => removeFile(index)}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      {!isView && (
+        <div className="flex justify-end gap-3 px-6 py-4 border-t bg-gray-50">
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={sending}
-            className="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2 rounded-md text-sm disabled:opacity-50"
+            className="bg-brand-500 hover:bg-brand-600"
           >
-            {sending ? "Sending..." : mode === "create" ? "Send" : "Update"}
-          </button>
-
-          <button
-            onClick={onClose}
-            className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-md text-sm"
-          >
-            Cancel
-          </button>
+            {sending ? "Sending..." : mode === "create" ? "Send Email" : "Update"}
+          </Button>
         </div>
       )}
     </div>

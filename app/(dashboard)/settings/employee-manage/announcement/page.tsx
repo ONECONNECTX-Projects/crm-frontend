@@ -71,7 +71,7 @@ export default function AnnouncementPage() {
   const [errors, setErrors] = useState<Partial<AnnouncementForm>>({});
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "title", label: "Title", visible: true },
     { key: "description", label: "Description", visible: true },
     { key: "priority", label: "Priority", visible: true },
@@ -185,11 +185,16 @@ export default function AnnouncementPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Announcement>[] = columns.map((col) => ({
-    key: col.key as keyof Announcement,
+  const tableColumns: TableColumn<Announcement & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Announcement & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row: Announcement & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
+      return <span>{(row as any)[col.key]}</span>;
+    },
   }));
 
   const filteredAnnouncements = announcementList.filter((announcement) =>
@@ -200,10 +205,12 @@ export default function AnnouncementPage() {
 
   const totalItems = filteredAnnouncements.length;
 
-  const paginatedAnnouncements = filteredAnnouncements.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedAnnouncements = filteredAnnouncements
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const handleDownloadExcel = () => {
     downloadExcel(filteredAnnouncements, columns, "announcements");

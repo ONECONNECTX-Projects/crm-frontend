@@ -34,46 +34,52 @@ export default function OpportunityPage() {
       key: string;
       label: string;
       visible: boolean;
-      render?: (row: Opportunity) => React.ReactNode;
+      render?: (row: Opportunity & { sNo?: number }) => React.ReactNode;
     }[]
   >([
+    {
+      key: "sNo",
+      label: "Sr.No",
+      visible: true,
+      render: (row) => row.sNo || "-",
+    },
     { key: "name", label: "Name", visible: true },
     {
       key: "owner",
       label: "Owner",
       visible: true,
-      render: (row: Opportunity) => row.owner?.name || "-",
+      render: (row) => row.owner?.name || "-",
     },
     { key: "amount", label: "Amount", visible: true },
     {
       key: "company",
       label: "Company",
       visible: true,
-      render: (row: Opportunity) => row.company?.name || "-",
+      render: (row) => row.company?.name || "-",
     },
     {
       key: "stage",
       label: "Stage",
       visible: true,
-      render: (row: Opportunity) => row.stage?.name || "-",
+      render: (row) => row.stage?.name || "-",
     },
     {
       key: "type",
       label: "Type",
       visible: true,
-      render: (row: Opportunity) => row.type?.name || "-",
+      render: (row) => row.type?.name || "-",
     },
     {
       key: "source",
       label: "Source",
       visible: true,
-      render: (row: Opportunity) => row.source?.name || "-",
+      render: (row) => row.source?.name || "-",
     },
     {
       key: "created_at",
       label: "Create date",
       visible: true,
-      render: (row: Opportunity) =>
+      render: (row) =>
         row.created_at ? new Date(row.created_at).toLocaleDateString() : "-",
     },
   ]);
@@ -101,6 +107,17 @@ export default function OpportunityPage() {
       ),
     );
   };
+
+  const filtered = opportunities.filter((o) =>
+    Object.values(o).join(" ").toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const paginated = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const handleDelete = async (opportunity: Opportunity) => {
     if (
@@ -154,13 +171,12 @@ export default function OpportunityPage() {
   };
 
   const handleDownloadExcel = () => {
-    downloadExcel(opportunities, columns, "opportunities", opportunityExtractors);
+    downloadExcel(filtered, columns, "opportunities", opportunityExtractors);
   };
 
   const handlePrintPDF = () => {
-    printPDF(opportunities, columns, "Opportunities", opportunityExtractors);
+    printPDF(filtered, columns, "Opportunities", opportunityExtractors);
   };
-
   return (
     <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
       <div className="max-w-9xl mx-auto space-y-4 sm:space-y-6">
@@ -187,14 +203,13 @@ export default function OpportunityPage() {
 
         <DataTable
           columns={columns}
-          data={opportunities}
+          data={paginated}
           actions={actions}
           emptyMessage="No opportunities found"
         />
-
         <Pagination
           currentPage={currentPage}
-          totalItems={opportunities.length}
+          totalItems={filtered.length}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
           onPageSizeChange={(size) => {

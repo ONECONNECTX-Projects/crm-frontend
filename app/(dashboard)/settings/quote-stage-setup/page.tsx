@@ -32,6 +32,7 @@ export default function QuoteStagesPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Quote Stage Name", visible: true },
     { key: "status", label: "Status", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
@@ -128,11 +129,14 @@ export default function QuoteStagesPage() {
     },
   ];
 
-  const tableColumns: TableColumn<QuoteStage>[] = columns.map((col) => ({
-    key: col.key as keyof QuoteStage,
+  const tableColumns: TableColumn<QuoteStage & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (QuoteStage & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: QuoteStage & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -164,10 +168,8 @@ export default function QuoteStagesPage() {
   );
 
   const totalItems = filteredQuoteStages.length;
-  const paginatedQuoteStages = filteredQuoteStages.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedQuoteStages = filteredQuoteStages.slice(startIndex, startIndex + pageSize).map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

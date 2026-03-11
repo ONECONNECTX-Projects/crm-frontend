@@ -31,6 +31,7 @@ export default function RolesPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Role Name", visible: true },
     { key: "description", label: "Description", visible: true },
     { key: "status", label: "Status", visible: true },
@@ -133,11 +134,14 @@ export default function RolesPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Role>[] = columns.map((col) => ({
-    key: col.key as keyof Role,
+  const tableColumns: TableColumn<Role & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Role & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Role & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "status") {
         return (
           <Toggle
@@ -171,10 +175,13 @@ export default function RolesPage() {
   );
 
   const totalItems = filteredRoles.length;
-  const paginatedRoles = filteredRoles.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedRoles = filteredRoles
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: startIndex + index + 1,
+    }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

@@ -29,7 +29,7 @@ export default function ContactsPage() {
   const { showSuccess, showError } = useError();
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "email", label: "Email", visible: true },
     { key: "phone", label: "Phone Number", visible: true },
@@ -126,13 +126,13 @@ export default function ContactsPage() {
     },
   ];
 
-  const tableColumns: TableColumn<Contact>[] = [
+  const tableColumns: TableColumn<Contact & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "ID",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -234,10 +234,13 @@ export default function ContactsPage() {
   const totalPages = Math.ceil(totalItems / pageSize);
   const safePage = Math.max(1, Math.min(currentPage, totalPages || 1));
   const startIndex = (safePage - 1) * pageSize;
-  const paginatedContacts = filteredContacts.slice(
-    startIndex,
-    startIndex + pageSize,
-  );
+
+  const paginatedContacts = filteredContacts
+    .slice(startIndex, startIndex + pageSize)
+    .map((lead, index) => ({
+      ...lead,
+      sNo: startIndex + index + 1,
+    }));
 
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
@@ -269,7 +272,7 @@ export default function ContactsPage() {
 
         <DataTable
           columns={tableColumns}
-          data={paginatedContacts}
+          data={paginatedContacts as (Contact & { sNo: number })[]}
           actions={tableActions}
           emptyMessage="No contacts found. Add your first contact to get started!"
         />

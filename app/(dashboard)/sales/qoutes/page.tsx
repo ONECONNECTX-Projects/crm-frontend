@@ -28,7 +28,7 @@ export default function QuotePage() {
   const [quotes, setQuoteList] = useState<Quote[]>([]);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "owner", label: "Owner", visible: true },
 
@@ -155,15 +155,20 @@ export default function QuotePage() {
   );
 
   const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-  const tableColumns: TableColumn<Quote>[] = columns.map((col) => ({
-    key: col.key as keyof Quote,
+  const paginatedData = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
+  const tableColumns: TableColumn<Quote & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Quote & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: Quote & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       let value: any;
 
       switch (col.key) {

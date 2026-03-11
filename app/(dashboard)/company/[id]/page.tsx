@@ -335,13 +335,13 @@ export default function CompanyViewPage() {
     },
   ];
 
-  const projectColumns: TableColumn<Project>[] = [
+  const projectColumns: TableColumn<Project & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "ID",
+      key: "sNo",
+      label: "Sr.No",
       visible: true,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -467,7 +467,7 @@ export default function CompanyViewPage() {
         return (
           <DataTable
             columns={projectColumns}
-            data={projects}
+            data={projects.map((item, index) => ({ ...item, sNo: index + 1 }))}
             emptyMessage="No Project found"
           />
         );
