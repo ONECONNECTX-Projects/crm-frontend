@@ -26,9 +26,9 @@ export default function NotePage() {
   const [loading, setLoading] = useState(false);
   const { showError, showSuccess } = useError();
   const [columns, setColumns] = useState<
-    { key: keyof Notes; label: string; visible: boolean }[]
+    { key: keyof (Notes & { sNo: number }); label: string; visible: boolean }[]
   >([
-    { key: "sNo" as keyof Notes, label: "Sr.No", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "title", label: "Title", visible: true },
     { key: "owner", label: "	Owner", visible: true },
     { key: "company", label: "Company", visible: true },
