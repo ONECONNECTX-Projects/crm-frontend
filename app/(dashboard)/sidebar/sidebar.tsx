@@ -215,7 +215,7 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(pathname.startsWith("/settings"));
 
   const toggleMenu = (name: string) => {
     setOpenMenu(openMenu === name ? null : name);
