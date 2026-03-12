@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import InputField from "@/app/common/InputFeild";
 import { LoginModel } from "./Model/model";
 import { FiLock, FiUser } from "react-icons/fi";
@@ -28,12 +29,10 @@ export default function LoginPage() {
   // Check if user is already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
-      // User is already logged in, redirect to dashboard
       router.push("/dashboard");
       return;
     }
 
-    // Handle error messages from URL params
     const error = searchParams.get("error");
     if (error === "session_expired") {
       showError("Your session has expired. Please login again.");
@@ -46,7 +45,6 @@ export default function LoginPage() {
 
   // VALIDATE form
   const validateForm = () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newErrors: any = { email: "", password: "" };
     let isValid = true;
 
@@ -68,7 +66,6 @@ export default function LoginPage() {
   };
 
   // HANDLE SUBMIT
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -76,28 +73,25 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Call login API
       const response = await api.post(
         "auth/login",
         {
           email: form.email,
           password: form.password,
         },
-        { skipAuth: true }
+        { skipAuth: true },
       );
 
-      // Save token to localStorage
       if (response.token) {
         setAuthToken(response.token);
         showSuccess(response.message || "Login successful!");
 
-        // Redirect to intended page or dashboard
-        const redirectTo = sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
+        const redirectTo =
+          sessionStorage.getItem("redirectAfterLogin") || "/dashboard";
         sessionStorage.removeItem("redirectAfterLogin");
         router.push(redirectTo);
       }
     } catch (error) {
-      // Error is handled by the global error handler
       console.error("Login failed:", error);
     } finally {
       setLoading(false);
@@ -110,10 +104,27 @@ export default function LoginPage() {
         className="bg-white p-8 rounded-lg shadow-lg w-full m-8"
         onSubmit={handleSubmit}
       >
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-        <p className="text-gray-500 mt-1 mb-8">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/favicon.svg"
+            alt="Company Logo"
+            width={120}
+            height={120}
+            priority
+          />
+        </div>
+
+        {/* Heading */}
+        <h1 className="text-4xl font-bold text-gray-800 mb-2 text-center">
+          Welcome Back
+        </h1>
+
+        <p className="text-gray-500 mt-1 mb-8 text-center">
           Enter your credentials to access your account
         </p>
+
+        {/* Email */}
         <div className="mb-4">
           <InputField
             label="Email"
@@ -126,7 +137,9 @@ export default function LoginPage() {
             icon={<FiUser size={18} />}
           />
         </div>
-        <div className="mb-4">
+
+        {/* Password */}
+        <div className="mb-6">
           <InputField
             label="Password"
             type="password"
@@ -138,6 +151,8 @@ export default function LoginPage() {
             icon={<FiLock size={18} />}
           />
         </div>
+
+        {/* Button */}
         <CommonButton type="submit" label="Sign In" isLoading={loading} />
       </form>
     </div>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Quest CRM",
   description: "Quest CRM Application",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/browser.svg",
   },
 };
 
