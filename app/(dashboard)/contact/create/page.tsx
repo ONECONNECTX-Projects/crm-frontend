@@ -42,7 +42,7 @@ const initialContactInfo: ContactInfo = {
   first_name: "",
   last_name: "",
   email: "",
-  country_code: "+91",
+  country_code: "+1",
   phone: "",
   birthday: "",
   job_title: "",
@@ -316,9 +316,9 @@ export default function CreateContactForm({
                   Phone
                 </label>
                 <PhoneInput
-                  country={"in"}
+                  country={"us"}
                   value={
-                    (contactInfo.country_code || "+91").replace("+", "") +
+                    (contactInfo.country_code || "+1").replace("+", "") +
                     contactInfo.phone
                   }
                   onChange={(value, countryData: { dialCode?: string }) => {

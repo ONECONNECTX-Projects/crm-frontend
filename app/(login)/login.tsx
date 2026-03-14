@@ -7,7 +7,7 @@ import InputField from "@/app/common/InputFeild";
 import { LoginModel } from "./Model/model";
 import { FiLock, FiUser } from "react-icons/fi";
 import CommonButton from "@/app/common/button";
-import { setAuthToken, api, isAuthenticated } from "@/app/utils/apiClient";
+import { setAuthToken, setLoggedInUser, api, isAuthenticated } from "@/app/utils/apiClient";
 import { useError } from "@/app/providers/ErrorProvider";
 
 export default function LoginPage() {
@@ -84,6 +84,9 @@ export default function LoginPage() {
 
       if (response.token) {
         setAuthToken(response.token);
+        if (response.user) {
+          setLoggedInUser(response.user as { id: number; name: string; email: string; mobile: string });
+        }
         showSuccess(response.message || "Login successful!");
 
         const redirectTo =

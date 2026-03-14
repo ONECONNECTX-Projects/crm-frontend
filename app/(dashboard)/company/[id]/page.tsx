@@ -368,7 +368,7 @@ export default function CompanyViewPage() {
       visible: true,
       render: (row) => (
         <span className="font-semibold text-green-600">
-          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+          ${parseFloat(row.project_value || "0").toLocaleString("en-IN")}
         </span>
       ),
     },
@@ -697,9 +697,7 @@ export default function CompanyViewPage() {
                   </button>
                 )}
               </div>
-              <div className="overflow-x-auto">
-                {renderTabContent()}
-              </div>
+              <div className="overflow-x-auto">{renderTabContent()}</div>
             </div>
           )}
         </div>

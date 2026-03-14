@@ -69,6 +69,7 @@ export default function Header({
   // LOGOUT HANDLER
   const handleLogout = () => {
     localStorage.removeItem("auth-token");
+    localStorage.removeItem("user-info");
     setConfirmLogout(false);
     router.push("/login");
   };

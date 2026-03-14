@@ -56,7 +56,7 @@ export default function CreateLeadForm({
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    country_code: "+91",
+    country_code: "+1",
     phone: "",
     lead_owner_id: "",
     lead_status_id: "",
@@ -71,7 +71,7 @@ export default function CreateLeadForm({
       setFormData({
         name: data.name || "",
         email: data.email || "",
-        country_code: data.country_code || "+91",
+        country_code: data.country_code || "+1",
         phone: data.phone || "",
         lead_owner_id: data.lead_owner_id?.toString() || "",
         lead_status_id: data.lead_status_id?.toString() || "",
@@ -83,7 +83,7 @@ export default function CreateLeadForm({
       setFormData({
         name: "",
         email: "",
-        country_code: "+91",
+        country_code: "+1",
         phone: "",
         lead_owner_id: "",
         lead_status_id: "",
@@ -257,10 +257,10 @@ export default function CreateLeadForm({
               Phone Number
             </label>
             <PhoneInput
-              country={"in"}
+              country={"us"}
               value={formData.country_code.replace("+", "") + formData.phone}
               onChange={(value, countryData: { dialCode?: string }) => {
-                const dialCode = countryData?.dialCode || "91";
+                const dialCode = countryData?.dialCode || "1";
                 const phoneNumber = value.slice(dialCode.length);
                 setFormData({
                   ...formData,
