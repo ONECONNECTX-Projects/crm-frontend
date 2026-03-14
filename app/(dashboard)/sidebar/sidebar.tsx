@@ -26,17 +26,23 @@ import { TiContacts } from "react-icons/ti";
 import { BsBuildingGear, BsTicketDetailed } from "react-icons/bs";
 import { BiTask } from "react-icons/bi";
 import { AiOutlineProduct } from "react-icons/ai";
-import { HiOutlineLightBulb, HiOutlineTicket } from "react-icons/hi";
+import {
+  HiDocument,
+  HiOutlineLightBulb,
+  HiOutlineTicket,
+} from "react-icons/hi";
 import { GoTasklist } from "react-icons/go";
 import { LiaProjectDiagramSolid } from "react-icons/lia";
 import { LuCodesandbox } from "react-icons/lu";
 import { CgMediaLive } from "react-icons/cg";
+import { getLoggedInUser } from "@/app/utils/apiClient";
 
 type MenuItem = {
   name: string;
   path?: string;
   icon?: any;
   children?: { name: string; path: string }[];
+  superAdminOnly?: boolean;
 };
 
 const menuItems: MenuItem[] = [
@@ -82,7 +88,12 @@ const menuItems: MenuItem[] = [
     ],
   },
   { name: "Tickets", icon: HiOutlineTicket, path: "/tickets" },
-
+  {
+    name: "Documents",
+    icon: HiDocument,
+    path: "/document",
+    superAdminOnly: true,
+  },
   { name: "Settings", icon: FiSettings, children: [] },
 ];
 
@@ -176,6 +187,7 @@ const settingsMenu: MenuItem[] = [
       },
     ],
   },
+
   {
     name: "Lead Setup",
     icon: MdOutlineLeaderboard,
@@ -215,7 +227,16 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [showSettingsPanel, setShowSettingsPanel] = useState(pathname.startsWith("/settings"));
+  const [showSettingsPanel, setShowSettingsPanel] = useState(
+    pathname.startsWith("/settings"),
+  );
+
+  const loggedInUser = getLoggedInUser();
+  const isSuperAdmin = loggedInUser?.name === "Super Admin";
+
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.superAdminOnly || isSuperAdmin,
+  );
 
   const toggleMenu = (name: string) => {
     setOpenMenu(openMenu === name ? null : name);
@@ -227,8 +248,9 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
 
   return (
     <div
-      className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${collapsed ? "w-18" : "w-64"
-        }`}
+      className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${
+        collapsed ? "w-18" : "w-64"
+      }`}
     >
       {/* STATIC HEADER */}
       <div
@@ -251,7 +273,7 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
         {/* MAIN SIDEBAR */}
         {!showSettingsPanel && (
           <nav className="mt-4 space-y-2">
-            {menuItems.map((item) => (
+            {filteredMenuItems.map((item) => (
               <div key={item.name}>
                 <div
                   className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-50 text-gray-700 cursor-pointer"
@@ -305,10 +327,11 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                         onClick={onNavigate}
                       >
                         <div
-                          className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${pathname === child.path
-                            ? "text-brand-500 font-semibold"
-                            : "text-gray-500 hover:text-brand-500"
-                            }`}
+                          className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
+                            pathname === child.path
+                              ? "text-brand-500 font-semibold"
+                              : "text-gray-500 hover:text-brand-500"
+                          }`}
                         >
                           {child.name}
                         </div>
@@ -379,10 +402,11 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                           onClick={onNavigate}
                         >
                           <div
-                            className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${pathname === child.path
-                              ? "text-brand-500 font-semibold"
-                              : "text-gray-500 hover:text-brand-500"
-                              }`}
+                            className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
+                              pathname === child.path
+                                ? "text-brand-500 font-semibold"
+                                : "text-gray-500 hover:text-brand-500"
+                            }`}
                           >
                             {child.name}
                           </div>

@@ -697,9 +697,7 @@ export default function CompanyViewPage() {
                   </button>
                 )}
               </div>
-              <div className="overflow-x-auto">
-                {renderTabContent()}
-              </div>
+              <div className="overflow-x-auto">{renderTabContent()}</div>
             </div>
           )}
         </div>
