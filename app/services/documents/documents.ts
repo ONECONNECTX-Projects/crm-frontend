@@ -52,7 +52,7 @@ export async function getAllViews(
   if (!response.ok) {
     throw new Error("Failed to fetch views");
   }
-
+  console.log(response);
   const data = await response.json();
   return data;
 }
