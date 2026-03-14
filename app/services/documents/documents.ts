@@ -47,9 +47,6 @@ export async function getAllViews(
 ): Promise<ProductViewsResponse> {
   const response = await fetch(`${API_BASE_URL}?page=${page}&limit=${limit}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
 
   if (!response.ok) {
