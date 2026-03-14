@@ -50,6 +50,7 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_BASE_URL=${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}
             NEXT_PUBLIC_API_URL=${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}
+            NEXT_PUBLIC_DATA_URL=${{ secrets.FRONT_NEXT_PUBLIC_DATA_URL }}
 
   deploy:
     needs: build-and-push
@@ -181,4 +182,5 @@ jobs:
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
               -e NEXT_PUBLIC_API_URL="${{ secrets.FRONT_NEXT_PUBLIC_API_BASE_URL }}" \
+              -e NEXT_PUBLIC_DATA_URL="${{ secrets.FRONT_NEXT_PUBLIC_DATA_URL }}" \
               "$IMAGE"
