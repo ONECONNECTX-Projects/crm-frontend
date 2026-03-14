@@ -46,7 +46,7 @@ export interface DesignationSalary {
   salary_amount: number;
   salary_type: string;
   commission_type: string;
-  start_date: string;
+  start_date: string | null;
 }
 
 // Complete Staff Create/Update payload

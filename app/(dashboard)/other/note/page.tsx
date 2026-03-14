@@ -26,8 +26,9 @@ export default function NotePage() {
   const [loading, setLoading] = useState(false);
   const { showError, showSuccess } = useError();
   const [columns, setColumns] = useState<
-    { key: keyof Notes; label: string; visible: boolean }[]
+    { key: keyof (Notes & { sNo: number }); label: string; visible: boolean }[]
   >([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "title", label: "Title", visible: true },
     { key: "owner", label: "	Owner", visible: true },
     { key: "company", label: "Company", visible: true },
@@ -78,13 +79,13 @@ export default function NotePage() {
     },
   ];
 
-  const tableColumns: TableColumn<Notes>[] = [
+  const tableColumns: TableColumn<Notes & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "Id",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -124,7 +125,7 @@ export default function NotePage() {
       label: "Opportunity",
       visible: columns.find((c) => c.key === "opportunity")?.visible,
       render: (row) => (
-        <span className="text-gray-600">{row.opportunity.name || "-"}</span>
+        <span className="text-gray-600">{row.opportunity?.name || "-"}</span>
       ),
     },
     {
@@ -148,16 +149,18 @@ export default function NotePage() {
   ];
 
   const filtered = notes.filter((note) =>
-    `${note.title} ${note.company.name} ${note.contact.name}  ${note.opportunity.name}`
+    `${note.title} ${note.company?.name || ""} ${note.contact?.name || ""} ${note.opportunity?.name || ""}`
       .toLowerCase()
       .includes(searchValue.toLowerCase()),
   );
 
   const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedData = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const noteExtractors: Record<
     string,

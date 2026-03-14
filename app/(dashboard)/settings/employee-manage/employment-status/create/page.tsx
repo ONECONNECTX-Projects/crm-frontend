@@ -62,7 +62,6 @@ export default function CreateEmploymentStatusForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save employment status:", error);
-      showError("Failed to save employment status");
     } finally {
       setSubmitting(false);
     }

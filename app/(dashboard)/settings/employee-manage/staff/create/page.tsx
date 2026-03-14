@@ -18,6 +18,11 @@ import {
   StaffEducation,
 } from "@/app/services/staff/staff.service";
 import { useError } from "@/app/providers/ErrorProvider";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import CreateDepartmentForm from "../../departments/create/page";
+import CreateDesignationForm from "../../designations/create/page";
+import CreateShiftForm from "../../shifts/create/page";
+import CreateEmploymentStatusForm from "../../employment-status/create/page";
 
 interface CreateStaffFormProps {
   mode?: "create" | "edit";
@@ -60,6 +65,12 @@ export default function CreateStaffForm({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+
+  // Quick-create modals
+  const [openDepartmentModal, setOpenDepartmentModal] = useState(false);
+  const [openDesignationModal, setOpenDesignationModal] = useState(false);
+  const [openShiftModal, setOpenShiftModal] = useState(false);
+  const [openEmploymentStatusModal, setOpenEmploymentStatusModal] = useState(false);
 
   // Dropdown options
   const [roles, setRoles] = useState<{ id: number; name: string }[]>([]);
@@ -157,7 +168,7 @@ export default function CreateStaffForm({
             ...edu,
             study_start_date: edu.study_start_date?.split("T")[0] || "",
             study_end_date: edu.study_end_date?.split("T")[0] || "",
-          }))
+          })),
         );
       }
 
@@ -227,7 +238,7 @@ export default function CreateStaffForm({
   const updateEducation = (
     index: number,
     field: keyof StaffEducation,
-    value: string
+    value: string,
   ) => {
     const updated = [...educations];
     updated[index] = { ...updated[index], [field]: value };
@@ -237,16 +248,12 @@ export default function CreateStaffForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userForm.name.trim()) {
-      showError("Name is required");
+    if (!validateTab(0)) {
+      setActiveTab(0);
       return;
     }
-    if (!userForm.email.trim()) {
-      showError("Email is required");
-      return;
-    }
-    if (mode === "create" && !userForm.password.trim()) {
-      showError("Password is required");
+    if (!validateTab(1)) {
+      setActiveTab(1);
       return;
     }
 
@@ -258,28 +265,27 @@ export default function CreateStaffForm({
           email: userForm.email,
           mobile: userForm.mobile,
           password: userForm.password || undefined,
-          role_id: parseInt(userForm.role_id) || 0,
+          role_id: parseInt(userForm.role_id),
         },
         staff: {
           employee_code: staffForm.employee_code,
           joining_date: staffForm.joining_date,
           blood_group: staffForm.blood_group,
-          department_id: parseInt(staffForm.department_id) || 0,
-          designation_id: parseInt(staffForm.designation_id) || 0,
-          shift_id: parseInt(staffForm.shift_id) || 0,
-          employment_status_id: parseInt(staffForm.employment_status_id) || 0,
+          department_id: parseInt(staffForm.department_id),
+          designation_id: parseInt(staffForm.designation_id),
+          shift_id: parseInt(staffForm.shift_id),
+          employment_status_id: parseInt(staffForm.employment_status_id),
         },
         address: addressForm,
         educations: educations.filter((edu) => edu.degree || edu.institution),
         designation_salary: {
           designation_id:
             parseInt(salaryForm.designation_id) ||
-            parseInt(staffForm.designation_id) ||
-            0,
+            parseInt(staffForm.designation_id),
           salary_amount: parseFloat(salaryForm.salary_amount) || 0,
           salary_type: salaryForm.salary_type,
           commission_type: salaryForm.commission_type,
-          start_date: salaryForm.start_date || staffForm.joining_date,
+          start_date: salaryForm.start_date || null,
         },
       };
 
@@ -292,16 +298,71 @@ export default function CreateStaffForm({
       }
 
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to save staff:", error);
-      const errorMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        (mode === "edit" ? "Failed to update staff" : "Failed to create staff");
-      showError(errorMessage);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const validateTab = (tabIndex: number): boolean => {
+    if (tabIndex === 0) {
+      if (!userForm.name.trim()) {
+        showError("Name is required");
+        return false;
+      }
+      if (!userForm.email.trim()) {
+        showError("Email is required");
+        return false;
+      }
+      if (!/^\S+@\S+\.\S+$/.test(userForm.email)) {
+        showError("Invalid email format");
+        return false;
+      }
+      if (!userForm.mobile.trim()) {
+        showError("Mobile is required");
+        return false;
+      }
+      if (mode === "create" && !userForm.password.trim()) {
+        showError("Password is required");
+        return false;
+      }
+      if (mode === "create" && userForm.password.trim().length < 6) {
+        showError("Password must be at least 6 characters");
+        return false;
+      }
+      if (!userForm.role_id) {
+        showError("Role is required");
+        return false;
+      }
+    }
+    if (tabIndex === 1) {
+      if (!staffForm.employee_code.trim()) {
+        showError("Employee Code is required");
+        return false;
+      }
+      if (!staffForm.joining_date) {
+        showError("Joining Date is required");
+        return false;
+      }
+      if (!staffForm.department_id) {
+        showError("Department is required");
+        return false;
+      }
+      if (!staffForm.designation_id) {
+        showError("Designation is required");
+        return false;
+      }
+      if (!staffForm.shift_id) {
+        showError("Shift is required");
+        return false;
+      }
+      if (!staffForm.employment_status_id) {
+        showError("Employment Status is required");
+        return false;
+      }
+    }
+    return true;
   };
 
   const tabs = [
@@ -332,7 +393,14 @@ export default function CreateStaffForm({
         {tabs.map((tab, index) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(index)}
+            onClick={() => {
+              if (index > activeTab) {
+                for (let i = activeTab; i < index; i++) {
+                  if (!validateTab(i)) return;
+                }
+              }
+              setActiveTab(index);
+            }}
             className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === index
                 ? "border-b-2 border-brand-500 text-brand-500"
@@ -351,7 +419,8 @@ export default function CreateStaffForm({
             <div>
               <InputField
                 type="text"
-                label="Full Name *"
+                label="Full Name"
+                required
                 value={userForm.name}
                 onChange={(v) => setUserForm({ ...userForm, name: v })}
                 placeholder="Enter full name"
@@ -360,7 +429,8 @@ export default function CreateStaffForm({
             <div>
               <InputField
                 type="email"
-                label="Email *"
+                label="Email"
+                required
                 value={userForm.email}
                 onChange={(v) => setUserForm({ ...userForm, email: v })}
                 placeholder="Enter email address"
@@ -370,6 +440,8 @@ export default function CreateStaffForm({
               <InputField
                 type="text"
                 label="Mobile"
+                required
+                maxLength={10}
                 value={userForm.mobile}
                 onChange={(v) => setUserForm({ ...userForm, mobile: v })}
                 placeholder="Enter mobile number"
@@ -380,9 +452,10 @@ export default function CreateStaffForm({
                 type="password"
                 label={
                   mode === "create"
-                    ? "Password *"
+                    ? "Password"
                     : "Password (leave blank to keep)"
                 }
+                required={mode === "create"}
                 value={userForm.password}
                 onChange={(v) => setUserForm({ ...userForm, password: v })}
                 placeholder="Enter password"
@@ -391,6 +464,7 @@ export default function CreateStaffForm({
             <div>
               <SelectDropdown
                 label="Role"
+                required
                 value={userForm.role_id}
                 onChange={(v) => setUserForm({ ...userForm, role_id: v })}
                 options={roles.map((role) => ({
@@ -410,6 +484,7 @@ export default function CreateStaffForm({
               <InputField
                 type="text"
                 label="Employee Code"
+                required
                 value={staffForm.employee_code}
                 onChange={(v) =>
                   setStaffForm({ ...staffForm, employee_code: v })
@@ -421,6 +496,7 @@ export default function CreateStaffForm({
               <InputField
                 type="date"
                 label="Joining Date"
+                required
                 value={staffForm.joining_date}
                 onChange={(v) =>
                   setStaffForm({ ...staffForm, joining_date: v })
@@ -440,6 +516,7 @@ export default function CreateStaffForm({
             <div>
               <SelectDropdown
                 label="Department"
+                required
                 value={staffForm.department_id}
                 onChange={(v) =>
                   setStaffForm({ ...staffForm, department_id: v })
@@ -448,12 +525,14 @@ export default function CreateStaffForm({
                   label: dept.name,
                   value: dept.id,
                 }))}
+                onAddClick={() => setOpenDepartmentModal(true)}
                 placeholder="Select Department"
               />
             </div>
             <div>
               <SelectDropdown
                 label="Designation"
+                required
                 value={staffForm.designation_id}
                 onChange={(v) => {
                   setStaffForm({ ...staffForm, designation_id: v });
@@ -463,24 +542,28 @@ export default function CreateStaffForm({
                   label: desig.name,
                   value: desig.id,
                 }))}
+                onAddClick={() => setOpenDesignationModal(true)}
                 placeholder="Select Designation"
               />
             </div>
             <div>
               <SelectDropdown
                 label="Shift"
+                required
                 value={staffForm.shift_id}
                 onChange={(v) => setStaffForm({ ...staffForm, shift_id: v })}
                 options={shifts.map((shift) => ({
                   label: shift.name,
                   value: shift.id,
                 }))}
+                onAddClick={() => setOpenShiftModal(true)}
                 placeholder="Select Shift"
               />
             </div>
             <div>
               <SelectDropdown
                 label="Employment Status"
+                required
                 value={staffForm.employment_status_id}
                 onChange={(v) =>
                   setStaffForm({ ...staffForm, employment_status_id: v })
@@ -489,6 +572,7 @@ export default function CreateStaffForm({
                   label: status.name,
                   value: status.id,
                 }))}
+                onAddClick={() => setOpenEmploymentStatusModal(true)}
                 placeholder="Select Employment Status"
               />
             </div>
@@ -646,20 +730,6 @@ export default function CreateStaffForm({
         {activeTab === 4 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <SelectDropdown
-                label="Designation"
-                value={salaryForm.designation_id}
-                onChange={(v) =>
-                  setSalaryForm({ ...salaryForm, designation_id: v })
-                }
-                options={designations.map((desig) => ({
-                  label: desig.name,
-                  value: desig.id,
-                }))}
-                placeholder="Select Designation"
-              />
-            </div>
-            <div>
               <InputField
                 type="number"
                 label="Salary Amount"
@@ -729,6 +799,7 @@ export default function CreateStaffForm({
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
+                  if (!validateTab(activeTab)) return;
                   setActiveTab(activeTab + 1);
                 }}
               >
@@ -750,6 +821,74 @@ export default function CreateStaffForm({
           </div>
         </div>
       </form>
+
+      {openDepartmentModal && (
+        <Dialog open={openDepartmentModal} onOpenChange={setOpenDepartmentModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <CreateDepartmentForm
+              mode="create"
+              onClose={() => setOpenDepartmentModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenDepartmentModal(false);
+                const res = await getAllActiveDepartment();
+                setDepartments(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openDesignationModal && (
+        <Dialog open={openDesignationModal} onOpenChange={setOpenDesignationModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <CreateDesignationForm
+              mode="create"
+              onClose={() => setOpenDesignationModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenDesignationModal(false);
+                const res = await getAllActiveDesignation();
+                setDesignations(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openShiftModal && (
+        <Dialog open={openShiftModal} onOpenChange={setOpenShiftModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <CreateShiftForm
+              mode="create"
+              onClose={() => setOpenShiftModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenShiftModal(false);
+                const res = await getAllActiveShift();
+                setShifts(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {openEmploymentStatusModal && (
+        <Dialog open={openEmploymentStatusModal} onOpenChange={setOpenEmploymentStatusModal}>
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+            <CreateEmploymentStatusForm
+              mode="create"
+              onClose={() => setOpenEmploymentStatusModal(false)}
+              popUp={true}
+              onSuccess={async () => {
+                setOpenEmploymentStatusModal(false);
+                const res = await getAllActiveEmploymentStatus();
+                setEmploymentStatuses(res.data || []);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

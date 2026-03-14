@@ -181,8 +181,6 @@ export default function CreateTask({
           showSuccess("Task updated successfully");
           onSuccess?.();
           onClose();
-        } else {
-          showError("Failed to update task");
         }
       } else {
         const response = await createTask(formData);
@@ -190,12 +188,10 @@ export default function CreateTask({
           showSuccess("Task created successfully");
           onSuccess?.();
           onClose();
-        } else {
-          showError("Failed to create task");
         }
       }
     } catch (error) {
-      showError(`Failed to ${isEditMode ? "update" : "create"} task`);
+      console.error(`Failed to ${isEditMode ? "update" : "create"} task:`, error);
     } finally {
       setLoading(false);
     }

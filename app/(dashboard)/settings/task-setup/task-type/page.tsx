@@ -30,6 +30,7 @@ export default function TaskTypesPage() {
   const { showSuccess, showError } = useError();
 
   const [columns, setColumns] = useState([
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Task Type Name", visible: true },
     { key: "createdAt", label: "Created Date", visible: true },
     { key: "status", label: "Status", visible: true },
@@ -129,11 +130,14 @@ export default function TaskTypesPage() {
   /* =========================
      Table Columns
   ========================== */
-  const tableColumns: TableColumn<TaskType>[] = columns.map((col) => ({
-    key: col.key as keyof TaskType,
+  const tableColumns: TableColumn<TaskType & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (TaskType & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => {
+    render: (row: TaskType & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
       if (col.key === "createdAt" && row.created_at) {
         return (
           <span>
@@ -170,10 +174,10 @@ export default function TaskTypesPage() {
 
   const totalItems = filteredTaskType.length;
 
-  const paginatedTaskType = filteredTaskType.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedTaskType = filteredTaskType
+    .slice(startIndex, startIndex + pageSize)
+    .map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   const extractors: Record<string, (row: TaskType) => string> = {
     status: (row) => (row.is_active ? "Active" : "Inactive"),

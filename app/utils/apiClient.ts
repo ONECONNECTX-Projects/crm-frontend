@@ -3,6 +3,7 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/";
 const AUTH_TOKEN_KEY = "auth-token";
+const AUTH_USER_KEY = "user-info";
 
 // Error handler callback - can be set globally
 type ErrorHandler = (error: ApiError) => void;
@@ -84,6 +85,25 @@ export function setAuthToken(token: string): void {
 export function removeAuthToken(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(AUTH_USER_KEY);
+}
+
+// Set logged-in user in localStorage
+export function setLoggedInUser(user: { id: number; name: string; email: string; mobile: string }): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+}
+
+// Get logged-in user from localStorage
+export function getLoggedInUser(): { id: number; name: string; email: string; mobile: string } | null {
+  if (typeof window === "undefined") return null;
+  const user = localStorage.getItem(AUTH_USER_KEY);
+  if (!user) return null;
+  try {
+    return JSON.parse(user);
+  } catch {
+    return null;
+  }
 }
 
 // Check if user is authenticated and token is valid

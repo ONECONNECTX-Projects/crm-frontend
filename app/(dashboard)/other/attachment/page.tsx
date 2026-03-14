@@ -28,7 +28,7 @@ export default function AttachmentPage() {
   const [loading, setLoading] = useState(false);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "Id", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "file_name", label: "File Name", visible: true },
     { key: "owner", label: "Owner", visible: true },
     { key: "company", label: "Company", visible: true },
@@ -81,10 +81,12 @@ export default function AttachmentPage() {
   );
 
   const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedData = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const attachmentExtractors: Record<
     string,
@@ -126,13 +128,13 @@ export default function AttachmentPage() {
     }
   };
 
-  const tableColumns: TableColumn<Attachment>[] = [
+  const tableColumns: TableColumn<Attachment & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "Id",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {

@@ -38,7 +38,7 @@ export default function AwardsPage() {
 
   /* ---------- Column Toggle ---------- */
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "description", label: "Description", visible: true },
     { key: "createdAt", label: "Created at", visible: true },
@@ -120,11 +120,16 @@ export default function AwardsPage() {
   };
 
   /* ---------- Table ---------- */
-  const tableColumns: TableColumn<Award>[] = columns.map((col) => ({
-    key: col.key as keyof Award,
+  const tableColumns: TableColumn<Award & { sNo: number }>[] = columns.map((col) => ({
+    key: col.key as keyof (Award & { sNo: number }),
     label: col.label,
     visible: col.visible,
-    render: (row) => <span>{(row as any)[col.key]}</span>,
+    render: (row: Award & { sNo: number }) => {
+      if (col.key === "sNo") {
+        return <span className="font-medium text-gray-500">{row.sNo}</span>;
+      }
+      return <span>{(row as any)[col.key]}</span>;
+    },
   }));
 
   const tableActions: TableAction<Award>[] = [
@@ -141,10 +146,12 @@ export default function AwardsPage() {
       .includes(searchValue.toLowerCase())
   );
 
-  const paginatedAwards = filteredAwards.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedAwards = filteredAwards
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   const handleDownloadExcel = () => {
     downloadExcel(filteredAwards, columns, "awards");

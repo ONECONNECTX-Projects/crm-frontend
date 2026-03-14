@@ -172,7 +172,6 @@ export default function CreateAttachmentForm({
       onClose();
     } catch (error) {
       console.error("Failed to create attachment:", error);
-      showError("Failed to upload attachment");
     } finally {
       setLoading(false);
     }

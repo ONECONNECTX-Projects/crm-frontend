@@ -335,13 +335,13 @@ export default function CompanyViewPage() {
     },
   ];
 
-  const projectColumns: TableColumn<Project>[] = [
+  const projectColumns: TableColumn<Project & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "ID",
+      key: "sNo",
+      label: "Sr.No",
       visible: true,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -368,7 +368,7 @@ export default function CompanyViewPage() {
       visible: true,
       render: (row) => (
         <span className="font-semibold text-green-600">
-          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+          ${parseFloat(row.project_value || "0").toLocaleString("en-IN")}
         </span>
       ),
     },
@@ -467,7 +467,7 @@ export default function CompanyViewPage() {
         return (
           <DataTable
             columns={projectColumns}
-            data={projects}
+            data={projects.map((item, index) => ({ ...item, sNo: index + 1 }))}
             emptyMessage="No Project found"
           />
         );
@@ -600,7 +600,7 @@ export default function CompanyViewPage() {
         </div>
 
         {/* Right Details */}
-        <div className="flex-1 space-y-6">
+        <div className="flex-1 min-w-0 space-y-6">
           {activeTab === "Company Information" ? (
             <>
               {/* Basic Info */}
@@ -697,7 +697,7 @@ export default function CompanyViewPage() {
                   </button>
                 )}
               </div>
-              {renderTabContent()}
+              <div className="overflow-x-auto">{renderTabContent()}</div>
             </div>
           )}
         </div>

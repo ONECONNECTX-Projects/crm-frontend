@@ -63,7 +63,6 @@ export default function CreateTaskTypeForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Task Type:", error);
-      showError("Failed to save Task Type");
     } finally {
       setSubmitting(false);
     }

@@ -33,7 +33,7 @@ export default function TeamsPage() {
   const [pageSize, setPageSize] = useState(10);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Team Name", visible: true },
     { key: "project", label: "Project", visible: true },
     { key: "members", label: "Members", visible: true },
@@ -129,19 +129,21 @@ export default function TeamsPage() {
 
   /* Pagination Logic */
   const totalItems = filtered.length;
-  const paginatedData = filtered.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedData = filtered
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   /* DataTable Columns */
-  const tableColumns: TableColumn<ProjectTeam>[] = [
+  const tableColumns: TableColumn<ProjectTeam & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "ID",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {

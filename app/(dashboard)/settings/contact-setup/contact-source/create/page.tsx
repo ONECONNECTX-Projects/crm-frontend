@@ -63,7 +63,6 @@ export default function CreateContactSourceForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Contact Source:", error);
-      showError("Failed to save Contact Source");
     } finally {
       setSubmitting(false);
     }

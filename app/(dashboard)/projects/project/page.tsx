@@ -37,7 +37,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [columns, setColumns] = useState([
-    { key: "id", label: "ID", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "contact", label: "Contact", visible: true },
     { key: "value", label: "Value", visible: true },
@@ -93,13 +93,13 @@ export default function ProjectsPage() {
 
   /* ================= Columns ================= */
 
-  const tableColumns: TableColumn<Project>[] = [
+  const tableColumns: TableColumn<Project & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "ID",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -126,7 +126,7 @@ export default function ProjectsPage() {
       visible: columns.find((c) => c.key === "value")?.visible,
       render: (row) => (
         <span className="font-semibold text-green-600">
-          ₹{parseFloat(row.project_value || "0").toLocaleString("en-IN")}
+          ${parseFloat(row.project_value || "0").toLocaleString("en-IN")}
         </span>
       ),
     },
@@ -209,7 +209,7 @@ export default function ProjectsPage() {
   const projectExtractors: Record<string, (row: Project) => string> = {
     contact: (row) => row.contact?.name || "-",
     value: (row) =>
-      `₹${parseFloat(row.project_value || "0").toLocaleString("en-IN")}`,
+      `$${parseFloat(row.project_value || "0").toLocaleString("en-IN")}`,
     priority: (row) => row.priority?.name || "-",
     status: (row) => row.status?.name || "-",
     startDate: (row) =>
@@ -236,10 +236,12 @@ export default function ProjectsPage() {
 
   const totalItems = filteredProjects.length;
 
-  const paginatedProjects = filteredProjects.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
+  const paginatedProjects = filteredProjects
+    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+    .map((item, index) => ({
+      ...item,
+      sNo: (currentPage - 1) * pageSize + index + 1,
+    }));
 
   return (
     <div className="min-h-screen bg-white rounded-xl p-6">

@@ -42,7 +42,7 @@ const initialContactInfo: ContactInfo = {
   first_name: "",
   last_name: "",
   email: "",
-  country_code: "+91",
+  country_code: "+1",
   phone: "",
   birthday: "",
   job_title: "",
@@ -165,8 +165,8 @@ export default function CreateContactForm({
         errors.last_name = "Last name is required";
       if (!contactInfo.email.trim()) {
         errors.email = "Email is required";
-      } else if (!/\S+@\S+\.\S+/.test(contactInfo.email)) {
-        errors.email = "Invalid email address";
+      } else if (!/^\S+@\S+\.\S+$/.test(contactInfo.email)) {
+        errors.email = "Invalid email format";
       }
       if (contactInfo.phone && contactInfo.phone.trim().length !== 10) {
         errors.phone = "Phone must be exactly 10 digits";
@@ -316,9 +316,9 @@ export default function CreateContactForm({
                   Phone
                 </label>
                 <PhoneInput
-                  country={"in"}
+                  country={"us"}
                   value={
-                    (contactInfo.country_code || "+91").replace("+", "") +
+                    (contactInfo.country_code || "+1").replace("+", "") +
                     contactInfo.phone
                   }
                   onChange={(value, countryData: { dialCode?: string }) => {

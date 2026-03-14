@@ -36,7 +36,7 @@ export default function LeadsPage() {
   const [convertingLead, setConvertingLead] = useState<Leads | null>(null);
 
   const [columns, setColumns] = useState([
-    { key: "id", label: "Id", visible: true },
+    { key: "sNo", label: "Sr.No", visible: true },
     { key: "name", label: "Name", visible: true },
     { key: "email", label: "Email", visible: true },
     { key: "phone", label: "Phone Number", visible: true },
@@ -106,13 +106,13 @@ export default function LeadsPage() {
     printPDF(filteredLeads, columns, "Leads", leadExtractors);
   };
 
-  const tableColumns: TableColumn<Leads>[] = [
+  const tableColumns: TableColumn<Leads & { sNo: number }>[] = [
     {
-      key: "id",
-      label: "Id",
-      visible: columns.find((c) => c.key === "id")?.visible,
+      key: "sNo",
+      label: "Sr.No",
+      visible: columns.find((c) => c.key === "sNo")?.visible,
       render: (row) => (
-        <span className="font-medium text-gray-900">#{row.id}</span>
+        <span className="font-medium text-gray-500">{row.sNo}</span>
       ),
     },
     {
@@ -178,11 +178,21 @@ export default function LeadsPage() {
       key: "convert",
       label: "Convert Status",
       visible: columns.find((c) => c.key === "convert")?.visible,
-      render: (row) => (
-        <span className="text-gray-500 text-sm italic">
-          {row?.contact?.id > 0 ? "Converted" : "Not Converted"}
-        </span>
-      ),
+      render: (row) => {
+        const converted = row?.contact?.id > 0;
+
+        return (
+          <span
+            className={`px-2 py-1 text-xs font-semibold rounded-full ${
+              converted
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {converted ? "Converted" : "Not Converted"}
+          </span>
+        );
+      },
     },
   ];
 
@@ -227,8 +237,12 @@ export default function LeadsPage() {
   const safePage = Math.max(1, Math.min(currentPage, totalPages || 1));
 
   const startIndex = (safePage - 1) * pageSize;
-  const paginatedLeads = filteredLeads.slice(startIndex, startIndex + pageSize);
-
+  const paginatedLeads = filteredLeads
+    .slice(startIndex, startIndex + pageSize)
+    .map((lead, index) => ({
+      ...lead,
+      sNo: startIndex + index + 1,
+    }));
   const handlePageChange = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
@@ -260,7 +274,7 @@ export default function LeadsPage() {
 
           <DataTable
             columns={tableColumns}
-            data={paginatedLeads}
+            data={paginatedLeads as (Leads & { sNo: number })[]}
             actions={tableActions}
             emptyMessage="No leads found. Create your first lead to get started!"
           />

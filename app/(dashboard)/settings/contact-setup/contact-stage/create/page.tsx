@@ -63,7 +63,6 @@ export default function CreateContactStageForm({
       popUp ? await onSuccess?.() : onClose();
     } catch (error) {
       console.error("Failed to save Contact Stage:", error);
-      showError("Failed to save Contact Stage");
     } finally {
       setSubmitting(false);
     }

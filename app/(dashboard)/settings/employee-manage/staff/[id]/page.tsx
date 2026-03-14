@@ -157,7 +157,7 @@ export default function StaffViewPage() {
               label="Salary Amount"
               value={
                 staff.designation_salaries?.salary_amount
-                  ? `₹${staff.designation_salaries.salary_amount.toLocaleString()}`
+                  ? `$${staff.designation_salaries.salary_amount.toLocaleString()}`
                   : "-"
               }
             />
@@ -174,7 +174,7 @@ export default function StaffViewPage() {
               value={
                 staff.designation_salaries?.start_date
                   ? new Date(
-                      staff.designation_salaries.start_date
+                      staff.designation_salaries.start_date,
                     ).toLocaleDateString()
                   : "-"
               }

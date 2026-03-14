@@ -28,7 +28,7 @@ export default function CreateRoleForm({
   roleData,
   onClose,
 }: CreateRoleFormProps) {
-  const { showSuccess, showError } = useError();
+  const { showSuccess } = useError();
   const [form, setForm] = useState(initialForm);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ name?: string }>({});
@@ -76,7 +76,6 @@ export default function CreateRoleForm({
       onClose();
     } catch (error: any) {
       console.error("Failed to save role:", error);
-      showError(error?.response?.data?.message || "Server Error");
     } finally {
       setSubmitting(false);
     }

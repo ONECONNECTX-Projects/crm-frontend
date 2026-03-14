@@ -144,7 +144,11 @@ export default function CreateCompanyForm({
     if (currentStep === 1) {
       if (!CompanyInfo.name.trim()) errors.name = "Name is required";
       if (!CompanyInfo.owner_id) errors.owner_id = "Owner is required";
-      if (!CompanyInfo.email.trim()) errors.email = "Email is required";
+      if (!CompanyInfo.email.trim()) {
+        errors.email = "Email is required";
+      } else if (!/^\S+@\S+\.\S+$/.test(CompanyInfo.email)) {
+        errors.email = "Invalid email format";
+      }
       if (CompanyInfo.phone && CompanyInfo.phone.trim().length !== 10) {
         errors.phone = "Phone number must be exactly 10 digits";
       }
@@ -183,7 +187,7 @@ export default function CreateCompanyForm({
       }
       onSuccess?.();
     } catch (error: any) {
-      showError(error?.response?.data?.message || "Server Error");
+      console.error("Failed to save company:", error);
     } finally {
       setSubmitting(false);
     }

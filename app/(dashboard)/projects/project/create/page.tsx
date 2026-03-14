@@ -15,11 +15,15 @@ import { getAllActiveProjectStatus } from "@/app/services/project-status/project
 import { OptionDropDownModel } from "@/app/models/dropDownOption.model";
 import { useError } from "@/app/providers/ErrorProvider";
 import { getAllActiveCompany } from "@/app/services/company/company.service";
+import InputField from "@/app/common/InputFeild";
+import SelectDropdown from "@/app/common/dropdown";
+import DateInput from "@/app/common/CommonDate";
 
 interface CreateProjectFormProps {
   onClose: () => void;
   onSuccess: () => void;
   defaultCompanyId?: number;
+  defaultContactId?: number;
   editingProject?: Project | null;
 }
 
@@ -27,6 +31,7 @@ export default function CreateProjectForm({
   onClose,
   onSuccess,
   defaultCompanyId,
+  defaultContactId,
   editingProject,
 }: CreateProjectFormProps) {
   const { showSuccess, showError } = useError();
@@ -34,13 +39,14 @@ export default function CreateProjectForm({
   const [form, setForm] = useState({
     name: editingProject?.name || "",
     manager_id: editingProject?.manager_id?.toString() || "",
-    contact_id: editingProject?.contact_id?.toString() || "",
+    contact_id: defaultContactId
+      ? String(defaultContactId)
+      : editingProject?.contact_id?.toString() || "",
     project_status_id: editingProject?.project_status_id?.toString() || "",
     priority_id: editingProject?.priority_id?.toString() || "",
     company_id: defaultCompanyId
       ? String(defaultCompanyId)
-      : String(editingProject?.company_id),
-
+      : String(editingProject?.company_id || ""),
     project_value: editingProject?.project_value || "",
     start_date: editingProject?.start_date
       ? new Date(editingProject?.start_date).toISOString().split("T")[0]
@@ -74,7 +80,6 @@ export default function CreateProjectForm({
           ]);
 
         setContacts(contactsRes.data || []);
-        // Map staff to managers dropdown format
         const staffList = staffRes.data || [];
         setManagers(
           staffList.map((s: Staff) => ({
@@ -97,9 +102,24 @@ export default function CreateProjectForm({
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  const toOptions = (list: { id: number; name: string }[]) =>
+    list.map((item) => ({ label: item.name, value: item.id }));
+
   const handleSubmit = async () => {
     if (!form.name.trim()) {
       showError("Project name is required");
+      return;
+    }
+    if (!form.manager_id) {
+      showError("Project Manager is required");
+      return;
+    }
+    if (!form.project_status_id) {
+      showError("Project Status is required");
+      return;
+    }
+    if (!form.priority_id) {
+      showError("Priority is required");
       return;
     }
 
@@ -107,14 +127,14 @@ export default function CreateProjectForm({
     try {
       const payload: ProjectPayload = {
         name: form.name,
-        manager_id: parseInt(form.manager_id) || 0,
-        contact_id: parseInt(form.contact_id) || 0,
-        project_status_id: parseInt(form.project_status_id) || 0,
-        priority_id: parseInt(form.priority_id) || 0,
-        company_id: parseInt(form.company_id) || 0,
+        manager_id: parseInt(form.manager_id) || null,
+        contact_id: parseInt(form.contact_id) || null,
+        project_status_id: parseInt(form.project_status_id) || null,
+        priority_id: parseInt(form.priority_id) || null,
+        company_id: parseInt(form.company_id) || null,
         project_value: parseFloat(form.project_value) || 0,
         start_date: form.start_date ? new Date(form.start_date) : new Date(),
-        deadline: form.deadline ? new Date(form.deadline) : new Date(),
+        deadline: form.deadline ? new Date(form.deadline) : null,
         description: form.description,
       };
 
@@ -130,9 +150,6 @@ export default function CreateProjectForm({
       onClose();
     } catch (error) {
       console.error("Failed to save project:", error);
-      showError(
-        isEditMode ? "Failed to update project" : "Failed to create project",
-      );
     } finally {
       setLoading(false);
     }
@@ -152,49 +169,58 @@ export default function CreateProjectForm({
 
       {/* ================= Form ================= */}
       <div className="grid grid-cols-2 gap-6">
-        <Input
-          label="* Project Name"
+        <InputField
+          label="Project Name"
+          required
           placeholder="Enter Project Name"
           value={form.name}
           onChange={(v) => handleChange("name", v)}
         />
 
-        <Select
+        <SelectDropdown
           label="Project Manager"
           value={form.manager_id}
-          options={managers}
+          required
+          options={toOptions(managers)}
+          placeholder="Select Project Manager"
           onChange={(v) => handleChange("manager_id", v)}
         />
 
-        <Select
+        <SelectDropdown
           label="Contact"
           value={form.contact_id}
-          options={contacts}
+          options={toOptions(contacts)}
+          placeholder="Select Contact"
           onChange={(v) => handleChange("contact_id", v)}
         />
 
-        <Select
+        <SelectDropdown
           label="Project Status"
           value={form.project_status_id}
-          options={projectStatuses}
+          required
+          options={toOptions(projectStatuses)}
+          placeholder="Select Project Status"
           onChange={(v) => handleChange("project_status_id", v)}
         />
 
-        <Select
+        <SelectDropdown
           label="Priority"
           value={form.priority_id}
-          options={priorities}
+          required
+          options={toOptions(priorities)}
+          placeholder="Select Priority"
           onChange={(v) => handleChange("priority_id", v)}
         />
 
-        <Select
+        <SelectDropdown
           label="Company"
           value={form.company_id}
-          options={companies}
+          options={toOptions(companies)}
+          placeholder="Select Company"
           onChange={(v) => handleChange("company_id", v)}
         />
 
-        <Input
+        <InputField
           label="Project Value"
           placeholder="Enter value"
           value={form.project_value}
@@ -204,27 +230,25 @@ export default function CreateProjectForm({
         <DateInput
           label="Start Date"
           value={form.start_date}
-          onChange={(v) => handleChange("start_date", v)}
+          onChange={(v) => handleChange("start_date", v || "")}
         />
 
         <DateInput
           label="Deadline"
           value={form.deadline}
-          onChange={(v) => handleChange("deadline", v)}
+          onChange={(v) => handleChange("deadline", v || "")}
         />
       </div>
 
       {/* ================= Description ================= */}
-      <div>
-        <label className="text-sm font-medium">Project Description</label>
-        <textarea
-          value={form.description}
-          onChange={(e) => handleChange("description", e.target.value)}
-          placeholder="Enter Project Description"
-          rows={4}
-          className="w-full mt-1 border rounded-md px-3 py-2"
-        />
-      </div>
+      <InputField
+        label="Project Description"
+        placeholder="Enter Project Description"
+        value={form.description}
+        onChange={(v) => handleChange("description", v)}
+        multiline
+        rows={4}
+      />
 
       {/* ================= Footer ================= */}
       <button
@@ -240,84 +264,6 @@ export default function CreateProjectForm({
             ? "Update Project"
             : "Add Project"}
       </button>
-    </div>
-  );
-}
-
-/* ================= Reusable Fields ================= */
-
-function Input({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <input
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 border rounded-md px-3 py-2"
-      />
-    </div>
-  );
-}
-
-function Select({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { id: number; name: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 border rounded-md px-3 py-2 bg-white"
-      >
-        <option value="">Select {label}</option>
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-function DateInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium">{label}</label>
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full mt-1 border rounded-md px-3 py-2"
-      />
     </div>
   );
 }
