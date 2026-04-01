@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { FaRegBuilding } from "react-icons/fa";
@@ -231,8 +231,12 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
     pathname.startsWith("/settings"),
   );
 
-  const loggedInUser = getLoggedInUser();
-  const isSuperAdmin = loggedInUser?.name === "Super Admin";
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    const loggedInUser = getLoggedInUser();
+    setIsSuperAdmin(loggedInUser?.name === "Super Admin");
+  }, []);
 
   const filteredMenuItems = menuItems.filter(
     (item) => !item.superAdminOnly || isSuperAdmin,

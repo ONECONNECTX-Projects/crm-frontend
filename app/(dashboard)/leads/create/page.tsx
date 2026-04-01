@@ -134,31 +134,6 @@ export default function CreateLeadForm({
       newErrors.email = "Invalid email format";
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
-
-    if (!formData.lead_value.trim()) {
-      newErrors.lead_value = "Lead value is required";
-    } else if (Number(formData.lead_value) < 0) {
-      newErrors.lead_value = "Lead value cannot be negative";
-    }
-    if (!formData.lead_owner_id) {
-      newErrors.lead_owner_id = "Lead owner is required";
-    }
-
-    if (!formData.lead_status_id) {
-      newErrors.lead_status_id = "Lead status is required";
-    }
-
-    if (!formData.lead_source_id) {
-      newErrors.lead_source_id = "Lead source is required";
-    }
-
-    if (!formData.priority_id) {
-      newErrors.priority_id = "Priority is required";
-    }
-
     setErrors(newErrors);
 
     return Object.keys(newErrors).length === 0;
@@ -298,7 +273,6 @@ export default function CreateLeadForm({
             <InputField
               type="number"
               label="Lead Value"
-              required={true}
               value={formData.lead_value}
               error={errors.lead_value}
               onChange={(v) => {
@@ -315,7 +289,6 @@ export default function CreateLeadForm({
               label="Lead Owner"
               value={formData.lead_owner_id}
               error={errors.lead_owner_id}
-              required
               onChange={(v) => {
                 setFormData({ ...formData, lead_owner_id: v });
                 setErrors({ ...errors, lead_owner_id: "" });
@@ -334,7 +307,6 @@ export default function CreateLeadForm({
               label="Priority"
               value={formData.priority_id}
               error={errors.priority_id}
-              required
               onChange={(v) => {
                 setFormData({ ...formData, priority_id: v });
                 setErrors({ ...errors, priority_id: "" });
@@ -354,7 +326,6 @@ export default function CreateLeadForm({
               label="Lead Status"
               value={formData.lead_status_id}
               error={errors.lead_status_id}
-              required
               onChange={(v) => {
                 setFormData({ ...formData, lead_status_id: v });
                 setErrors({ ...errors, lead_status_id: "" });
@@ -374,7 +345,6 @@ export default function CreateLeadForm({
               label="Lead Source"
               value={formData.lead_source_id}
               error={errors.lead_source_id}
-              required
               onChange={(v) => {
                 setFormData({ ...formData, lead_source_id: v });
                 setErrors({ ...errors, lead_source_id: "" });
