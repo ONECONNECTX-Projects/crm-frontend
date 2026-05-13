@@ -1,6 +1,6 @@
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_DATA_URL ||
-  "https://questflowcontrols.com/api/documents/views";
+  "https://questflowcontrols.coms/api/documents/views";
 
 export interface ProductView {
   _id: string;
