@@ -55,7 +55,7 @@ export default function Login() {
             Effortlessly manage your <br /> customer and operations
           </h1>
           <p className="text-blue-100 text-lg max-w-md leading-relaxed opacity-90">
-            Welcome to Quest CRM! Streamline customer relationships, boost
+            Welcome to your CRM! Streamline customer relationships, boost
             sales, and drive business growth effortlessly.
           </p>
         </div>

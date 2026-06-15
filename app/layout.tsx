@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quest CRM",
-  description: "Quest CRM Application",
+  title: "CRM",
+  description: "CRM Application",
   icons: {
     icon: "/browser.svg",
   },

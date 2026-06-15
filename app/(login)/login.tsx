@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import InputField from "@/app/common/InputFeild";
 import { LoginModel } from "./Model/model";
 import { FiLock, FiUser } from "react-icons/fi";
@@ -109,13 +108,9 @@ export default function LoginPage() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <Image
-            src="/favicon.svg"
-            alt="Company Logo"
-            width={120}
-            height={120}
-            priority
-          />
+          <span className="text-4xl font-bold text-blue-600 tracking-tight">
+            Your Logo
+          </span>
         </div>
 
         {/* Heading */}

@@ -262,13 +262,14 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
           ${collapsed ? "text-center" : "text-2xl px-6"}
         `}
       >
-        <div className="flex items-center ">
-          <img
-            src="/favicon.svg"
-            alt="QFC Logo"
-            className={`${collapsed ? "w-12 h-12 ml-3" : "w-20 h-20"}`}
-          />
-          {/* {!collapsed && <span className="text-black">Quest</span>} */}
+        <div className="flex items-center justify-center py-4">
+          <span
+            className={`font-bold text-blue-600 tracking-tight ${
+              collapsed ? "text-lg" : "text-2xl"
+            }`}
+          >
+            {collapsed ? "CRM" : "Your Logo"}
+          </span>
         </div>
       </div>
 
