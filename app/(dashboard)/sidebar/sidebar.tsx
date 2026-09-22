@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { FaRegBuilding } from "react-icons/fa";
 import {
@@ -226,6 +226,7 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [showSettingsPanel, setShowSettingsPanel] = useState(
     pathname.startsWith("/settings"),
@@ -246,159 +247,136 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
     setOpenMenu(openMenu === name ? null : name);
   };
 
+  // Collapsed rail has no room for a submenu, so a parent click jumps to its first child.
+  const openParent = (item: MenuItem) => {
+    if (collapsed && item.children?.length) {
+      router.push(item.children[0].path);
+      onNavigate?.();
+      return;
+    }
+    toggleMenu(item.name);
+  };
+
   const goBack = () => {
     setShowSettingsPanel(false);
   };
 
+  const isActive = (path?: string) => {
+    if (!path) return false;
+    if (path === "/dashboard") return pathname === "/dashboard";
+    return pathname.startsWith(path);
+  };
+
+  // A parent row lights up when the open submenu or the current route is one of its children.
+  const hasActiveChild = (item: MenuItem) =>
+    !!item.children?.some((child) => pathname.startsWith(child.path));
+
   return (
     <div
-      className={`relative bg-white border-r shadow transition-all h-full overflow-y-auto ${
-        collapsed ? "w-18" : "w-64"
+      className={`sidebar-shell relative flex h-full flex-col text-slate-600 transition-all duration-300 ${
+        collapsed ? "w-20" : "w-64"
       }`}
     >
       {/* STATIC HEADER */}
+      {/*
+       * The logo is a 663x283 wordmark (2.34:1). Cap BOTH axes and let
+       * object-contain pick the binding one — a width-only cap overflows the
+       * 56px bar, which has to stay 56px to line up with the page header.
+       */}
       <div
-        className={`border-b font-bold sticky top-0 bg-white z-20 transition-all duration-300
-          ${collapsed ? "text-center" : "text-2xl px-6"}
-        `}
+        className={`flex h-14 shrink-0 items-center justify-center overflow-hidden border-b border-white/60 ${
+          collapsed ? "px-2" : "px-4"
+        }`}
       >
-        <div className="flex items-center ">
-          <img
-            src="/favicon.svg"
-            alt="QFC Logo"
-            className={`${collapsed ? "w-12 h-12 ml-3" : "w-20 h-20"}`}
-          />
-          {/* {!collapsed && <span className="text-black">Quest</span>} */}
-        </div>
+        <img
+          src="/logo-sidebar-light.svg"
+          alt="Quest CRM"
+          className={`h-auto w-auto object-contain ${
+            collapsed ? "max-h-8 max-w-12" : "max-h-10 max-w-40"
+          }`}
+        />
       </div>
 
       {/* SCROLLABLE AREA */}
-      <div className="h-[calc(100vh-90px)] overflow-y-auto px-1 pb-10">
+      <div className="no-scrollbar flex-1 overflow-y-auto px-3 pb-6">
         {/* MAIN SIDEBAR */}
         {!showSettingsPanel && (
-          <nav className="mt-4 space-y-2">
-            {filteredMenuItems.map((item) => (
-              <div key={item.name}>
-                <div
-                  className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-50 text-gray-700 cursor-pointer"
-                  onClick={() => {
-                    if (item.name === "Settings") {
-                      setShowSettingsPanel(true);
-                      return;
-                    }
-                    if (item.children) toggleMenu(item.name);
-                  }}
-                >
-                  {!item.children ? (
-                    item.path ? (
-                      <Link
-                        href={item.path}
-                        className="flex items-center gap-3 w-full"
-                        onClick={onNavigate}
-                      >
-                        <item.icon className="text-xl" />
-                        {!collapsed && <span>{item.name}</span>}
-                      </Link>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <item.icon className="text-xl" />
-                        {!collapsed && <span>{item.name}</span>}
-                      </div>
-                    )
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <item.icon className="text-xl" />
-                        {!collapsed && <span>{item.name}</span>}
-                      </div>
+          <nav className="mt-4 space-y-1">
+            {!collapsed && (
+              <p className="px-3 pb-1 text-xs font-medium text-slate-400">
+                Menu
+              </p>
+            )}
+            {filteredMenuItems.map((item) => {
+              const active =
+                item.name === "Settings"
+                  ? pathname.startsWith("/settings")
+                  : isActive(item.path) || hasActiveChild(item);
 
-                      {!collapsed &&
-                        (openMenu === item.name ? (
-                          <FiChevronDown />
-                        ) : (
-                          <FiChevronRight />
-                        ))}
-                    </>
-                  )}
-                </div>
-
-                {item.children && openMenu === item.name && !collapsed && (
-                  <div className="ml-10 mt-1 space-y-1">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.name}
-                        href={child.path}
-                        onClick={onNavigate}
-                      >
+              return (
+                <div key={item.name}>
+                  <div
+                    title={collapsed ? item.name : undefined}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer transition-colors ${
+                      active
+                        ? "bg-brand-500 text-white shadow-md shadow-brand-500/30"
+                        : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
+                    } ${collapsed ? "justify-center" : ""}`}
+                    onClick={() => {
+                      if (item.name === "Settings") {
+                        setShowSettingsPanel(true);
+                        return;
+                      }
+                      if (item.children) openParent(item);
+                    }}
+                  >
+                    {!item.children ? (
+                      item.path ? (
+                        <Link
+                          href={item.path}
+                          className={`flex w-full items-center gap-3 ${
+                            collapsed ? "justify-center" : ""
+                          }`}
+                          onClick={onNavigate}
+                        >
+                          <item.icon className="size-5 shrink-0" />
+                          {!collapsed && (
+                            <span className="truncate">{item.name}</span>
+                          )}
+                        </Link>
+                      ) : (
                         <div
-                          className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
-                            pathname === child.path
-                              ? "text-brand-500 font-semibold"
-                              : "text-gray-500 hover:text-brand-500"
+                          className={`flex items-center gap-3 ${
+                            collapsed ? "justify-center" : ""
                           }`}
                         >
-                          {child.name}
+                          <item.icon className="size-5 shrink-0" />
+                          {!collapsed && (
+                            <span className="truncate">{item.name}</span>
+                          )}
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
-        )}
-
-        {/* SETTINGS PANEL */}
-        {showSettingsPanel && (
-          <div className="mt-4">
-            {/* BACK BUTTON - FULL WIDTH */}
-            <div
-              className="w-full border-b border-gray-300 pb-2 mb-4 flex items-center gap-2 cursor-pointer"
-              onClick={goBack}
-            >
-              <IoIosArrowDropleft size={24} className="text-gray-600" />
-              <span className="text-gray-600 hover:text-black">
-                Back to menu
-              </span>
-            </div>
-
-            <div className="space-y-1">
-              {settingsMenu.map((item) => (
-                <div key={item.name}>
-                  {/* Parent Item */}
-                  <div
-                    className="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-brand-50 text-gray-700 cursor-pointer"
-                    onClick={() => item.children && toggleMenu(item.name)}
-                  >
-                    {item.children ? (
+                      )
+                    ) : (
                       <>
                         <div className="flex items-center gap-3">
-                          {item.icon && <item.icon className="text-lg" />}
-                          {!collapsed && <span>{item.name}</span>}
+                          <item.icon className="size-5 shrink-0" />
+                          {!collapsed && (
+                            <span className="truncate">{item.name}</span>
+                          )}
                         </div>
 
                         {!collapsed &&
                           (openMenu === item.name ? (
-                            <FiChevronDown />
+                            <FiChevronDown className="shrink-0" />
                           ) : (
-                            <FiChevronRight />
+                            <FiChevronRight className="shrink-0" />
                           ))}
                       </>
-                    ) : (
-                      <Link
-                        href={item.path ?? "#"}
-                        className="flex items-center gap-3 w-full"
-                        onClick={onNavigate}
-                      >
-                        {item.icon && <item.icon className="text-lg" />}
-                        {!collapsed && <span>{item.name}</span>}
-                      </Link>
                     )}
                   </div>
 
-                  {/* Children */}
                   {item.children && openMenu === item.name && !collapsed && (
-                    <div className="ml-10 mt-1 space-y-1">
+                    <div className="mt-1 ml-5 space-y-0.5 border-l border-brand-100 pl-4">
                       {item.children.map((child) => (
                         <Link
                           key={child.name}
@@ -406,10 +384,10 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                           onClick={onNavigate}
                         >
                           <div
-                            className={`px-3 py-1.5 rounded-md cursor-pointer text-sm ${
+                            className={`cursor-pointer rounded-md px-3 py-1.5 text-sm transition-colors ${
                               pathname === child.path
-                                ? "text-brand-500 font-semibold"
-                                : "text-gray-500 hover:text-brand-500"
+                                ? "bg-brand-50 font-semibold text-brand-700"
+                                : "text-slate-500 hover:bg-brand-50/70 hover:text-brand-700"
                             }`}
                           >
                             {child.name}
@@ -419,7 +397,101 @@ export default function Sidebar({ collapsed, onNavigate }: SidebarProps) {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
+          </nav>
+        )}
+
+        {/* SETTINGS PANEL */}
+        {showSettingsPanel && (
+          <div className="mt-4">
+            {/* BACK BUTTON - FULL WIDTH */}
+            <div
+              className="mb-4 flex w-full cursor-pointer items-center justify-center border-b border-brand-100 pb-3 text-slate-500 transition-colors hover:text-brand-700"
+              onClick={goBack}
+              title="Back to menu"
+            >
+              <IoIosArrowDropleft size={22} className="shrink-0" />
+            </div>
+
+            <div className="space-y-1">
+              {!collapsed && (
+                <p className="px-3 pb-1 text-xs font-medium text-slate-400">
+                  Settings
+                </p>
+              )}
+              {settingsMenu.map((item) => {
+                const active = isActive(item.path) || hasActiveChild(item);
+
+                return (
+                <div key={item.name}>
+                  {/* Parent Item */}
+                  <div
+                    title={collapsed ? item.name : undefined}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer transition-colors ${
+                      active
+                        ? "bg-brand-500 text-white shadow-md shadow-brand-500/30"
+                        : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
+                    } ${collapsed ? "justify-center" : ""}`}
+                    onClick={() => item.children && openParent(item)}
+                  >
+                    {item.children ? (
+                      <>
+                        <div className="flex items-center gap-3">
+                          {item.icon && <item.icon className="size-5 shrink-0" />}
+                          {!collapsed && (
+                            <span className="truncate">{item.name}</span>
+                          )}
+                        </div>
+
+                        {!collapsed &&
+                          (openMenu === item.name ? (
+                            <FiChevronDown className="shrink-0" />
+                          ) : (
+                            <FiChevronRight className="shrink-0" />
+                          ))}
+                      </>
+                    ) : (
+                      <Link
+                        href={item.path ?? "#"}
+                        className={`flex w-full items-center gap-3 ${
+                          collapsed ? "justify-center" : ""
+                        }`}
+                        onClick={onNavigate}
+                      >
+                        {item.icon && <item.icon className="size-5 shrink-0" />}
+                        {!collapsed && (
+                          <span className="truncate">{item.name}</span>
+                        )}
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Children */}
+                  {item.children && openMenu === item.name && !collapsed && (
+                    <div className="mt-1 ml-5 space-y-0.5 border-l border-brand-100 pl-4">
+                      {item.children.map((child) => (
+                        <Link
+                          key={child.name}
+                          href={child.path}
+                          onClick={onNavigate}
+                        >
+                          <div
+                            className={`cursor-pointer rounded-md px-3 py-1.5 text-sm transition-colors ${
+                              pathname === child.path
+                                ? "bg-brand-50 font-semibold text-brand-700"
+                                : "text-slate-500 hover:bg-brand-50/70 hover:text-brand-700"
+                            }`}
+                          >
+                            {child.name}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                );
+              })}
             </div>
           </div>
         )}

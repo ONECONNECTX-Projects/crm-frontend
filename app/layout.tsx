@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Raleway, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "react-phone-input-2/lib/style.css";
 import { ErrorProvider } from "./providers/ErrorProvider";
 import { AuthProvider } from "./providers/AuthProvider";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const raleway = Raleway({
+  variable: "--font-raleway",
   subsets: ["latin"],
 });
 
@@ -30,8 +30,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      {/*
+        suppressHydrationWarning: extensions like Grammarly stamp attributes
+        onto <body> before React hydrates. It suppresses this element only, so
+        a genuine mismatch anywhere inside still reports.
+      */}
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${raleway.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ErrorProvider>
           <AuthProvider>{children}</AuthProvider>

@@ -42,7 +42,7 @@ export default function ViewEmploymentStatusPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
         <p className="text-sm text-gray-500">Loading...</p>
       </div>
     );
@@ -50,14 +50,14 @@ export default function ViewEmploymentStatusPage() {
 
   if (!employmentStatus) {
     return (
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
         <p className="text-sm text-gray-500">Employment status not found</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -215,21 +214,18 @@ export default function EmploymentStatusPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Employment Status"
-          createButtonText="Create Employment Status"
-          onCreateClick={() => {
+
+        {/* Actions */}
+        <PageActions
+            createButtonText="Create Employment Status"
+            onCreateClick={() => {
             setMode("create");
             setEditingStatus(null);
             setOpenCreate(true);
           }}
-        />
-
-        {/* Actions */}
-        <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search employment status..."

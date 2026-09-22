@@ -6,8 +6,28 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-raleway);
   --font-mono: var(--font-geist-mono);
+
+  /*
+   * Type scale trimmed ~10% off Tailwind's defaults — the whole app reads a
+   * notch denser without touching a single text-* class. Spacing tokens are
+   * deliberately left alone so layouts keep their breathing room.
+   */
+  --text-xs: 0.6875rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.25rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.125rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.625rem;
+  --text-3xl--line-height: 2rem;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -76,29 +96,29 @@
   --popover-foreground: oklch(0.18 0.04 245);
   --primary: oklch(0.40 0.11 245);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.58 0.16 55);
+  --secondary: oklch(0.55 0.13 245);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.96 0.01 245);
   --muted-foreground: oklch(0.50 0.03 245);
-  --accent: oklch(0.58 0.16 55);
+  --accent: oklch(0.55 0.13 245);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.90 0.02 245);
   --input: oklch(0.90 0.02 245);
   --ring: oklch(0.40 0.11 245);
   --chart-1: oklch(0.40 0.11 245);
-  --chart-2: oklch(0.58 0.16 55);
+  --chart-2: oklch(0.55 0.13 245);
   --chart-3: oklch(0.50 0.08 245);
-  --chart-4: oklch(0.68 0.14 55);
+  --chart-4: oklch(0.72 0.08 245);
   --chart-5: oklch(0.55 0.09 245);
-  --sidebar: oklch(0.25 0.06 245);
+  --sidebar: oklch(0.40 0.11 245);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.58 0.16 55);
+  --sidebar-primary: oklch(0.55 0.13 245);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.35 0.08 245);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.35 0.06 245);
-  --sidebar-ring: oklch(0.58 0.16 55);
+  --sidebar-ring: oklch(0.55 0.13 245);
 }
 
 .dark {
@@ -110,36 +130,143 @@
   --popover-foreground: oklch(0.95 0.01 245);
   --primary: oklch(0.55 0.13 245);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.58 0.16 55);
+  --secondary: oklch(0.55 0.13 245);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.25 0.04 245);
   --muted-foreground: oklch(0.65 0.03 245);
-  --accent: oklch(0.58 0.16 55);
+  --accent: oklch(0.55 0.13 245);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(0.30 0.04 245);
   --input: oklch(0.30 0.04 245);
   --ring: oklch(0.55 0.13 245);
   --chart-1: oklch(0.55 0.13 245);
-  --chart-2: oklch(0.65 0.16 55);
+  --chart-2: oklch(0.65 0.11 245);
   --chart-3: oklch(0.45 0.10 245);
-  --chart-4: oklch(0.72 0.14 55);
+  --chart-4: oklch(0.78 0.07 245);
   --chart-5: oklch(0.60 0.11 245);
-  --sidebar: oklch(0.18 0.04 245);
+  --sidebar: oklch(0.36 0.10 245);
   --sidebar-foreground: oklch(0.95 0.01 245);
-  --sidebar-primary: oklch(0.58 0.16 55);
+  --sidebar-primary: oklch(0.55 0.13 245);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.28 0.05 245);
   --sidebar-accent-foreground: oklch(0.95 0.01 245);
   --sidebar-border: oklch(0.30 0.04 245);
-  --sidebar-ring: oklch(0.58 0.16 55);
+  --sidebar-ring: oklch(0.55 0.13 245);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
+  /*
+   * Soft blue page ground, matching the other Quest products. Fixed
+   * attachment so the wash stays put while content scrolls over it — the
+   * frosted sidebar and header read against a stable field, not a moving one.
+   */
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: #e9f1f8;
+    background-image:
+      radial-gradient(
+        1100px 620px at 8% -12%,
+        rgb(255 255 255 / 0.95) 0%,
+        transparent 62%
+      ),
+      radial-gradient(900px 520px at 102% 2%, #cfe4f5 0%, transparent 58%),
+      linear-gradient(158deg, #eaf3fb 0%, #dfebf6 48%, #e8f1f8 100%);
+    background-attachment: fixed;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar while keeping scroll functionality */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+   * Glass surfaces.
+   *
+   * Only the SURFACE is translucent — text and icons stay fully opaque, so
+   * contrast never depends on what happens to be scrolling underneath.
+   *
+   * ponytail: backdrop-filter is GPU work per layer. These are meant for the
+   * shell and panel-level containers (a dozen or so on screen), not for every
+   * table row. If a page ever feels sticky while scrolling, that's the cause —
+   * drop the blur to `.glass-flat` on the densest container.
+   */
+  .glass {
+    background-color: rgb(255 255 255 / 0.62);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgb(255 255 255 / 0.55);
+    box-shadow:
+      0 4px 24px -8px rgb(1 85 140 / 0.18),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.65);
+  }
+
+  /* For surfaces that sit over busy content — dropdowns, modals, popovers. */
+  .glass-strong {
+    background-color: rgb(255 255 255 / 0.82);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgb(255 255 255 / 0.7);
+    box-shadow:
+      0 12px 40px -12px rgb(1 85 140 / 0.28),
+      inset 0 1px 0 0 rgb(255 255 255 / 0.75);
+  }
+
+  /*
+   * Sidebar shell — frosted white over the blue page wash. Pairs with
+   * logo-sidebar-light.svg; the plain logo-sidebar.svg has a white wordmark
+   * that would vanish here.
+   */
+  .sidebar-shell {
+    background-color: rgb(255 255 255 / 0.7);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+    border-right: 1px solid rgb(255 255 255 / 0.6);
+  }
+
+  @supports not (backdrop-filter: blur(1px)) {
+    .sidebar-shell {
+      background-color: rgb(255 255 255 / 0.94);
+    }
+  }
+
+  /*
+   * Inputs: barely-there fill so the mesh reads through where there is one.
+   * The border is tinted, not white — these now sit on white page cards too,
+   * and a white border there is no border at all.
+   */
+  .glass-input {
+    background-color: rgb(255 255 255 / 0.55);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgb(1 85 140 / 0.18);
+  }
+
+  /* Same look, no blur — the escape hatch when a container gets scroll-heavy. */
+  .glass-flat {
+    background-color: rgb(255 255 255 / 0.75);
+    border: 1px solid rgb(255 255 255 / 0.55);
+    box-shadow: 0 4px 24px -8px rgb(1 85 140 / 0.18);
+  }
+
+  /* Fallback: no backdrop-filter support means no blur, so go more opaque. */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass,
+    .glass-input {
+      background-color: rgb(255 255 255 / 0.9);
+    }
+    .glass-strong {
+      background-color: rgb(255 255 255 / 0.96);
+    }
   }
 }

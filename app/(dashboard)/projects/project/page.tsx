@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -244,17 +243,14 @@ export default function ProjectsPage() {
     }));
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Projects"
-          createButtonText="Create Project"
-          onCreateClick={handleCreateClick}
-        />
 
         {/* Actions */}
         <PageActions
+            createButtonText="Create Project"
+            onCreateClick={handleCreateClick}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search projects..."

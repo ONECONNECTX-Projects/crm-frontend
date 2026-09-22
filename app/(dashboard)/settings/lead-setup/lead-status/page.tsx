@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -190,21 +189,18 @@ export default function LeadStatusPage() {
     .map((item, index) => ({ ...item, sNo: startIndex + index + 1 }));
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Lead Status"
-          createButtonText="Create Lead Status"
-          onCreateClick={() => {
+
+        {/* Actions */}
+        <PageActions
+            createButtonText="Create Lead Status"
+            onCreateClick={() => {
             setMode("create");
             setEditingLeadStatus(null);
             setOpenForm(true);
           }}
-        />
-
-        {/* Actions */}
-        <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search Lead Status..."

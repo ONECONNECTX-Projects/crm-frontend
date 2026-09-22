@@ -138,7 +138,7 @@ export default function ViewRolePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-3 sm:p-4 md:p-6">
         <p className="text-sm text-gray-500">Loading...</p>
       </div>
     );
@@ -146,7 +146,7 @@ export default function ViewRolePage() {
 
   if (!role) {
     return (
-      <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-3 sm:p-4 md:p-6">
         <p className="text-sm text-gray-500">Role not found</p>
       </div>
     );
@@ -161,7 +161,7 @@ export default function ViewRolePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+    <div className="bg-card rounded-xl border border-border shadow-sm p-3 sm:p-4 md:p-6">
       <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

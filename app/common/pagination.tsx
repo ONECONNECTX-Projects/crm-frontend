@@ -50,13 +50,13 @@ export default function Pagination({
   const pages = getPageNumbers();
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-4 border-t mt-6">
+    <div className="flex flex-col items-center justify-between gap-4 border-t border-border py-4 sm:flex-row">
       {/* LEFT: Page Size Dropdown */}
       <div className="flex items-center gap-2 order-2 sm:order-1">
         <select
           value={pageSize}
           onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="border rounded-md px-2 sm:px-3 py-1 text-sm"
+          className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-brand-500/15 sm:px-3"
         >
           {pageSizes.map((size) => (
             <option key={size} value={size}>
@@ -65,16 +65,16 @@ export default function Pagination({
           ))}
         </select>
 
-        <span className="text-gray-500 text-xs sm:text-sm">rows per page</span>
+        <span className="text-muted-foreground text-xs sm:text-sm">entries per page</span>
       </div>
 
-      {/* RIGHT: Pagination */}
-      <div className="flex items-center gap-1 sm:gap-3 order-1 sm:order-2">
+      {/* CENTER: Pagination */}
+      <div className="flex items-center gap-1 sm:gap-2 order-1 sm:order-2 sm:flex-1 sm:justify-center">
         {/* Prev */}
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-2 sm:px-3 py-1 rounded-md border text-sm disabled:opacity-40 bg-white"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
         >
           <ChevronLeft size={16} />
         </button>
@@ -83,17 +83,17 @@ export default function Pagination({
         <div className="flex items-center gap-1 sm:gap-2">
           {pages.map((p, i) =>
             p === "..." ? (
-              <span key={`ellipsis-${i}`} className="text-gray-400 px-1 sm:px-2 text-sm">
+              <span key={`ellipsis-${i}`} className="text-muted-foreground px-1 sm:px-2 text-sm">
                 ...
               </span>
             ) : (
               <button
                 key={p}
                 onClick={() => onPageChange(p as number)}
-                className={`px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm min-w-[28px] sm:min-w-[32px] ${
+                className={`min-w-[30px] rounded-md px-2 py-1.5 text-xs font-medium transition-colors sm:min-w-[34px] sm:px-3 sm:text-sm ${
                   currentPage === p
                     ? "bg-brand-500 text-white"
-                    : "border text-gray-700 bg-white"
+                    : "border border-border bg-background text-foreground hover:bg-muted"
                 }`}
               >
                 {p}
@@ -106,11 +106,17 @@ export default function Pagination({
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-2 sm:px-3 py-1 rounded-md border text-sm disabled:opacity-40 bg-white"
+          className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
         >
           <ChevronRight size={16} />
         </button>
       </div>
+
+      {/* RIGHT: Page counter */}
+      <span className="order-3 text-xs text-muted-foreground sm:text-sm">
+        Page <span className="font-semibold text-foreground">{currentPage}</span>{" "}
+        of <span className="font-semibold text-foreground">{totalPages || 1}</span>
+      </span>
     </div>
   );
 }

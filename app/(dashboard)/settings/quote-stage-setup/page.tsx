@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -190,21 +189,18 @@ export default function QuoteStagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Quote Stage"
-          createButtonText="Create Quote Stage"
-          onCreateClick={() => {
+
+        {/* Actions */}
+        <PageActions
+            createButtonText="Create Quote Stage"
+            onCreateClick={() => {
             setMode("create");
             setEditingQuoteStage(null);
             setOpenCreate(true);
           }}
-        />
-
-        {/* Actions */}
-        <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search Quote Stage..."

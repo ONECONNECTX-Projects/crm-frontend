@@ -3,6 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import {
   ArrowLeft,
+  Upload,
+  FolderPlus,
+  Search,
+  Loader2,
   FolderUp,
   File,
   Folder,
@@ -34,6 +38,7 @@ export default function MediaPage() {
   const [uploading, setUploading] = useState(false);
   const [currentFolderId, setCurrentFolderId] = useState<number | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<Media[]>([]);
+  const [search, setSearch] = useState("");
 
   // Modal states
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -221,31 +226,58 @@ export default function MediaPage() {
     }
   };
 
-  // Get file icon based on mime type
+  // Icon + tint per file kind, rendered as a chip so the list scans by shape.
   const getFileIcon = (item: Media) => {
-    if (item.type === "folder") {
-      return <Folder className="w-7 h-7 text-yellow-600" />;
-    }
-
+    const chip = "flex size-8 shrink-0 items-center justify-center rounded-lg";
     const mimeType = item.mime_type || "";
 
+    if (item.type === "folder") {
+      return (
+        <span className={`${chip} bg-brand-50 text-brand-500`}>
+          <Folder className="size-4" />
+        </span>
+      );
+    }
     if (mimeType.startsWith("image/")) {
-      return <ImageIcon className="w-7 h-7 text-green-600" />;
+      return (
+        <span className={`${chip} bg-emerald-50 text-emerald-600`}>
+          <ImageIcon className="size-4" />
+        </span>
+      );
     }
     if (mimeType.startsWith("video/")) {
-      return <FileVideo className="w-7 h-7 text-purple-600" />;
+      return (
+        <span className={`${chip} bg-violet-50 text-violet-600`}>
+          <FileVideo className="size-4" />
+        </span>
+      );
     }
     if (mimeType.startsWith("audio/")) {
-      return <FileAudio className="w-7 h-7 text-pink-600" />;
+      return (
+        <span className={`${chip} bg-pink-50 text-pink-600`}>
+          <FileAudio className="size-4" />
+        </span>
+      );
     }
     if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) {
-      return <FileSpreadsheet className="w-7 h-7 text-green-700" />;
+      return (
+        <span className={`${chip} bg-emerald-50 text-emerald-700`}>
+          <FileSpreadsheet className="size-4" />
+        </span>
+      );
     }
     if (mimeType.includes("pdf") || mimeType.includes("document")) {
-      return <FileText className="w-7 h-7 text-red-600" />;
+      return (
+        <span className={`${chip} bg-red-50 text-red-600`}>
+          <FileText className="size-4" />
+        </span>
+      );
     }
-
-    return <File className="w-7 h-7 text-gray-600" />;
+    return (
+      <span className={`${chip} bg-brand-50 text-brand-500`}>
+        <File className="size-4" />
+      </span>
+    );
   };
 
   // Format file size
@@ -278,240 +310,324 @@ export default function MediaPage() {
     }
   };
 
+  const folders = items.filter((i) => i.type === "folder");
+  const visibleItems = search.trim()
+    ? items.filter((i) =>
+        i.name.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : items;
+
   return (
-    <div className="h-screen flex flex-col bg-[#d1d5db]">
-      {/* Top Toolbar */}
-      <div className="flex items-center gap-5 px-6 py-4 bg-[#3f454a] text-white text-lg">
-        <button
-          onClick={handleGoBack}
-          disabled={breadcrumbs.length === 0}
-          className={`flex items-center gap-3 px-4 py-3 rounded ${
-            breadcrumbs.length === 0
-              ? "opacity-50 cursor-not-allowed"
-              : "hover:bg-[#4f5559]"
-          }`}
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            Media
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage your files and folders
+          </p>
+        </div>
 
-        <div className="flex-1" />
+        <div className="flex flex-wrap items-center gap-2">
+          <label
+            className={`flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted ${
+              uploading ? "pointer-events-none opacity-50" : "cursor-pointer"
+            }`}
+          >
+            <FolderUp className="size-4" />
+            Upload Folder
+            <input
+              ref={folderInputRef}
+              type="file"
+              multiple
+              hidden
+              onChange={handleFolderUpload}
+              disabled={uploading}
+            />
+          </label>
 
-        {/* <button
-          onClick={() => setShowCreateFolder(true)}
-          className="bg-[#4a9d5b] px-5 py-3 rounded cursor-pointer hover:bg-[#3d8c4d] flex items-center gap-3"
-        >
-          <Plus className="w-6 h-6" />
-          New Folder
-        </button> */}
+          <label
+            className={`flex items-center gap-2 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-600 ${
+              uploading ? "pointer-events-none opacity-50" : "cursor-pointer"
+            }`}
+          >
+            <Upload className="size-4" />
+            {uploading ? "Uploading..." : "Upload Files"}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              hidden
+              onChange={handleFileUpload}
+              disabled={uploading}
+            />
+          </label>
 
-        <label
-          className={`bg-[#5a8dee] px-5 py-3 rounded cursor-pointer hover:bg-[#4a7dde] flex items-center gap-3 ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          <File className="w-6 h-6" />
-          {uploading ? "Uploading..." : "Upload Files"}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={handleFileUpload}
-            disabled={uploading}
-          />
-        </label>
-
-        <label
-          className={`bg-[#5a8dee] px-5 py-3 rounded cursor-pointer hover:bg-[#4a7dde] flex items-center gap-3 ${uploading ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          <FolderUp className="w-6 h-6" />
-          Upload Folder
-          <input
-            ref={folderInputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={handleFolderUpload}
-            disabled={uploading}
-          />
-        </label>
+          <button
+            onClick={() => setShowCreateFolder(true)}
+            className="flex items-center gap-2 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-600"
+          >
+            <FolderPlus className="size-4" />
+            New Folder
+          </button>
+        </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-72 bg-[#2f3439] text-gray-200 text-lg p-5">
-          <div className="font-semibold mb-4 text-xl">Media</div>
-          <div
-            className={`pl-4 py-3 cursor-pointer rounded flex items-center gap-3 ${
-              currentFolderId === null ? "bg-[#4b5563]" : ""
-            }`}
+      <div className="grid gap-4 lg:grid-cols-[16rem_1fr] sm:gap-6">
+        {/* Folder rail */}
+        <div className="h-fit rounded-xl border border-border bg-card p-4 shadow-sm">
+          <h2 className="mb-3 text-sm font-semibold text-foreground">
+            Folders
+          </h2>
+          <button
             onClick={() => {
               setBreadcrumbs([]);
               setCurrentFolderId(null);
             }}
+            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm transition-colors ${
+              currentFolderId === null
+                ? "bg-brand-50 font-medium text-brand-600"
+                : "text-muted-foreground hover:bg-muted"
+            }`}
           >
-            <Folder className="w-6 h-6" />
+            <Folder className="size-4" />
             Root
-          </div>
-        </div>
+          </button>
 
-        {/* File Table */}
-        <div className="flex-1 bg-[#e5e7eb] overflow-auto">
-          {/* Breadcrumb */}
-          <div className="px-4 py-3 text-lg bg-[#d1d5db] flex items-center gap-3">
-            <span
-              className="cursor-pointer text-brand-500 font-medium"
-              onClick={() => navigateToBreadcrumb(-1)}
+          {folders.map((folder) => (
+            <button
+              key={folder.id}
+              onClick={() => navigateToFolder(folder)}
+              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted"
             >
-              Root
-            </span>
-            {breadcrumbs.map((folder, index) => (
-              <span key={folder.id} className="flex items-center gap-2">
-                /
-                <span
-                  className="cursor-pointer text-brand-500 font-medium"
-                  onClick={() => navigateToBreadcrumb(index)}
-                >
-                  {folder.name}
-                </span>
-              </span>
-            ))}
-          </div>
-
-          {/* Header */}
-          <div className="grid grid-cols-[3fr_2fr_1fr_1fr_2fr] bg-[#374151] text-white text-base font-semibold px-4 py-4">
-            <div>Name</div>
-            <div>Modified</div>
-            <div>Size</div>
-            <div>Type</div>
-            <div>Actions</div>
-          </div>
-
-          {/* Loading State */}
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-            </div>
-          ) : items.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              <Folder className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <p>No files or folders</p>
-            </div>
-          ) : (
-            /* Rows */
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="grid grid-cols-[3fr_2fr_1fr_1fr_2fr] px-4 py-3 text-lg border-b hover:bg-[#d1d5db]"
-              >
-                <div
-                  className={`flex items-center gap-3 ${
-                    item.type === "folder"
-                      ? "cursor-pointer text-brand-500"
-                      : ""
-                  }`}
-                  onDoubleClick={() =>
-                    item.type === "folder" && navigateToFolder(item)
-                  }
-                >
-                  {getFileIcon(item)}
-                  {renamingItem?.id === item.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={renameValue}
-                        onChange={(e) => setRenameValue(e.target.value)}
-                        className="px-2 py-1 border rounded text-sm"
-                        autoFocus
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRename();
-                          if (e.key === "Escape") {
-                            setRenamingItem(null);
-                            setRenameValue("");
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={handleRename}
-                        className="text-green-600 hover:text-green-700"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => {
-                          setRenamingItem(null);
-                          setRenameValue("");
-                        }}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <span>{item.name}</span>
-                  )}
-                </div>
-
-                <div>{formatDate(item.updatedAt)}</div>
-                <div>
-                  {item.type === "folder" ? "—" : formatSize(item.size)}
-                </div>
-                <div>{item.type === "folder" ? "Folder" : "File"}</div>
-                <div className="flex items-center gap-3">
-                  {item.type === "file" && (
-                    <button
-                      onClick={() => handleDownload(item)}
-                      className="p-2 text-blue-600 hover:bg-blue-100 rounded"
-                      title="Download"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setRenamingItem(item);
-                      setRenameValue(item.name);
-                    }}
-                    className="p-2 text-gray-600 hover:bg-gray-200 rounded"
-                    title="Rename"
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
+              <Folder className="size-4 shrink-0" />
+              <span className="truncate">{folder.name}</span>
+            </button>
+          ))}
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="px-6 py-3 bg-[#374151] text-base text-white flex justify-between">
-        <span>Items: {items.length}</span>
-        <span>
-          Status:{" "}
-          {loading ? "Loading..." : uploading ? "Uploading..." : "Ready"}
-        </span>
+        {/* File list — one card: breadcrumb, search, table, footer */}
+        <div className="rounded-xl border border-border bg-card px-4 shadow-sm sm:px-6">
+          {/* Breadcrumb + search */}
+          <div className="flex flex-col gap-3 border-b border-border py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-1.5 text-sm">
+              <button
+                onClick={handleGoBack}
+                disabled={breadcrumbs.length === 0}
+                className="mr-1 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted disabled:opacity-40 disabled:hover:bg-transparent"
+                title="Back"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+              <button
+                className="font-medium text-brand-500 hover:underline"
+                onClick={() => navigateToBreadcrumb(-1)}
+              >
+                Root
+              </button>
+              {breadcrumbs.map((folder, index) => (
+                <span key={folder.id} className="flex items-center gap-1.5">
+                  <span className="text-muted-foreground">/</span>
+                  <button
+                    className="font-medium text-brand-500 hover:underline"
+                    onClick={() => navigateToBreadcrumb(index)}
+                  >
+                    {folder.name}
+                  </button>
+                </span>
+              ))}
+            </div>
+
+            <div className="relative sm:w-64">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search files and folders..."
+                className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-3 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/20"
+              />
+            </div>
+          </div>
+
+          {/* Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  {["Name", "Type", "Size", "Modified", ""].map((label, i) => (
+                    <th
+                      key={i}
+                      className={`whitespace-nowrap py-3 text-xs font-semibold uppercase tracking-wide text-brand-700 ${
+                        i === 4 ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {label || "Actions"}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <Loader2 className="mx-auto size-8 animate-spin text-brand-500" />
+                    </td>
+                  </tr>
+                ) : visibleItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-2xl bg-brand-50">
+                        <Folder className="size-7 text-brand-400" />
+                      </div>
+                      <p className="text-sm font-medium text-foreground">
+                        {search ? "No matches" : "No files or folders"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {search
+                          ? "Try a different search term."
+                          : "Upload a file to get started."}
+                      </p>
+                    </td>
+                  </tr>
+                ) : (
+                  visibleItems.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="border-b border-border transition-colors last:border-0 hover:bg-muted/50"
+                    >
+                      <td className="py-3 pr-4">
+                        <div
+                          className={`flex items-center gap-3 ${
+                            item.type === "folder" ? "cursor-pointer" : ""
+                          }`}
+                          onDoubleClick={() =>
+                            item.type === "folder" && navigateToFolder(item)
+                          }
+                        >
+                          {getFileIcon(item)}
+                          {renamingItem?.id === item.id ? (
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={renameValue}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                className="rounded-lg border border-border bg-background px-2 py-1 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/20"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleRename();
+                                  if (e.key === "Escape") {
+                                    setRenamingItem(null);
+                                    setRenameValue("");
+                                  }
+                                }}
+                              />
+                              <button
+                                onClick={handleRename}
+                                className="text-xs font-medium text-brand-500 hover:underline"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setRenamingItem(null);
+                                  setRenameValue("");
+                                }}
+                                className="text-xs font-medium text-muted-foreground hover:underline"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <span
+                              className={`truncate font-medium ${
+                                item.type === "folder"
+                                  ? "text-brand-600"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {item.name}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap py-3 pr-4 text-muted-foreground">
+                        {item.type === "folder" ? "Folder" : "File"}
+                      </td>
+                      <td className="whitespace-nowrap py-3 pr-4 text-muted-foreground">
+                        {item.type === "folder" ? "—" : formatSize(item.size)}
+                      </td>
+                      <td className="whitespace-nowrap py-3 pr-4 text-muted-foreground">
+                        {formatDate(item.updatedAt)}
+                      </td>
+                      <td className="py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {item.type === "file" && (
+                            <button
+                              onClick={() => handleDownload(item)}
+                              className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-brand-50 hover:text-brand-600"
+                              title="Download"
+                            >
+                              <Download className="size-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => {
+                              setRenamingItem(item);
+                              setRenameValue(item.name);
+                            }}
+                            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            title="Rename"
+                          >
+                            <Edit2 className="size-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item)}
+                            className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <Trash2 className="size-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between border-t border-border py-3 text-xs text-muted-foreground">
+            <span>
+              Showing {visibleItems.length} of {items.length} item
+              {items.length === 1 ? "" : "s"}
+            </span>
+            <span>
+              {loading ? "Loading..." : uploading ? "Uploading..." : "Ready"}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Create Folder Modal */}
       {showCreateFolder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Create New Folder</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-lg">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-base font-semibold text-foreground">
+                Create New Folder
+              </h3>
               <button
                 onClick={() => {
                   setShowCreateFolder(false);
                   setNewFolderName("");
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted"
               >
-                <X className="w-5 h-5" />
+                <X className="size-4" />
               </button>
             </div>
             <input
@@ -519,26 +635,26 @@ export default function MediaPage() {
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               placeholder="Folder name"
-              className="w-full px-3 py-2 border rounded-md mb-4"
+              className="mb-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-[3px] focus-visible:ring-brand-500/20"
               autoFocus
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleCreateFolder();
               }}
             />
-            <div className="flex justify-end gap-3">
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => {
                   setShowCreateFolder(false);
                   setNewFolderName("");
                 }}
-                className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                className="rounded-lg border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateFolder}
                 disabled={creatingFolder}
-                className="px-4 py-2 bg-brand-500 text-white rounded-md hover:bg-brand-600 disabled:opacity-50"
+                className="rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-600 disabled:opacity-50"
               >
                 {creatingFolder ? "Creating..." : "Create"}
               </button>

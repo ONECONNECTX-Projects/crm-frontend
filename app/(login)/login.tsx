@@ -102,9 +102,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white ">
+    <div className="flex min-h-screen items-center justify-center">
       <form
-        className="bg-white p-8 rounded-lg shadow-lg w-full m-8"
+        className="glass m-8 w-full max-w-md rounded-2xl p-8"
         onSubmit={handleSubmit}
       >
         {/* Logo */}
@@ -119,11 +119,11 @@ export default function LoginPage() {
         </div>
 
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-gray-800 mb-2 text-center">
+        <h1 className="mb-2 text-center text-3xl font-bold tracking-tight text-foreground">
           Welcome Back
         </h1>
 
-        <p className="text-gray-500 mt-1 mb-8 text-center">
+        <p className="mb-8 mt-1 text-center text-sm text-muted-foreground">
           Enter your credentials to access your account
         </p>
 

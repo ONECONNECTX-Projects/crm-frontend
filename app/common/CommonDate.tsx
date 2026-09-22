@@ -22,7 +22,7 @@ export default function DateInput({
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-1 font-medium text-gray-700">{label}</label>
+        <label className="mb-1.5 block text-sm font-medium text-foreground">{label}</label>
       )}
 
       <input
@@ -32,14 +32,14 @@ export default function DateInput({
         max={max}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value ? e.target.value : null)}
-        className={`w-full p-3 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 ${
+        className={`glass-input w-full rounded-lg px-3 py-2.5 text-sm text-foreground outline-none transition-[color,box-shadow,border-color] ${
           error
-            ? "border-red-500 focus:ring-red-400"
-            : "border-gray-300 focus:ring-brand-500"
+            ? "!border-destructive focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+            : "focus-visible:border-brand-400 focus-visible:ring-[3px] focus-visible:ring-brand-500/20"
         }`}
       />
 
-      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>
   );
 }

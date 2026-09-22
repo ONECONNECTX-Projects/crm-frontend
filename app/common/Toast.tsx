@@ -41,19 +41,19 @@ export default function Toast({
   const getBgColor = () => {
     switch (type) {
       case "success":
-        return "bg-green-50 border-green-200";
+        return "bg-green-50/85 border-green-200/70";
       case "error":
-        return "bg-red-50 border-red-200";
+        return "bg-red-50/85 border-red-200/70";
       case "warning":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-yellow-50/85 border-yellow-200/70";
       default:
-        return "bg-brand-50 border-brand-200";
+        return "bg-brand-50/85 border-brand-200/70";
     }
   };
 
   return (
     <div
-      className={`fixed top-4 right-4 z-[9999] flex items-center gap-3 px-4 py-3 rounded-lg border ${getBgColor()} shadow-lg animate-slide-in-right max-w-md`}
+      className={`fixed top-4 right-4 z-[9999] flex items-center gap-3 px-4 py-3 rounded-xl border ${getBgColor()} shadow-lg backdrop-blur-md animate-slide-in-right max-w-md`}
     >
       {getIcon()}
       <p className="flex-1 text-sm text-gray-800">{message}</p>

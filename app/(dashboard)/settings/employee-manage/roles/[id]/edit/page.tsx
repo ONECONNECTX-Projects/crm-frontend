@@ -9,7 +9,7 @@ export default function EditRolePage() {
   const roleId = params.id ? parseInt(params.id as string) : null;
 
   return (
-    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl">
+    <div className="bg-card rounded-xl border border-border shadow-sm">
       <CreateRoleForm
         mode="edit"
         onClose={() => router.push("/settings/employee-manage/roles")}

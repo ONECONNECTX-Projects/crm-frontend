@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import StatusBadge from "@/app/common/StatusBadge";
@@ -227,19 +226,16 @@ export default function StaffPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div>
         <div className="max-w-9xl mx-auto space-y-6">
-          <PageHeader
-            title="Staff"
+
+          <PageActions
             createButtonText="Add Staff"
             onCreateClick={() => {
               setMode("create");
               setEditingStaff(null);
               setOpenCreate(true);
             }}
-          />
-
-          <PageActions
             searchValue={searchValue}
             onSearchChange={setSearchValue}
             searchPlaceholder="Search staff by name, email, code..."

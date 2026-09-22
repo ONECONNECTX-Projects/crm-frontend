@@ -20,11 +20,11 @@ export default function VerticalTabs({
   title?: string;
 }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="glass rounded-2xl p-4">
       {title && (
-        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-gray-200">
-          <Users className="w-5 h-5 text-gray-600" />
-          <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+        <div className="mb-6 flex items-center gap-2 border-b border-white/40 pb-4">
+          <Users className="w-5 h-5 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
             {title}
           </h2>
         </div>
@@ -37,8 +37,8 @@ export default function VerticalTabs({
             onClick={() => onChange(tab.key)}
             className={`w-full text-left px-3 py-2.5 text-sm font-medium rounded-md transition-all ${
               activeTab === tab.key
-                ? "bg-brand-50 text-brand-500 border-l-4 border-brand-500 pl-2.5"
-                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-4 border-transparent pl-2.5"
+                ? "border-l-4 border-brand-500 bg-white/60 pl-2.5 text-brand-700 shadow-sm"
+                : "border-l-4 border-transparent pl-2.5 text-muted-foreground hover:bg-white/40 hover:text-foreground"
             }`}
           >
             <div className="flex items-center gap-2">

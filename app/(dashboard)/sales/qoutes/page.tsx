@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -258,17 +257,14 @@ export default function QuotePage() {
   }));
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <PageHeader
-        title="Quotes"
-        createButtonText="Create Quote"
-        onCreateClick={() => {
+    <div className="bg-white rounded-xl p-6 space-y-6">
+
+      <PageActions
+            createButtonText="Create Quote"
+            onCreateClick={() => {
           setEditId(null);
           setOpenCreate(true);
         }}
-      />
-
-      <PageActions
         searchValue={searchValue}
         onSearchChange={(val) => {
           setSearchValue(val);

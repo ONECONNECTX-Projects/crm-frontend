@@ -374,7 +374,7 @@ export default function CreateStaffForm({
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">

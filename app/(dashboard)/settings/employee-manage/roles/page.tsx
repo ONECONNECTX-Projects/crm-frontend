@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -202,21 +201,18 @@ export default function RolesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
-      <div className="space-y-4 sm:space-y-6">
+    <div>
+      <div className="space-y-3">
         {/* Header */}
-        <PageHeader
-          title="Roles & Permissions"
-          createButtonText="Create Role"
-          onCreateClick={() => {
+
+        {/* Actions */}
+        <PageActions
+            createButtonText="Create Role"
+            onCreateClick={() => {
             setMode("create");
             setEditingRole(null);
             setOpenCreate(true);
           }}
-        />
-
-        {/* Actions */}
-        <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search roles..."
