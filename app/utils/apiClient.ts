@@ -1,5 +1,7 @@
 // API Client with token management and expiration check
 
+import { clearSsoToken, setSsoToken } from "./sso";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/";
 const AUTH_TOKEN_KEY = "auth-token";
@@ -75,17 +77,20 @@ export function getAuthToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
-// Set token in localStorage
+// Set token in localStorage — and in the SSO cookie the other apps read.
 export function setAuthToken(token: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(AUTH_TOKEN_KEY, token);
+  setSsoToken(token);
 }
 
-// Remove token from localStorage
+// Remove token from localStorage. Clearing the cookie logs the user out of
+// Intranet and Calc too, which is the point of one login.
 export function removeAuthToken(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
+  clearSsoToken();
 }
 
 // Set logged-in user in localStorage
@@ -111,6 +116,13 @@ export function isAuthenticated(): boolean {
   const token = getAuthToken();
   if (!token) return false;
   if (isTokenExpired(token)) {
+    removeAuthToken();
+    return false;
+  }
+  // A token minted before SSO existed carries no email, so the other apps
+  // would reject it and app switching would silently ask for a login. One
+  // forced re-login here fixes the session for all three.
+  if (!decodeToken(token)?.email) {
     removeAuthToken();
     return false;
   }

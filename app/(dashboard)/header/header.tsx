@@ -5,6 +5,8 @@ import { LogOut, Maximize, Minimize } from "lucide-react";
 import { FiMenu } from "react-icons/fi";
 import { useRouter, usePathname } from "next/navigation";
 import CommonButton from "@/app/common/button";
+import AppSwitcher from "@/app/common/AppSwitcher";
+import { removeAuthToken } from "@/app/utils/apiClient";
 import {
   getAllProfiles,
   Profile,
@@ -73,8 +75,9 @@ export default function Header({
 
   // LOGOUT HANDLER
   const handleLogout = () => {
-    localStorage.removeItem("auth-token");
-    localStorage.removeItem("user-info");
+    // Goes through removeAuthToken so the SSO cookie is cleared too — otherwise
+    // Intranet and Calc would stay logged in after logging out of the CRM.
+    removeAuthToken();
     setConfirmLogout(false);
     router.push("/login");
   };
@@ -100,6 +103,8 @@ export default function Header({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          <AppSwitcher current="crm" />
+
           {/* FULL SCREEN */}
           <button
             onClick={toggleFullscreen}
