@@ -19,9 +19,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: APP_NAME,
   description: `${APP_NAME} Application`,
-  icons: {
-    icon: "/browser.svg",
-  },
 };
 
 export default function RootLayout({
