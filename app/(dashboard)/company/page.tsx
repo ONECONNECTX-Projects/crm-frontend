@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -223,19 +222,16 @@ export default function CompanyPage() {
     }));
 
   return (
-    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+    <div>
       <div className="space-y-4 sm:space-y-6">
-        <PageHeader
-          title="Company"
-          createButtonText="Create Company"
-          onCreateClick={() => {
+
+        <PageActions
+            createButtonText="Create Company"
+            onCreateClick={() => {
             setMode("create");
             setEditingCompany(null);
             setOpenCreate(true);
           }}
-        />
-
-        <PageActions
           searchValue={searchValue}
           onSearchChange={(v) => {
             setSearchValue(v);

@@ -6,6 +6,7 @@ import InputField from "@/app/common/InputFeild";
 import { LoginModel } from "./Model/model";
 import { FiLock, FiUser } from "react-icons/fi";
 import CommonButton from "@/app/common/button";
+import { APP_NAME } from "@/app/constant/brand";
 import { setAuthToken, setLoggedInUser, api, isAuthenticated } from "@/app/utils/apiClient";
 import { useError } from "@/app/providers/ErrorProvider";
 
@@ -101,24 +102,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white ">
+    <div className="flex min-h-screen items-center justify-center">
       <form
-        className="bg-white p-8 rounded-lg shadow-lg w-full m-8"
+        className="glass m-8 w-full max-w-md rounded-2xl p-8"
         onSubmit={handleSubmit}
       >
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <span className="text-4xl font-bold text-blue-600 tracking-tight">
-            Your Logo
+          <img
+            src="/oneconnectx-logo.png"
+            alt={APP_NAME}
+            className="h-10 w-auto object-contain"
+          />
+          <span className="ml-2 self-center text-3xl font-bold tracking-tight text-brand-700">
+            CRM
           </span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-4xl font-bold text-gray-800 mb-2 text-center">
+        <h1 className="mb-2 text-center text-3xl font-bold tracking-tight text-foreground">
           Welcome Back
         </h1>
 
-        <p className="text-gray-500 mt-1 mb-8 text-center">
+        <p className="mb-8 mt-1 text-center text-sm text-muted-foreground">
           Enter your credentials to access your account
         </p>
 

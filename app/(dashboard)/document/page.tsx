@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
@@ -170,13 +169,13 @@ export default function ProductViewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader title="Product Document Views" showCreateButton={false} />
 
         {/* Actions */}
         <PageActions
+            showCreateButton={false}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search views..."

@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Filter, Printer, Download, Columns } from "lucide-react";
+import { Filter, Printer, Download, Columns, Search, Plus } from "lucide-react";
 import InputField from "@/app/common/InputFeild";
 
 interface Column {
@@ -30,6 +30,9 @@ interface PageActionsProps {
   showExport?: boolean;
   onPrintPDF?: () => void;
   onDownloadExcel?: () => void;
+  createButtonText?: string;
+  onCreateClick?: () => void;
+  showCreateButton?: boolean;
 }
 
 export default function PageActions({
@@ -44,20 +47,14 @@ export default function PageActions({
   showExport = true,
   onPrintPDF,
   onDownloadExcel,
+  createButtonText = "Create",
+  onCreateClick,
+  showCreateButton = true,
 }: PageActionsProps) {
   return (
-    <div
-      className="
-  flex flex-col 
-  md:flex-row 
-  md:items-center 
-  md:justify-between 
-  gap-4 
-  bg-white p-4 
-  rounded-lg 
-  border border-gray-200
-"
-    >
+    // A band inside the page card, not a card of its own — nesting cards three
+    // deep is what made every list page look like stacked panels.
+    <div className="flex flex-col gap-4 border-b border-border py-4 md:flex-row md:items-center md:justify-between">
       {/* LEFT SECTION */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
         {/* SEARCH BOX */}
@@ -66,6 +63,7 @@ export default function PageActions({
             placeholder={searchPlaceholder}
             onChange={(e) => onSearchChange(e)}
             value={searchValue}
+            icon={<Search className="size-4" />}
           />
         </div>
 
@@ -73,7 +71,7 @@ export default function PageActions({
         {/* {showFilter && (
           <Button
             variant="outline"
-            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
+            className="flex w-full gap-2 rounded-lg border border-border bg-card text-foreground shadow-none transition-colors hover:bg-muted sm:w-auto"
             onClick={onFilterClick}
           >
             <Filter className="w-4 h-4" />
@@ -87,7 +85,7 @@ export default function PageActions({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
+                className="flex w-full gap-2 rounded-lg border border-border bg-card text-foreground shadow-none transition-colors hover:bg-muted sm:w-auto"
               >
                 <Columns className="w-4 h-4" />
                 Columns
@@ -110,28 +108,40 @@ export default function PageActions({
         )}
       </div>
 
-      {/* RIGHT SECTION (Export Buttons) */}
-      {showExport && (
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-          <Button
-            variant="outline"
-            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
-            onClick={onPrintPDF}
-          >
-            <Printer className="w-4 h-4" />
-            Print PDF
-          </Button>
+      {/* RIGHT SECTION (Export + Create) */}
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+        {showExport && (
+          <>
+            <Button
+              variant="outline"
+              className="flex w-full gap-2 rounded-lg border border-border bg-card text-foreground shadow-none transition-colors hover:bg-muted sm:w-auto"
+              onClick={onPrintPDF}
+            >
+              <Printer className="w-4 h-4" />
+              Print PDF
+            </Button>
 
+            <Button
+              variant="outline"
+              className="flex w-full gap-2 rounded-lg border border-border bg-card text-foreground shadow-none transition-colors hover:bg-muted sm:w-auto"
+              onClick={onDownloadExcel}
+            >
+              <Download className="w-4 h-4" />
+              Download Excel
+            </Button>
+          </>
+        )}
+
+        {showCreateButton && (
           <Button
-            variant="outline"
-            className="flex gap-2 border-gray-300  hover:bg-brand-600 hover:text-white hover:border-brand-600 w-full sm:w-auto"
-            onClick={onDownloadExcel}
+            onClick={onCreateClick}
+            className="flex w-full gap-2 rounded-lg bg-brand-500 text-white shadow-none transition-colors hover:bg-brand-600 sm:w-auto"
           >
-            <Download className="w-4 h-4" />
-            Download Excel
+            <Plus className="w-4 h-4" />
+            <span className="whitespace-nowrap">{createButtonText}</span>
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

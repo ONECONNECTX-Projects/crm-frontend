@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
@@ -178,19 +177,16 @@ export default function OpportunityPage() {
     printPDF(filtered, columns, "Opportunities", opportunityExtractors);
   };
   return (
-    <div className="min-h-screen bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6">
+    <div>
       <div className="max-w-9xl mx-auto space-y-4 sm:space-y-6">
-        <PageHeader
-          title="Opportunity"
-          createButtonText="Create Opportunity"
-          onCreateClick={() => {
+
+        <PageActions
+            createButtonText="Create Opportunity"
+            onCreateClick={() => {
             setMode("create");
             setEditingOpportunities(null);
             setOpen(true);
           }}
-        />
-
-        <PageActions
           searchValue={search}
           onSearchChange={setSearch}
           searchPlaceholder="Search"

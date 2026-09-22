@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import StatusBadge from "@/app/common/StatusBadge";
@@ -249,19 +248,16 @@ export default function LeadsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-white rounded-xl p-6">
+      <div>
         <div className="max-w-9xl mx-auto space-y-6">
-          <PageHeader
-            title="Leads"
+
+          <PageActions
             createButtonText="Create Lead"
             onCreateClick={() => {
               setMode("create");
               setEditingLead(null);
               setOpenCreate(true);
             }}
-          />
-
-          <PageActions
             searchValue={searchValue}
             onSearchChange={setSearchValue}
             searchPlaceholder="Search leads by name, email, phone..."

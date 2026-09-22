@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -247,14 +246,11 @@ export default function TransactionPage() {
     }));
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <PageHeader
-        title="Transactions"
-        createButtonText="Add Transaction"
-        onCreateClick={() => setOpenCreate(true)}
-      />
+    <div className="bg-white rounded-xl p-6 space-y-6">
 
       <PageActions
+            createButtonText="Add Transaction"
+            onCreateClick={() => setOpenCreate(true)}
         searchValue={searchValue}
         onSearchChange={(val) => {
           setSearchValue(val);

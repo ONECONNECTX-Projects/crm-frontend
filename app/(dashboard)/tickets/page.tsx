@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -223,14 +222,11 @@ export default function TicketPage() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <PageHeader
-        title="Tickets"
-        createButtonText="Create Ticket"
-        onCreateClick={handleCreateClick}
-      />
+    <div className="bg-white rounded-xl p-6 space-y-6">
 
       <PageActions
+            createButtonText="Create Ticket"
+            onCreateClick={handleCreateClick}
         searchValue={searchValue}
         onSearchChange={(val) => {
           setSearchValue(val);

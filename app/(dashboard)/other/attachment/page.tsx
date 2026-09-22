@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -209,14 +208,11 @@ export default function AttachmentPage() {
   ];
 
   return (
-    <div className="bg-white rounded-xl p-6 space-y-6">
-      <PageHeader
-        title="Attachments"
-        createButtonText="Upload Attachment"
-        onCreateClick={() => setOpenCreate(true)}
-      />
+    <div className="bg-white rounded-xl p-6 space-y-6">
 
       <PageActions
+            createButtonText="Upload Attachment"
+            onCreateClick={() => setOpenCreate(true)}
         searchValue={searchValue}
         onSearchChange={(val) => {
           setSearchValue(val);

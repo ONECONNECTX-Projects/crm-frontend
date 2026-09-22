@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "./sidebar/sidebar";
-import { FiChevronLeft, FiChevronRight, FiMenu, FiX } from "react-icons/fi";
+import { FiMenu, FiX } from "react-icons/fi";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Header from "./header/header";
 import ProtectedRoute from "@/app/components/ProtectedRoute";
 
@@ -37,7 +38,14 @@ export default function DashboardLayout({ children }: any) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen">
+
+      {/* BACKGROUND */}
+      <div
+        className="fixed inset-0 -z-10 scale-110 bg-cover bg-center bg-no-repeat blur-sm"
+        style={{ backgroundImage: "url('/login-bg.png')" }}
+      />
+      <div className="fixed inset-0 -z-10 bg-white/70" />
 
       {/* MOBILE OVERLAY */}
       {isMobile && mobileOpen && (
@@ -59,10 +67,14 @@ export default function DashboardLayout({ children }: any) {
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="absolute -right-3 top-6 w-8 h-8 rounded-full bg-white text-gray-500 shadow-lg
-              flex items-center justify-center z-50 border"
+            className="glass-strong absolute -right-3 top-3.5 z-50 flex h-8 w-8 items-center
+              justify-center rounded-md text-slate-500 transition-colors hover:text-brand-700"
           >
-            {collapsed ? <FiChevronRight /> : <FiChevronLeft />}
+            {collapsed ? (
+              <PanelLeftOpen className="size-6" />
+            ) : (
+              <PanelLeftClose className="size-6" />
+            )}
           </button>
         )}
 
@@ -70,15 +82,15 @@ export default function DashboardLayout({ children }: any) {
         {isMobile && mobileOpen && (
           <button
             onClick={() => setMobileOpen(false)}
-            className="absolute right-2 top-2 w-8 h-8 rounded-full bg-gray-100 text-gray-600
-              flex items-center justify-center z-50"
+            className="absolute right-2 top-3 z-50 flex h-8 w-8 items-center justify-center
+              rounded-full bg-brand-50 text-brand-700 shadow-sm"
           >
             <FiX />
           </button>
         )}
 
         {/* SIDEBAR SCROLLING CONTAINER */}
-        <div className="h-full overflow-y-auto">
+        <div className="h-full">
           <Sidebar collapsed={isMobile ? false : collapsed} onNavigate={closeMobileSidebar} />
         </div>
       </div>
@@ -91,7 +103,7 @@ export default function DashboardLayout({ children }: any) {
             showMenuButton={isMobile}
           />
 
-          <div className="p-3 sm:p-4 md:p-6 overflow-y-auto flex-1">
+          <div className="p-2 sm:p-3 md:p-4 overflow-y-auto flex-1">
             {children}
           </div>
         </div>

@@ -37,9 +37,9 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
     <div className="w-full">
       {label && (
         <div className="flex items-center mb-1">
-          <label className="text-sm sm:text-base font-medium text-gray-700">
+          <label className="text-sm font-medium text-foreground">
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="text-destructive ml-1">*</span>}
           </label>
 
           {onAddClick && (
@@ -59,11 +59,11 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full p-2.5 sm:p-3 text-sm sm:text-base border rounded-lg text-gray-700 focus:outline-none focus:ring-2 transition-all ${
+        className={`w-full px-3 py-2.5 text-sm glass-input rounded-lg text-foreground outline-none transition-[color,box-shadow,border-color] ${
           hasError
-            ? "border-red-500 focus:ring-red-400"
-            : "border-gray-300 focus:ring-brand-500"
-        } ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"} ${className}`}
+            ? "!border-destructive focus-visible:ring-[3px] focus-visible:ring-destructive/25"
+            : "focus-visible:border-brand-400 focus-visible:ring-[3px] focus-visible:ring-brand-500/20"
+        } ${disabled ? "cursor-not-allowed opacity-60" : ""} ${className}`}
       >
         <option value="">{placeholder}</option>
 
@@ -74,7 +74,7 @@ const SelectDropdown: React.FC<SelectDropdownProps> = ({
         ))}
       </select>
 
-      {hasError && <p className="text-red-500 text-xs sm:text-sm mt-1">{error}</p>}
+      {hasError && <p className="mt-1 text-xs text-destructive">{error}</p>}
     </div>
   );
 };

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableColumn, TableAction } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
@@ -369,13 +368,8 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="max-w-9xl mx-auto space-y-6">
-        <PageHeader
-          title="Tasks"
-          createButtonText="Create Task"
-          onCreateClick={() => setOpen(true)}
-        />
 
         {/* View Toggle */}
         <div className="flex items-center gap-2">
@@ -404,6 +398,8 @@ export default function TasksPage() {
         ) : viewMode === "list" ? (
           <>
             <PageActions
+            createButtonText="Create Task"
+            onCreateClick={() => setOpen(true)}
               searchValue={search}
               onSearchChange={setSearch}
               searchPlaceholder="Search"

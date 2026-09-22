@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import Pagination from "@/app/common/pagination";
@@ -221,17 +220,14 @@ export default function AnnouncementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Announcements"
-          createButtonText="Create Announcement"
-          onCreateClick={handleOpenCreate}
-        />
 
         {/* Actions */}
         <PageActions
+            createButtonText="Create Announcement"
+            onCreateClick={handleOpenCreate}
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search announcements..."

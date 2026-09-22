@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import PageHeader from "@/app/common/PageHeader";
 import PageActions from "@/app/common/PageActions";
 import DataTable, { TableAction, TableColumn } from "@/app/common/DataTable";
 import SlideOver from "@/app/common/slideOver";
@@ -189,21 +188,18 @@ export default function TicketCategoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white rounded-xl p-6">
+    <div>
       <div className="space-y-6">
         {/* Header */}
-        <PageHeader
-          title="Ticket Category"
-          createButtonText="Create Ticket Category"
-          onCreateClick={() => {
+
+        {/* Actions */}
+        <PageActions
+            createButtonText="Create Ticket Category"
+            onCreateClick={() => {
             setMode("create");
             setEditingTicketCategory(null);
             setOpenCreate(true);
           }}
-        />
-
-        {/* Actions */}
-        <PageActions
           searchValue={searchValue}
           onSearchChange={setSearchValue}
           searchPlaceholder="Search Ticket Categories..."

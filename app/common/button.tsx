@@ -20,7 +20,7 @@ export default function CommonButton({
       type={type}
       onClick={onClick}
       disabled={isLoading}
-      className={`w-full flex items-center justify-center bg-brand-500 text-white p-3 rounded-lg hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed transition-all ${className}`}
+      className={`flex w-full items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 p-3 text-white shadow-lg shadow-brand-500/30 ring-1 ring-white/25 transition-shadow hover:shadow-xl hover:shadow-brand-500/40 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
       {isLoading ? (
         <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

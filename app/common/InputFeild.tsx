@@ -66,15 +66,15 @@ export default function InputField({
   return (
     <div className="w-full">
       {label && (
-        <label className="block mb-1 text-sm sm:text-base font-medium text-gray-700">
+        <label className="mb-1.5 block text-sm font-medium text-foreground">
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-destructive ml-1">*</span>}
         </label>
       )}
 
       <div className="relative flex items-center">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
             {icon}
           </div>
         )}
@@ -88,16 +88,16 @@ export default function InputField({
             maxLength={maxLength}
             rows={rows}
             disabled={disabled}
-            className={`w-full p-2.5 sm:p-3 text-sm sm:text-base
+            className={`w-full px-3 py-2.5 text-sm
               ${icon ? "pl-11 sm:pl-12" : ""}
-              border rounded-lg text-gray-700
-              focus:outline-none focus:ring-2 transition-all
+              rounded-lg border border-border bg-background text-foreground
+              outline-none transition-[color,box-shadow,border-color]
               ${
                 hasError
-                  ? "border-red-500 focus:ring-red-400"
-                  : "border-gray-300 focus:ring-brand-500"
+                  ? "!border-destructive focus-visible:ring-2 focus-visible:ring-destructive/20"
+                  : "focus-visible:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-500/15"
               }
-              ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+              ${disabled ? "cursor-not-allowed opacity-60" : ""}
             `}
           />
         ) : (
@@ -110,24 +110,24 @@ export default function InputField({
               onKeyDown={handleKeyDown}
               maxLength={maxLength}
               disabled={disabled}
-              className={`w-full p-2.5 sm:p-3 text-sm sm:text-base
+              className={`w-full px-3 py-2.5 text-sm
                 ${icon ? "pl-11 sm:pl-12" : ""}
                 pr-10 sm:pr-12
-                border rounded-lg text-gray-700
-                focus:outline-none focus:ring-2 transition-all
+                rounded-lg border border-border bg-background text-foreground
+                outline-none transition-[color,box-shadow,border-color]
                 ${
                   hasError
-                    ? "border-red-500 focus:ring-red-400"
-                    : "border-gray-300 focus:ring-brand-500"
+                    ? "!border-destructive focus-visible:ring-2 focus-visible:ring-destructive/20"
+                    : "focus-visible:border-brand-400 focus-visible:ring-2 focus-visible:ring-brand-500/15"
                 }
-                ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}
+                ${disabled ? "cursor-not-allowed opacity-60" : ""}
               `}
             />
 
             {isPassword && (
               <span
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground"
               >
                 {showPassword ? <FiEye size={18} /> : <FiEyeOff size={18} />}
               </span>
@@ -137,7 +137,7 @@ export default function InputField({
       </div>
 
       {hasError && (
-        <p className="text-red-500 text-xs sm:text-sm mt-1">
+        <p className="mt-1 text-xs text-destructive">
           {localError || error}
         </p>
       )}
